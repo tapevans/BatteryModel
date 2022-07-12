@@ -51,12 +51,11 @@ FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
 
 FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
 
-folder_name  = 'Final_Lui_Wiley_Model';
-battery_name = 'Final_Lui_Wiley_Model';
+% folder_name  = 'Final_Lui_Wiley_Model';
+% battery_name = 'Final_Lui_Wiley_Model';
 
-% folder_name  = 'Half_Cell_Test';
-% battery_name = 'Half_Cell_Test_halfCA';
-% battery_name = 'Half_Cell_Test_fullcell';
+folder_name  = 'KBCP_Mode_Test';
+battery_name = 'KBCP_Mode_Test';
 
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
@@ -77,8 +76,8 @@ battery_name = 'Final_Lui_Wiley_Model';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-%     SS_SOC = [];
-    SS_SOC = [5, 10, 25, 50, 75, 90, 95];
+    SS_SOC = [];
+%     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
 %     SS_SOC = [81.93];
     
 %         SS_freq = [];

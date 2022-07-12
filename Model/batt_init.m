@@ -611,7 +611,7 @@ end
         SIM.current_MO_step = 1;
         MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
         if MO == 2
-            i_user = 0; %Start fsolve assuming the voltage should be close
+            i_user = SIM.Cell_Cap/20; %Start fsolve assuming the voltage should be close
         else
             if SIM.Controller_MO_File(SIM.current_MO_step).CorD == 'C'
                 i_user = -SIM.Controller_MO_File(SIM.current_MO_step).C_rate * SIM.Cell_Cap / SIM.A_c;
@@ -631,22 +631,25 @@ phi_temp(end,N.CV_Region_SEP) =   NaN(1,N.N_CV_SEP); % No SV in the SEP region f
 phi_temp = reshape(phi_temp, [],1);
 
 % Remove NaN
-    phi = zeros((N.N_ES_var)*N.N_CV_AN + N.N_CV_SEP + (N.N_ES_var)*N.N_CV_CA , 1);
+    phi_guess = zeros((N.N_ES_var)*N.N_CV_AN + N.N_CV_SEP + (N.N_ES_var)*N.N_CV_CA , 1);
     
     find_non_NaN = ~isnan(phi_temp);
     count = 0;
     for i = 1:length(find_non_NaN)
         if find_non_NaN(i)
             count = count + 1;
-            phi(count,1) = phi_temp(i);
+            phi_guess(count,1) = phi_temp(i);
         end
     end
     
-    SIM.phi_guess = phi;
+    phi_guess(end+1) = i_user;
+    
+    SIM.phi_guess = phi_guess;
     
 % Solve for better phi values
-phi = fsolve(@(phi) phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props) , SIM.phi_guess , SIM.fsolve_options);
-phi = phi1Dto2D( phi , N , P , FLAG);
+phi_soln = fsolve(@(phi) phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props) , phi_guess , SIM.fsolve_options);
+i_user = phi_soln(end);
+phi = phi1Dto2D( phi_soln(1:end-1) , N , P , FLAG);
 
 %% Fix phi for Initial State Vector
 % ---- Anode ----
