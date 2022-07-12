@@ -7,9 +7,10 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
-% Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
+% Project_Folder{i} = 'phiFsolve_Test';   i = i+1;
+Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
 % Project_Folder{i} = 'Half_Cell_Test';   i = i+1;
-Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
+% Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
 % Project_Folder{i} = 'Change_Mode_Number_Test';   i = i+1;
 
 %%
