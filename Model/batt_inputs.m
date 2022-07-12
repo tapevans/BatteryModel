@@ -105,8 +105,8 @@ N.N_R_CA    = 10;  % Number of r-direction cathode   control volumes (CV) %%%No 
 %% fsolve options
 options = optimoptions('fsolve');
 options.FunctionTolerance = 1e-15;
-% options.Display = 'iter';
-options.Display = 'none';
+options.Display = 'iter';
+% options.Display = 'none';
 SIM.fsolve_options = options;
 
 %% Setting Simulation Parameters based on mode of operation
