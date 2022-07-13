@@ -162,7 +162,8 @@ for i = 1:num_sim_files
                         % First iteration is not using ODExtend
                         % Setup variables to track i_user history
                         N_history = ceil(SIM.ZeroTime / SIM.DiscreteTimeStep);
-                        SIM.i_user_history = ones(N_history,1);
+%                         SIM.i_user_history = ones(N_history,1);
+                        SIM.i_user_history = zeros(N_history,1);
                         % Calc i_user from controller
                             SV = SV_IC;
                             SV = SV1Dto2D(SV , N , P , FLAG);
@@ -206,13 +207,31 @@ for i = 1:num_sim_files
                 
                 % Save solution
                     if MO ~= 2 % CC, Relax
-                        t_soln_int = SOLN.x';
-                        if ~isempty(t_soln)
-                            t_soln_int = t_soln_int + t_soln(end);
+                        if FLAG.SaveSolnDiscreteTime
+                            new_tfinal = SOLN.x(end);
+                            save_time = (0:SIM.SaveTStep:new_tfinal)';
+                            t_soln_int  = save_time;
+                            if ~isempty(t_soln)
+                                t_soln_int = t_soln_int + t_soln(end);
+                            end
+                            
+                            SV_soln_int = (deval(SOLN,save_time))';
+                        else
+                            t_soln_int = SOLN.x';
+                            if ~isempty(t_soln)
+                                t_soln_int = t_soln_int + t_soln(end);
+                            end
+
+                            SV_soln_int = SOLN.y';
                         end
-                        
-                        SV_soln_int = SOLN.y';
-                        i_user_soln_int = i_user*ones(length(SOLN.x),1);
+                        i_user_soln_int = i_user*ones(length(t_soln_int),1);
+%                         t_soln_int = SOLN.x';
+%                         if ~isempty(t_soln)
+%                             t_soln_int = t_soln_int + t_soln(end);
+%                         end
+%                         
+%                         SV_soln_int = SOLN.y';
+%                         i_user_soln_int = i_user*ones(length(SOLN.x),1);
                     else % CV
                         if ~isempty(t_soln)
                             t_soln_int = t_soln_int + t_soln(end);
@@ -349,124 +368,3 @@ for i = 1:num_sim_files
     clearvars -except sim_filenames i k num_sim_files
 end
 disp('Finished all simulations')
-%% 
-
-%     MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
-%     if MO == 2
-%         persistent MO_step
-%         if isempty(MO_step)
-%             MO_step = 1;
-%         end
-%         persistent i_user_history
-%         if isempty(i_user_history)
-%             i_user_history = (SIM.Cell_Cap/SIM.A_c)*ones(10,1);
-%         end
-%         persistent do_i_user_solve
-%         if isempty(do_i_user_solve)
-%             do_i_user_solve = 1;
-%         end
-%         
-%         if MO_step ~= SIM.current_MO_step
-%             % If the solver has moved on to the next step, clear the
-%             % i_user_history and update the step
-%             i_user_history = (SIM.Cell_Cap/SIM.A_c)*ones(10,1);
-%             MO_step = SIM.current_MO_step;
-%         end
-%         
-%         sum_criteria = sum (abs(i_user_history) < (SIM.Cell_Cap /SIM.A_c / 20) );
-%         if sum_criteria == length(i_user_history)
-%             do_i_user_solve = 0;
-%         end
-%         
-%         if do_i_user_solve
-%             phi_temp = SV(P.phi_el:P.i_PS, :);
-%             phi_temp(end+1,: ) = zeros(1,N.N_CV_tot ); % Adding a row for the new constraint equation
-%             phi_temp(end,N.CV_Region_SEP) =   NaN(1,N.N_CV_SEP); % No SV in the SEP region for the new constraint
-%             phi_temp = reshape(phi_temp, [],1);
-% 
-%             % Remove NaN
-%             phi = zeros((N.N_ES_var)*N.N_CV_AN + N.N_CV_SEP + (N.N_ES_var)*N.N_CV_CA , 1);
-% 
-%             find_non_NaN = ~isnan(phi_temp);
-%             count = 0;
-%             for i = 1:length(find_non_NaN)
-%                 if find_non_NaN(i)
-%                     count = count + 1;
-%                     phi(count,1) = phi_temp(i);
-%                 end
-%             end
-% 
-%             % Add one more variable for i_user
-%             phi = [phi;i_user];
-%             phi_guess = phi;
-% 
-%             % Solve for better phi values
-%             phi = fsolve(@(phi) phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,PROPS) , phi_guess , SIM.fsolve_options);
-%             i_user = phi(end);
-%         else
-%             i_user = 0;
-%         end
-%         
-%         if t > 0
-%             i_user_history =  [i_user_history(2:end) ; i_user];
-%         end
-%         
-%     else % The current is a known
-%         if SIM.Controller_MO_File(SIM.current_MO_step).CorD == 'C'
-%             i_user = -SIM.Controller_MO_File(SIM.current_MO_step).C_rate*SIM.Cell_Cap/SIM.A_c;
-%         else
-%             i_user =  SIM.Controller_MO_File(current_MO_step).C_rate*SIM.Cell_Cap/SIM.A_c;
-%         end
-%     end
-
-%%
-% %% Check if end conditions for current MO have been reached
-% 	MO = SIM.Controller_MO_File(current_MO_step).MO;
-% 	end_reached = 0;
-% 	if MO == 1 % CC
-% 		% Check Voltage Limit
-% 			if SIM.Controller_MO_File(current_MO_step).CorD == 'C'
-% 				if cell_voltage > SIM.Controller_MO_File(current_MO_step).Volt_lim
-% 					end_reached = 1;
-% 				end
-% 			elseif SIM.Controller_MO_File(current_MO_step).CorD == 'D'
-% 				if cell_voltage < SIM.Controller_MO_File(current_MO_step).Volt_lim
-% 					end_reached = 1;
-% 				end	
-% 			end
-% 		% Check Time Limit
-% 			start_time = MO_StartEnd_Time(current_MO_step,1);
-% 			delta_time = t - start_time;
-% 			if delta_time > SIM.Controller_MO_File(current_MO_step).Time_lim
-% 				end_reached = 1;
-% 			end	
-% 	elseif MO == 2 % CV
-% 		% Check Time Limit
-% 			start_time = MO_StartEnd_Time(current_MO_step,1);
-% 			delta_time = t - start_time;
-% 			if delta_time > SIM.Controller_MO_File(current_MO_step).Time_lim
-% 				end_reached = 1;
-% 			end	
-% 		% Check Change in Variables Tolerance
-% 			% !!!!!Not Implemented
-% 	elseif MO == 3 % Relaxation 
-% 		% No end condition at this time. It is used to run out the last of
-% 		% tspan for the ode
-% 	else
-% 		disp('do not know what mode of operation I am in')
-% 	end
-% 
-% % If the end condition has been reached, move to the next MO
-% if end_reached
-%     MO_StartEnd_Time(current_MO_step,2) = t;
-%     if current_MO_step ~= length(SIM.Controller_MO_File)
-%         current_MO_step = current_MO_step + 1;
-%         MO_StartEnd_Time(current_MO_step,1) = t;
-%         MO = SIM.Controller_MO_File(current_MO_step).MO;
-%     else
-%         % !!!!!!!!Figure out how to break out of the ODE
-%             % Currently using Relaxation to finish sim
-%     end
-% end
-
-

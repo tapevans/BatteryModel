@@ -1,4 +1,3 @@
-% function plotfcn(t_soln,y_soln,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG)
 function plotfcn(filename)
 %% Load Results
 load(filename)

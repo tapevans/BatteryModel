@@ -33,7 +33,7 @@ filename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\Resul
 postProcessing(filename)
 
 %% Plot Single Results
-filename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_SS_EIS_SOC81.93.mat';
+filename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\Results\KBCP_Mode_Test\KBCP_Mode_Test_KPCont_Profile_CC_Test_3StepSOC0.mat';
 plotfcn(filename)
 
 %%
@@ -42,16 +42,10 @@ close all
 clc
 
 %% Load Results
-% filename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_SS_EIS_SOC95.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2022_07_11_Lui_SS\95SOC.mat';
+filename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\Results\KBCP_Mode_Test\KBCP_Mode_Test_KPCont_Profile_CC_Test_3StepSOC0.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2022_07_11_Lui_SS\95SOC.mat';
 load(filename)
 
-%% Save Results to New filename
-% filename = '95SOC';
-% multiple = -SIM.A_c^-1;
-% sys = multiple*ss(A,B,C,D,'E',SIM.M);
-% cell_voltage = SIM.SV_IC(341);
-% save(filename,'sys','cell_voltage')
 
 %% Change Parameters of an existing sim
 clear all; close all; clc;

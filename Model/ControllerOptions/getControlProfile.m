@@ -102,26 +102,26 @@ j = 0;
 
 %% Voltage Step
 % Constant Voltage @ 4.0V
-% j = j + 1;
-% MO_File(j).MO         = 2;
-% MO_File(j).CorD       = [];
-% MO_File(j).C_rate     = [];
-% MO_File(j).Volt_ref   = 4.0; % [V]
-% MO_File(j).Volt_lim   = [];  % [V]
-% MO_File(j).Time_lim   = 0.05; % [s]
-% MO_File(j).delta_tol  = 1e-10;
-% MO_File(j).C_rate_sat = 2;
+j = j + 1;
+MO_File(j).MO         = 2;
+MO_File(j).CorD       = [];
+MO_File(j).C_rate     = [];
+MO_File(j).Volt_ref   = 4.0; % [V]
+MO_File(j).Volt_lim   = [];  % [V]
+MO_File(j).Time_lim   = 0.5; % [s]
+MO_File(j).delta_tol  = 1e-10;
+MO_File(j).C_rate_sat = 2;
 
 % Constant Voltage @ 3.98V
-% j = j + 1;
-% MO_File(j).MO         = 2;
-% MO_File(j).CorD       = [];
-% MO_File(j).C_rate     = [];
-% MO_File(j).Volt_ref   = 3.98;  % [V]
-% MO_File(j).Volt_lim   = [];   % [V]
-% MO_File(j).Time_lim   = 0.5; % [s]
-% MO_File(j).delta_tol  = 1e-10;
-% MO_File(j).C_rate_sat = 2;
+j = j + 1;
+MO_File(j).MO         = 2;
+MO_File(j).CorD       = [];
+MO_File(j).C_rate     = [];
+MO_File(j).Volt_ref   = 3.98;  % [V]
+MO_File(j).Volt_lim   = [];   % [V]
+MO_File(j).Time_lim   = 0.05; % [s]
+MO_File(j).delta_tol  = 1e-10;
+MO_File(j).C_rate_sat = 2;
 
 % % Constant Voltage @ 4.0V
 % j = j + 1;
@@ -135,24 +135,24 @@ j = 0;
 % MO_File(j).C_rate_sat = 2;
 
 %% CC to CV
-% Constant Current Charge 1C
-j = j + 1;
-MO_File(j).MO        = 1;
-MO_File(j).CorD      = 'C';
-MO_File(j).C_rate    = 1;
-MO_File(j).Volt_ref  = [];
-MO_File(j).Volt_lim  = 4.2;
-MO_File(j).Time_lim  = 3600*1;
-MO_File(j).delta_tol = [];
-
-% Constant Voltage @ 4.0V
-j = j + 1;
-MO_File(j).MO         = 2;
-MO_File(j).CorD       = [];
-MO_File(j).C_rate     = [];
-MO_File(j).Volt_ref   = 4.2;  % [V]
-MO_File(j).Volt_lim   = [];   % [V]
-MO_File(j).Time_lim   = 10; % [s]
-MO_File(j).delta_tol  = 1e-10;
-MO_File(j).C_rate_sat = 2;
+% % Constant Current Charge 1C
+% j = j + 1;
+% MO_File(j).MO        = 1;
+% MO_File(j).CorD      = 'C';
+% MO_File(j).C_rate    = 1;
+% MO_File(j).Volt_ref  = [];
+% MO_File(j).Volt_lim  = 4.2;
+% MO_File(j).Time_lim  = 3600*1;
+% MO_File(j).delta_tol = [];
+% 
+% % Constant Voltage @ 4.0V
+% j = j + 1;
+% MO_File(j).MO         = 2;
+% MO_File(j).CorD       = [];
+% MO_File(j).C_rate     = [];
+% MO_File(j).Volt_ref   = 4.2;  % [V]
+% MO_File(j).Volt_lim   = [];   % [V]
+% MO_File(j).Time_lim   = 10; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
 end

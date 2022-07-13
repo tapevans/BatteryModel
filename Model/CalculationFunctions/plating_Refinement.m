@@ -1,3 +1,15 @@
+%% Refine Current Profile for Plating Constraint
+% Description: 
+% 
+% Inputs:
+%   *
+%   *
+%   *
+%
+% Outputs:
+%   *
+%   *
+%%
 function [continueRefinement, current_vec , current , sum_of_refinement] = plating_Refinement(del_phi, t_soln, SIM, N)
 current = SIM.region_current_vec;
 continueRefinement = 1;

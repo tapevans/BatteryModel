@@ -1,56 +1,27 @@
-
-function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Batt Residual Function
 % This function is used to return the time derivative of the governing equations.
 
+
+function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Organize (reshape) the SV
 SV = SV1Dto2D(SV , N , P , FLAG);
-
-%% Calculate i_user
-if SIM.SimMode == 3 % State Space EIS
-    % Uses the i_user value from the function handle
-elseif SIM.SimMode == 4 % KBCP Controller
-    % Uses the i_user value from the function handle if its CC or Relax
-    if SIM.Controller_MO_File(SIM.current_MO_step).MO == 2
-        if t > 0
-            % Solve for i_user using fsolve
-            phi_temp = SV(P.phi_el:P.i_PS, :);
-            phi_temp(end+1,: ) = zeros(1,N.N_CV_tot ); % Adding a row for the new constraint equation(i_dl)
-            phi_temp(end,N.CV_Region_SEP) =   NaN(1,N.N_CV_SEP); % No SV in the SEP region for the new constraint
-            phi_temp = reshape(phi_temp, [],1);
-            
-            % Remove NaN
-            phi_guess = zeros((N.N_ES_var)*N.N_CV_AN + N.N_CV_SEP + (N.N_ES_var)*N.N_CV_CA , 1);
-            
-            find_non_NaN = ~isnan(phi_temp);
-            count = 0;
-            for i = 1:length(find_non_NaN)
-                if find_non_NaN(i)
-                    count = count + 1;
-                    phi_guess(count,1) = phi_temp(i);
-                end
-            end
-            phi_guess(end+1) = i_user;
-            
-            % Solve for better phi values
-            phi = fsolve(@(phi) phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props) , phi_guess , SIM.fsolve_options);
-            i_user = phi(end);
-            phi = phi1Dto2D( phi(1:end-1) , N , P , FLAG);
-        else
-            i_user = SIM.Cell_Cap/20;
-        end
-    end
-elseif SIM.SimMode == 5 % MOO Controller
-    % Uses the i_user value from the function handle
-else
-    i_user = i_user_calc(t,SIM);
-end
 
 %% Obtain Property Values
 if FLAG.VARIABLE_PROPS_FROM_HANDLES
     props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
 else
     props = PROPS;
+end
+
+%% Calculate i_user
+if SIM.SimMode == 3 % State Space EIS
+    % Uses the i_user value from the function handle
+elseif SIM.SimMode == 4 % KBCP Controller
+    % Uses the i_user value from the function handle
+elseif SIM.SimMode == 5 % MOO Controller
+    % Uses the i_user value from the function handle
+else
+    i_user = i_user_calc(t,SIM);
 end
 
 %% Calculate All Fluxes

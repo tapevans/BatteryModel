@@ -1,8 +1,8 @@
-function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG)
 %% Batt Initialization
 % This function is used to initialize all of the user inputs and calculates
 % the necessary parameters and pointers for the model
 
+function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG)
 %% Constants
     CONS.F = 96485338.3; % [C kmol^-1], Faraday's Constant 
     CONS.R = 8314.472;   % [J kmol^-1 K^-1], Gas Constant

@@ -87,7 +87,7 @@ battery_name = 'KBCP_Mode_Test';
 % ---- Known BC Profile Controller ----
     KBCP   = 1;
         KBCPProfileOverwrite = 1;
-        KBCPProfileFilename = 'Profile_CV_Test_CCCV';
+        KBCPProfileFilename = 'Profile_CV_Test_CVController_Kp500_.5percent';
         KBSOC = 81.93;
         
 % ---- MOO Controller ----
@@ -102,7 +102,7 @@ battery_name = 'KBCP_Mode_Test';
             MCP.tol_Delta_phi  = 0.01; % Goal for the largest delta_phi
             
         MCP.UseExistingProfile = 1; % 1 if using file found at MCP.Existing_Profile_filepath
-            MCP.Existing_Profile_filepath = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_ManCurrProf_100steps_1000Iter_0.03tol_CurrentProfile_Output.mat';
+            MCP.Existing_Profile_filepath = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_ManCurrProf_100steps_1000Iter_0.03tol_CurrentProfile_Output.mat';
         MCP.ManProfileName = ''; % Use this if MCP.plating_refine = 0;
         
         
@@ -253,7 +253,7 @@ end
 % ---- Known BC Profile ----
 if KBCP    
     % Check if controller profile already exist
-    profile_filename = [current_file_path filesep 'ControllerOptions' filesep KBCPProfileFilename '.mat'];
+    profile_filename = [current_file_path filesep 'KnownProfiles' filesep KBCPProfileFilename '.mat'];
     
     if isfile(profile_filename)
         if KBCPProfileOverwrite

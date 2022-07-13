@@ -28,9 +28,6 @@ i_ed        = zeros_vec;
         i_el(i) = -   EL.kappa*(SV(P.phi_el,i)-SV(P.phi_el,i-1))/(AN.del_x/2 + SEP.del_x/2) ...
                   - 2*EL.kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + EL.Activity)*(EL.tf_num-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(AN.del_x/2 + SEP.del_x/2);
         i_ed(i) = 0; 
-%         if FLAG.AN_LI_FOIL%%%%%%%%%%%%%%%%%
-%             i_el(i) = i_user;
-%         end
         
     % SEP Region
         for i = N.CV_Region_SEP(2:end)
