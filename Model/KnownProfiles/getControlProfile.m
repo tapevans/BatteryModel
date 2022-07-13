@@ -100,28 +100,48 @@ j = 0;
 % MO_File(j).Time_lim  = 3600*1;
 % MO_File(j).delta_tol = [];
 
-%% Voltage Step
-% Constant Voltage @ 4.0V
+% Constant Current Charge 1C/3
 j = j + 1;
-MO_File(j).MO         = 2;
-MO_File(j).CorD       = [];
-MO_File(j).C_rate     = [];
-MO_File(j).Volt_ref   = 4.0; % [V]
-MO_File(j).Volt_lim   = [];  % [V]
-MO_File(j).Time_lim   = 0.5; % [s]
-MO_File(j).delta_tol  = 1e-10;
-MO_File(j).C_rate_sat = 2;
+MO_File(j).MO        = 1;
+MO_File(j).CorD      = 'C';
+MO_File(j).C_rate    = 1/3;
+MO_File(j).Volt_ref  = [];
+MO_File(j).Volt_lim  = 4.2;
+MO_File(j).Time_lim  = 3600*4;
+MO_File(j).delta_tol = [];
 
-% Constant Voltage @ 3.98V
+% Constant Current Discharge 1C/3
 j = j + 1;
-MO_File(j).MO         = 2;
-MO_File(j).CorD       = [];
-MO_File(j).C_rate     = [];
-MO_File(j).Volt_ref   = 3.98;  % [V]
-MO_File(j).Volt_lim   = [];   % [V]
-MO_File(j).Time_lim   = 0.05; % [s]
-MO_File(j).delta_tol  = 1e-10;
-MO_File(j).C_rate_sat = 2;
+MO_File(j).MO        = 1;
+MO_File(j).CorD      = 'D';
+MO_File(j).C_rate    = 1/3;
+MO_File(j).Volt_ref  = [];
+MO_File(j).Volt_lim  = 3.4;
+MO_File(j).Time_lim  = 3600*4;
+MO_File(j).delta_tol = [];
+
+%% Voltage Step
+% % Constant Voltage @ 4.0V
+% j = j + 1;
+% MO_File(j).MO         = 2;
+% MO_File(j).CorD       = [];
+% MO_File(j).C_rate     = [];
+% MO_File(j).Volt_ref   = 4.0; % [V]
+% MO_File(j).Volt_lim   = [];  % [V]
+% MO_File(j).Time_lim   = 0.5; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+% 
+% % Constant Voltage @ 3.98V
+% j = j + 1;
+% MO_File(j).MO         = 2;
+% MO_File(j).CorD       = [];
+% MO_File(j).C_rate     = [];
+% MO_File(j).Volt_ref   = 3.98;  % [V]
+% MO_File(j).Volt_lim   = [];   % [V]
+% MO_File(j).Time_lim   = 0.05; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
 
 % % Constant Voltage @ 4.0V
 % j = j + 1;

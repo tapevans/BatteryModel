@@ -37,10 +37,10 @@ FLAG.SS_BODE     = 1;
 
 % ---- Known Profile Controller ----
 FLAG.KPCONT_cellVoltage      = 1; % Terminal voltage of the battery vs time
-FLAG.KPCONT_i_user           = 1; 
+FLAG.KPCONT_i_user           = 0; 
 FLAG.KPCONT_V_and_A_norm_abs = 0;
-FLAG.KPCONT_V_and_A_norm     = 1;
-
+FLAG.KPCONT_V_and_A_norm     = 0;
+FLAG.KPCONT_VOLT_v_SOC       = 1;
 
 % ---- MOO Controller ----
 FLAG.MOOCONT_cellVoltage = 1;
@@ -549,7 +549,13 @@ elseif SIM.SimMode == 4
     end
     
     %% SOC vs Cell Voltage (Think I need a SOC calc in postProcessing which requires saving i_user)
-
+    if FLAG.KPCONT_VOLT_v_SOC
+    figure
+    plot(SOC , cell_voltage , 'Linewidth' , 2)
+    title('Voltage vs SOC')
+    xlabel('SOC')
+    ylabel('Voltage')
+    end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- MOO Controller ----
 elseif SIM.SimMode == 5

@@ -87,8 +87,9 @@ battery_name = 'KBCP_Mode_Test';
 % ---- Known BC Profile Controller ----
     KBCP   = 1;
         KBCPProfileOverwrite = 1;
-        KBCPProfileFilename = 'Profile_CV_Test_CVController_Kp500_.5percent';
-        KBSOC = 81.93;
+        KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
+%         KBSOC = 81.93;
+        KBSOC = 0;
         
 % ---- MOO Controller ----
     MOO = 0;

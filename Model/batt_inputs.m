@@ -88,7 +88,7 @@ if ( FLAG.CONSTANT_PROPS_FROM_HANDLES && FLAG.VARIABLE_PROPS_FROM_HANDLES)
     warning('Both FLAG.CONSTANT_PROPS_FROM_HANDLES and FLAG.VARIABLE_PROPS_FROM_HANDLES are 1.')
 end
 
-FLAG.SaveSolnDiscreteTime = 1;
+FLAG.SaveSolnDiscreteTime = 0;
 	SIM.SaveTimeStep = 1;
 
 FLAG.doPostProcessing = 1; % 1 if the postprocessing function is performed after a simulation completes

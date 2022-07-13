@@ -3,7 +3,7 @@
 % The jth index is for the flux at the left (minus) face of the jth radial control volume
 % j = 1 is r = 0
 
-function J_Li = JLiCalc( SV , AN , CA , N , s_dot , props)
+function J_Li = JLiCalc( SV , AN , CA , P , N , s_dot , props)
 %% Initialize
 J_Li = NaN(N.N_R_max+1 , N.N_CV_tot); % [kmol m^-2 s^-1], Radial molar flux (in electrode)(m^-2 is the cross-sectional area)
 

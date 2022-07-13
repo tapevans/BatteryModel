@@ -64,15 +64,31 @@ for i = 1:num_sim_files
                 if k == 1
                     tspan = [SIM.tspan(k), SIM.tspan(k+1)-1e-8];
                     SV_IC = SIM.SV_IC;
-                    [t_soln_int,SV_soln_int,te,ye,ie] = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
-                    t_soln = t_soln_int;
-                    SV_soln = SV_soln_int;
+                    SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
+                    if FLAG.SaveSolnDiscreteTime
+                        new_tfinal = SOLN.x(end);
+                        save_time = (0:SIM.SaveTStep:new_tfinal)';
+                        t_soln = save_time;
+                        SV_soln = (deval(SOLN,save_time))';
+                    else
+                        t_soln  = SOLN.x';
+                        SV_soln = SOLN.y';
+                    end
                 else
                     %New IC
-                    SV_IC = SV_soln_int(end,:);
+                    SV_IC = SV_soln(end,:);
                     tspan = [SIM.tspan(k), SIM.tspan(k+1)-1e-8];
-                    [t_soln_int,SV_soln_int,te,ye,ie] = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
-                    t_soln = [t_soln; t_soln_int];
+                    SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
+                    if FLAG.SaveSolnDiscreteTime
+                        new_tfinal = SOLN.x(end);
+                        save_time = (0:SIM.SaveTStep:new_tfinal)';
+                        t_soln_int = save_time;
+                        SV_soln_int = (deval(SOLN,save_time))';
+                    else
+                        t_soln_int  = SOLN.x';
+                        SV_soln_int = SOLN.y';
+                    end
+                    t_soln  = [t_soln ; t_soln_int ];
                     SV_soln = [SV_soln; SV_soln_int];
                 end
             end
@@ -93,9 +109,16 @@ for i = 1:num_sim_files
             i_user = 0;
             tspan = SIM.tspan;
             SV_IC = SIM.SV_IC;
-            [t_soln_int,SV_soln_int,te,ye,ie] = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
-            t_soln = t_soln_int;
-            SV_soln = SV_soln_int;
+            SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
+            if FLAG.SaveSolnDiscreteTime
+                new_tfinal = SOLN.x(end);
+                save_time = (0:SIM.SaveTStep:new_tfinal)';
+                t_soln = save_time;
+                SV_soln = (deval(SOLN,save_time))';
+            else
+                t_soln  = SOLN.x';
+                SV_soln = SOLN.y';
+            end
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- State Space EIS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 3 
@@ -211,31 +234,18 @@ for i = 1:num_sim_files
                             new_tfinal = SOLN.x(end);
                             save_time = (0:SIM.SaveTStep:new_tfinal)';
                             t_soln_int  = save_time;
-                            if ~isempty(t_soln)
-                                t_soln_int = t_soln_int + t_soln(end);
-                            end
-                            
                             SV_soln_int = (deval(SOLN,save_time))';
                         else
                             t_soln_int = SOLN.x';
-                            if ~isempty(t_soln)
-                                t_soln_int = t_soln_int + t_soln(end);
-                            end
-
                             SV_soln_int = SOLN.y';
                         end
                         i_user_soln_int = i_user*ones(length(t_soln_int),1);
-%                         t_soln_int = SOLN.x';
-%                         if ~isempty(t_soln)
-%                             t_soln_int = t_soln_int + t_soln(end);
-%                         end
-%                         
-%                         SV_soln_int = SOLN.y';
-%                         i_user_soln_int = i_user*ones(length(SOLN.x),1);
                     else % CV
-                        if ~isempty(t_soln)
-                            t_soln_int = t_soln_int + t_soln(end);
-                        end
+                        %
+                    end
+                    
+                    if ~isempty(t_soln)
+                        t_soln_int = t_soln_int + t_soln(end);
                     end
                     
                     mode_soln_int = MO * ones(length(t_soln_int),1);

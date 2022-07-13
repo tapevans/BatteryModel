@@ -30,7 +30,7 @@ i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props );
 s_dot = i_Far / CONS.F ;
 
 J_Liion = JLiionCalc( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , i_el , props);
-J_Li    = JLiCalc( SV , AN , CA , N , s_dot , props);
+J_Li    = JLiCalc( SV , AN , CA , P , N , s_dot , props);
 
 %%
 q_cond = zeros(1 , N.N_CV_tot+1);
