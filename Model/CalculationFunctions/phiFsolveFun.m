@@ -63,11 +63,13 @@ end
 
 % ---- i_user ----
 if SIM.SimMode == 4
-    if MO == 2
-        Res_i_user(1) = SV(P.phi_ed,end) - SIM.Controller_MO_File(SIM.current_MO_step).Volt_ref;
+    if SIM.Controller_MO_File(SIM.current_MO_step).MO == 2
+        Res_i_user = SV(P.phi_ed,end) - SIM.Controller_MO_File(SIM.current_MO_step).Volt_ref;
+    else
+        Res_i_user = i_user_guess - i_user;
     end
 else
-    Res_i_user(1) = i_user_guess - i_user;
+    Res_i_user = i_user_guess - i_user;
 end
 
 

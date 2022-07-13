@@ -85,9 +85,9 @@ battery_name = 'KBCP_Mode_Test';
 %         SS_freq = (logspace(-2,6,75) *(2*pi));
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 0;
-        KBCPProfileOverwrite = 0;
-        KBCPProfileFilename = 'Profile_CV_Test_1SmallStep_Kp275';
+    KBCP   = 1;
+        KBCPProfileOverwrite = 1;
+        KBCPProfileFilename = 'Profile_CV_Test_CCCV';
         KBSOC = 81.93;
         
 % ---- MOO Controller ----
