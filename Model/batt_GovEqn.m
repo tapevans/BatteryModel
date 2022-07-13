@@ -1,7 +1,6 @@
 %% Batt Residual Function
 % This function is used to return the time derivative of the governing equations.
 
-
 function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Organize (reshape) the SV
 SV = SV1Dto2D(SV , N , P , FLAG);

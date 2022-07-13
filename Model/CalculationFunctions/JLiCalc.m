@@ -17,7 +17,9 @@ J_Li = NaN(N.N_R_max+1 , N.N_CV_tot); % [kmol m^-2 s^-1], Radial molar flux (in 
     for i = N.CV_Region_AN
         % Internal CV
         for j = 2:N.N_R_AN
-            J_Li(j,i) = -AN.D_o * ( SV(N.N_SV_nR+j , i) - SV(N.N_SV_nR+j-1 , i) ) ...
+            D_o = (props( P.D_o+(j-1)-1 , i ) + props( P.D_o+(j-1)-1 , i ))/2;
+            
+            J_Li(j,i) = -D_o * ( SV(N.N_SV_nR+j , i) - SV(N.N_SV_nR+j-1 , i) ) ...
                 / (AN.r_vec(j) - AN.r_vec(j-1));
         end
     end
@@ -26,7 +28,9 @@ J_Li = NaN(N.N_R_max+1 , N.N_CV_tot); % [kmol m^-2 s^-1], Radial molar flux (in 
     for i = N.CV_Region_CA
         % Internal CV
         for j = 2:N.N_R_CA
-            J_Li(j,i) = -CA.D_o * ( SV(N.N_SV_nR+j , i) - SV(N.N_SV_nR+j-1 , i) ) ...
+            D_o = (props( P.D_o+(j-1)-1 , i ) + props( P.D_o+(j-1)-1 , i ))/2;
+            
+            J_Li(j,i) = -D_o * ( SV(N.N_SV_nR+j , i) - SV(N.N_SV_nR+j-1 , i) ) ...
                 / (CA.r_vec(j) - CA.r_vec(j-1));
         end
     end

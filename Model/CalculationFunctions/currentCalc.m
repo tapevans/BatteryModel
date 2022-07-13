@@ -16,37 +16,59 @@ i_ed        = zeros_vec;
     % AN Region
         if ~FLAG.AN_LI_FOIL
             for i = N.CV_Region_AN(2:end)
-                i_ed(i) = -  AN.sigma*(SV(P.phi_ed,i)- SV(P.phi_ed,i-1))/ AN.del_x;
-                i_el(i) = -  EL.kappa*(SV(P.phi_el,i)- SV(P.phi_el,i-1))/(AN.del_x) ...
-                          -2*EL.kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + EL.Activity )*(EL.tf_num-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(AN.del_x);
+                sigma    = (props( P.sigma    , i-1 ) + props( P.sigma    , i ))/2;
+                kappa    = (props( P.kappa    , i-1 ) + props( P.kappa    , i ))/2;
+                tf       = (props( P.tf_num   , i-1 ) + props( P.tf_num   , i ))/2;
+                activity = (props( P.activity , i-1 ) + props( P.activity , i ))/2;
+                
+                i_ed(i) = -  sigma*(SV(P.phi_ed,i)- SV(P.phi_ed,i-1))/ AN.del_x;
+                i_el(i) = -  kappa*(SV(P.phi_el,i)- SV(P.phi_el,i-1))/(AN.del_x) ...
+                          -2*kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + activity )*(tf-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(AN.del_x);
             end
         end
 
 % ---- Separator ----
     % AN/SEP interface
         i = N.CV_Region_SEP(1);
-        i_el(i) = -   EL.kappa*(SV(P.phi_el,i)-SV(P.phi_el,i-1))/(AN.del_x/2 + SEP.del_x/2) ...
-                  - 2*EL.kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + EL.Activity)*(EL.tf_num-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(AN.del_x/2 + SEP.del_x/2);
+        kappa    = (props( P.kappa    , i-1 ) + props( P.kappa    , i ))/2;
+        tf       = (props( P.tf_num   , i-1 ) + props( P.tf_num   , i ))/2;
+        activity = (props( P.activity , i-1 ) + props( P.activity , i ))/2;
+                
+        i_el(i) = -   kappa*(SV(P.phi_el,i)-SV(P.phi_el,i-1))/(AN.del_x/2 + SEP.del_x/2) ...
+                  - 2*kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + activity)*(tf-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(AN.del_x/2 + SEP.del_x/2);
         i_ed(i) = 0; 
         
     % SEP Region
         for i = N.CV_Region_SEP(2:end)
-            i_el(i) = -   EL.kappa*(SV(P.phi_el,i)-SV(P.phi_el,i-1))/(SEP.del_x) ...
-                      - 2*EL.kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + EL.Activity )*(EL.tf_num-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(SEP.del_x);
+            kappa    = (props( P.kappa    , i-1 ) + props( P.kappa    , i ))/2;
+            tf       = (props( P.tf_num   , i-1 ) + props( P.tf_num   , i ))/2;
+            activity = (props( P.activity , i-1 ) + props( P.activity , i ))/2;
+            
+            i_el(i) = -   kappa*(SV(P.phi_el,i)-SV(P.phi_el,i-1))/(SEP.del_x) ...
+                      - 2*kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + activity )*(tf-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(SEP.del_x);
         end
  
 % ---- Cathode ----
     % SEP/CA interface
         i = N.CV_Region_CA(1);
-        i_el(i) = -   EL.kappa*(SV(P.phi_el,i)-SV(P.phi_el,i-1))/(SEP.del_x/2 + CA.del_x/2) ...
-                  - 2*EL.kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + EL.Activity)*(EL.tf_num-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(CA.del_x/2 + SEP.del_x/2);
+        kappa    = (props( P.kappa    , i-1 ) + props( P.kappa    , i ))/2;
+        tf       = (props( P.tf_num   , i-1 ) + props( P.tf_num   , i ))/2;
+        activity = (props( P.activity , i-1 ) + props( P.activity , i ))/2;
+        
+        i_el(i) = -   kappa*(SV(P.phi_el,i)-SV(P.phi_el,i-1))/(SEP.del_x/2 + CA.del_x/2) ...
+                  - 2*kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + activity)*(tf-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(CA.del_x/2 + SEP.del_x/2);
         i_ed(i) = 0;      
     % CA region
         if ~FLAG.CA_LI_FOIL
             for i = N.CV_Region_CA(2:end)
-                i_ed(i) = -   CA.sigma*(SV(P.phi_ed,i)- SV(P.phi_ed,i-1))/ CA.del_x;
-                i_el(i) = -   EL.kappa*(SV(P.phi_el,i)- SV(P.phi_el,i-1))/(CA.del_x) ...
-                          - 2*EL.kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + EL.Activity)*(EL.tf_num-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(CA.del_x); 
+                sigma    = (props( P.sigma    , i-1 ) + props( P.sigma    , i ))/2;
+                kappa    = (props( P.kappa    , i-1 ) + props( P.kappa    , i ))/2;
+                tf       = (props( P.tf_num   , i-1 ) + props( P.tf_num   , i ))/2;
+                activity = (props( P.activity , i-1 ) + props( P.activity , i ))/2;
+                
+                i_ed(i) = -   sigma*(SV(P.phi_ed,i)- SV(P.phi_ed,i-1))/ CA.del_x;
+                i_el(i) = -   kappa*(SV(P.phi_el,i)- SV(P.phi_el,i-1))/(CA.del_x) ...
+                          - 2*kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + activity)*(tf-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(CA.del_x); 
             end
         end
 
