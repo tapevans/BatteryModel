@@ -10,15 +10,23 @@ function [i_user] = Controller_CV(SV, P , SIM)
 % 	K_p = 1200;  % Too Aggressive
 %     K_p = 100; % Too Slow
 %     K_p = 700; % Too Aggressive
-%     K_p = 500; % Too Aggressive
+    K_p = 500; % Too Aggressive
 %     K_p = 400; % Aggressive
-    K_p = 275; % Too Slow
+%     K_p = 275; % Too Slow
 %     K_p = 300; % Slightly unstable still
     
 	K_i = 0;
 	K_d = 0;
+    
     C_rate_min = 1/20;
     C_rate_max = 2;
+    
+    i_min = C_rate_min * SIM.Cell_Cap / SIM.A_c;
+    i_max = C_rate_max * SIM.Cell_Cap / SIM.A_c;
+    
+    Delta_i = i_max - i_min;
+    Percent_change = .5;
+    Delta_i_allow = Delta_i*Percent_change/100;
     
 %% Cell Voltage Calc
 	cell_voltage = SV(P.phi_ed,end) - SV(P.phi_ed,1);
@@ -33,8 +41,7 @@ function [i_user] = Controller_CV(SV, P , SIM)
 %            + K_d * (error_history(end) - error_history(end -1))/(time_history(end) - time_history(end -1));            
 
 %% Saturation Limits
-    i_min = C_rate_min * SIM.Cell_Cap / SIM.A_c;
-    i_max = C_rate_max * SIM.Cell_Cap / SIM.A_c;
+    
     if abs(i_calc) < i_min % if i_calc is smaller than min limit, set to zero
         i_user = 0;
     elseif abs(i_calc) > i_max % if i_calc is larger than max limit, saturate to i_max
@@ -46,5 +53,15 @@ function [i_user] = Controller_CV(SV, P , SIM)
     else
         i_user = i_calc;
     end
-
+%% Velocity Saturation
+    change_in_i_user = i_user - SIM.i_user_history(end);
+    if abs(change_in_i_user) > Delta_i_allow
+        if change_in_i_user > 0
+            i_user = SIM.i_user_history(end) + Delta_i_allow;
+        else
+            i_user = SIM.i_user_history(end) - Delta_i_allow;
+        end
+    else
+        % nothing, don't change i_user
+    end
 end

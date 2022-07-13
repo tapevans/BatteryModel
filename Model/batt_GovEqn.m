@@ -1,10 +1,17 @@
-
-function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Batt Residual Function
 % This function is used to return the time derivative of the governing equations.
 
+
+function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Organize (reshape) the SV
 SV = SV1Dto2D(SV , N , P , FLAG);
+
+%% Obtain Property Values
+if FLAG.VARIABLE_PROPS_FROM_HANDLES
+    props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
+else
+    props = PROPS;
+end
 
 %% Calculate i_user
 if SIM.SimMode == 3 % State Space EIS
@@ -15,13 +22,6 @@ elseif SIM.SimMode == 5 % MOO Controller
     % Uses the i_user value from the function handle
 else
     i_user = i_user_calc(t,SIM);
-end
-
-%% Obtain Property Values
-if FLAG.VARIABLE_PROPS_FROM_HANDLES
-    props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
-else
-    props = PROPS;
 end
 
 %% Calculate All Fluxes

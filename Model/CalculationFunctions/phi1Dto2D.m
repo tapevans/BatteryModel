@@ -1,6 +1,7 @@
 %% Reshape phi: 1D to 2D
 % Reorganize the phi values
 % Insert NaN back into the phi matrix for i_ed in the seperator region
+%%
 function phi_out = phi1Dto2D( phi_in , N , P , FLAG)
 phi_temp = NaN(N.N_ES_var, N.N_CV_tot);
 
