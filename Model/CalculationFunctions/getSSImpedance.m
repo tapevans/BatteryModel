@@ -1,11 +1,11 @@
-function [A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS)
 %% getSSImpedance
 % This function is used to calculate the state space matricies and its
 % associated impedance.
 
 %%%%%%%%%%%%%Add more here about what A,B,C,D are and the SS equations
 
-%% Changing Inputs
+function [A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS)
+%% Initializing Inputs
 SV      = SIM.SV_IC;
 i_user  = SIM.i_user;
 M       = SIM.M;
@@ -87,9 +87,5 @@ end
 
 %% Output
 function [output] = get_output(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec)
-%     dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,inputs_vec);
-%     SV = SV1Dto2D(SV , N , P , FLAG);
-%     cellVoltage = SV(P.phi_ed,end) - SV(P.phi_ed,1);
-%     output = cellVoltage;
     output = SIM.OutputMatrix*SV;
 end

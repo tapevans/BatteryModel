@@ -1,4 +1,5 @@
-% Reaction Rate (i_o) NMC
+%% Reaction Rate (i_o) NMC
+% This came from Andrew C. modeling code
 function i_o_NMC = i_oNMC(X_Li, C_Liion, SIM)
 RR  = 8314.472;
 T   = 303.15;

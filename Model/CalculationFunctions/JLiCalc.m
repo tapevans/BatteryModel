@@ -1,6 +1,7 @@
 %% Function to calculate J_Li
 % The ith index is for the ith CV
 % The jth index is for the flux at the left (minus) face of the jth radial control volume
+% j = 1 is r = 0
 
 function J_Li = JLiCalc( SV , AN , CA , N , s_dot , props)
 %% Initialize

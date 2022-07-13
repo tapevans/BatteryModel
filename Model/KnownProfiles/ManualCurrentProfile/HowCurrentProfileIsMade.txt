@@ -1,0 +1,9 @@
+* region_time_vec    : time at which the steps occurs. Includes the initial and final time. Typically t_0 should be zero
+* region_current_vec : the current (Amps/m^2) for each region. A region occurs between steps. Region 1 occurs between region_time_vec(1:2)
+* t_ramp             : how much time between regions it takes to go from one value to another. This is to help the ode solver when steps have a high difference between them
+* profile_time       : adds points in where the ramp time starts and stops. If there is a ramp, a new point is place at t_ramp/2 before and after each region_time_vec value
+	* the first time point only gets a point inserted after it
+	* the last  time point doesn't get any points added around it
+* profile_current    : current at each profile_time point
+
+* profile_time and profile_current are used for the interpolation in i_user

@@ -151,24 +151,7 @@ if ~exist('postProcessComplete') %~= 1
     cell_voltage = phi_ed(:,end) - phi_ed(:,1);
     
     % Cell Capacity
-    Cap = -SIM.A_c/3600 * cumtrapz( t_soln , i_user );
-    
-%     if SIM.SimMode == 4 %%%%%%%%%%%!!!!!!!!!!!Why is Mode 4 special? Can trap be called with a vector and not a fnc?
-%         for i = 1:length(t_soln)
-%             if i == 1
-%                 Cap(i,1) = 0;
-%             else
-%                 Cap(i,1) = SIM.A_c * trapz( i_user(1:i) , t_soln(1:i) );
-%             end
-%         end
-%     elseif SIM.SimMode == 5
-%         
-%     else
-%         for i = 1:length(t_soln)
-%             Cap(i,1) = SIM.A_c * integral( @(t)i_user_calc(t,SIM) , 0 , t_soln(i) );
-%         end
-%     end
-% Cap = Cap/3600; % Put into Ahr    
+    Cap = -SIM.A_c/3600 * cumtrapz( t_soln , i_user );   
         
     % SOC
     SOC = Cap/SIM.Cell_Cap + SIM.SOC_start;
@@ -228,9 +211,9 @@ if ~exist('postProcessComplete') %~= 1
         
         %% Impedance Calculation
         Z_mag = Amp_ID / SIM.I_user_amp; % Impedance Magnitude
-        Z_Re = Z_mag * cos(ps); % Real Impedance Component
-        Z_Im = Z_mag * sin(ps); % Imaginary Impedance Component
-        Z_dB = 20*log10(Z_mag); % Impedance Magnitude in decibel
+        Z_Re = Z_mag * cos(ps);          % Real Impedance Component
+        Z_Im = Z_mag * sin(ps);          % Imaginary Impedance Component
+        Z_dB = 20*log10(Z_mag);          % Impedance Magnitude in decibel
         Z_angle_deg = ps * 360 / (2*pi); % Phase Shift in degrees
         
         if Z_angle_deg <= -358

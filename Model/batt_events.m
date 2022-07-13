@@ -7,7 +7,7 @@
 % * Cell voltage reaches a minimum
 % * A particle has no lithium left %%%%%%%%%%%%%%%%%%Not implemented
 % * A particle is completely full of lithium %%%%%%%%%%%%%%%%%%Not implemented
-
+%%
 function [value,isterminal,direction] = batt_events(t,SV,SIM,P,N,FLAG)
 SV = SV1Dto2D(SV , N , P , FLAG);
 CellVoltage = SV(P.phi_ed,end) - SV(P.phi_ed,1);
@@ -42,4 +42,4 @@ isterminal = [ 1;  % If cell goes above max voltage
 direction = [-1;  % If cell goes above max voltage
              -1]; % If cell goes below min voltage
 
-end % batt_events
+end

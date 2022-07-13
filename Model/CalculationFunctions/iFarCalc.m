@@ -5,11 +5,6 @@ function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props)
     i_Far = zeros(1 , N.N_CV_tot);
 
 %% Concentration Dependent Parameters
-% Equilibrium Voltage
-%     E_eq_an  = AN.EqPotentialHandle( SV(P.C_Li_surf , N.CV_Region_AN ) / AN.C_Li_max );
-%     E_eq_ca  = CA.EqPotentialHandle( SV(P.C_Li_surf , N.CV_Region_CA ) / CA.C_Li_max );
-%     E_eq_vec = [ E_eq_an , zeros(1,N.N_CV_SEP) , E_eq_ca];
-
 % Delta phi
     del_phi = SV(P.phi_ed , :) - SV(P.phi_el , :);
 
@@ -49,6 +44,4 @@ function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props)
         i_Far(i) = i_o(i) * ( exp( CA.alpha_a*CONS.F*eta(i)/( CONS.R*SV(P.T,i) ))... 
                             - exp(-CA.alpha_c*CONS.F*eta(i)/( CONS.R*SV(P.T,i) )));
     end
-    
-%         i_Far(i) = i_o(i) * 2 * ( sinh(CA.alpha_a*CONS.F*eta(i)/( CONS.R*SV(P.T,i) )) );
 end

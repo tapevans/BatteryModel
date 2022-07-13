@@ -88,6 +88,8 @@ if ( FLAG.CONSTANT_PROPS_FROM_HANDLES && FLAG.VARIABLE_PROPS_FROM_HANDLES)
     warning('Both FLAG.CONSTANT_PROPS_FROM_HANDLES and FLAG.VARIABLE_PROPS_FROM_HANDLES are 1.')
 end
 
+FLAG.SaveSolnDiscreteTime = 1;
+	SIM.SaveTimeStep = 1;
 
 FLAG.doPostProcessing = 1; % 1 if the postprocessing function is performed after a simulation completes
     FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln
@@ -146,10 +148,6 @@ if SIM.SimMode == 4
     SIM.DiscreteTimeStep    = 0.001;
     SIM.ControllerHandle    = @Controller_CV; % Function handle of the controller to call
     SIM.ZeroTime            = 0.01; % [s], How long a CV has to be at min i_user before simulation calls it quits 
-%     SIM.TroubleshootFilename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\ControllerOptions\ProfileTesting.txt';
-%     SIM.ControllerHandle    = @PID_Step_Controller; % Function handle of the controller to call
-%     SIM.TroubleshootFilename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\ControllerOptions\StepProfileTesting.txt';
-%         SIM.OverwriteOldFile    = 1;
 
 %%%% Input from CreateProject
 %     SIM.SOC_start           = 81.93;    % [%], Initial state of charge of the cell 81.93 ~ 4.0V
@@ -164,12 +162,6 @@ end
 %% ---- MOO Controller ----
 if SIM.SimMode == 5
     SIM.SOC_start           = 81.93;    % [%], Initial state of charge of the cell 81.93 ~ 4.0V
-    
-%     SIM.ControllerHandle    = @CC_CV_CC_Controller; % Function handle of the controller to call
-%     SIM.TroubleshootFilename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\ControllerOptions\ProfileTesting.txt';
-%     SIM.ControllerHandle    = @PID_Step_Controller; % Function handle of the controller to call
-%     SIM.TroubleshootFilename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\ControllerOptions\StepProfileTesting.txt';
-%         SIM.OverwriteOldFile    = 1;
 
 %%%% Input from controller
 %     SIM.C_rate              = 2;	% How many charges per hour, ABSOLUTE VALUE
@@ -388,24 +380,6 @@ end
 SIM.initial_offset = 0;          % [s], How long there is an initial zero current
 
 % Properties for SOC calcualtion
-%%% When z is solved for, something like 1.1
-% SIM.VoltageMax         = 4.12129364585305 ;  % [V] 
-% SIM.VoltageMin         = 2.99130522797021 ;  % [V] 
-% SIM.AnodeFormation_X   = 0.810919619448331;  % [-] 
-% SIM.CathodeFormation_X = 0.158043684598619;  % [-] 
-
-%%% When z is not a variable and is 0.86...
-% SIM.VoltageMax         = 4.10810908453671 ;  % [V] 
-% SIM.VoltageMin         = 2.99890777159343 ;  % [V] 
-% SIM.AnodeFormation_X   = 0.987981610035607;  % [-] 
-% SIM.CathodeFormation_X = 0.174776323806353;  % [-] 
-
-%%% When z is not a variable and is 1.06...
-% SIM.VoltageMax         = 4.16805162164903 ;  % [V] 
-% SIM.VoltageMin         = 2.81282309009479 ;  % [V] 
-% SIM.AnodeFormation_X   = 0.992638932161171;  % [-] 
-% SIM.CathodeFormation_X = 0.00808528352299353;  % [-] 
-
 %%% Wiley
 SIM.VoltageMax         = 4.2 ;  % [V] 
 SIM.VoltageMin         = 3.4 ;  % [V] 
