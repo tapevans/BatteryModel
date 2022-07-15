@@ -3,6 +3,7 @@ function plotfcn(filename)
 load(filename)
 
 %% Plot Flags
+% ---- Polarization ----
 FLAG.COE       = 0; % Conservation of Energy Check %%%%%%%%%%%%%These plots need to be fixed
 FLAG.COM       = 1; % Conservation of Mass Check
 FLAG.COC       = 1; % Conservation of Charge Check
@@ -41,6 +42,7 @@ FLAG.KPCONT_i_user           = 0;
 FLAG.KPCONT_V_and_A_norm_abs = 0;
 FLAG.KPCONT_V_and_A_norm     = 0;
 FLAG.KPCONT_VOLT_v_SOC       = 1;
+FLAG.KPCONT_X_Li_surf        = 1;
 
 % ---- MOO Controller ----
 FLAG.MOOCONT_cellVoltage = 1;
@@ -62,13 +64,9 @@ N_times = 6; % Number of times to plot
     CV_vec = [N.CV_Region_AN(1) , N.CV_Region_AN(end) , N.CV_Region_CA(1) , N.CV_Region_CA(end)];
 %     CV_vec = [N.CV_Region_AN(3) , N.CV_Region_CA(3) ];
 % end
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ---- Polarization ----
-if SIM.SimMode == 1
     
-    %% Make Desired Times for Plotting
+%% Make Desired Times for Plotting
+if ~(SIM.SimMode == 3)
     time_des = linspace(0, t_soln(end), N_times);
 %     time_des = linspace(SIM.initial_offset, t_soln(end), N_times);
 %     time_des = SIM.initial_offset:(t_soln(end)-SIM.initial_offset)/(N_times-1):t_soln(end);
@@ -76,7 +74,11 @@ if SIM.SimMode == 1
     for i = 1:length(time_des)
         [~,t_index(i)] = min(abs(time_des(i)-t_soln));
     end
-    
+end
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ---- Polarization ----
+if SIM.SimMode == 1
     %% Conservation of Energy Check
     if FLAG.COE
 %     figure
@@ -556,6 +558,28 @@ elseif SIM.SimMode == 4
     xlabel('SOC')
     ylabel('Voltage')
     end
+    
+    %% Mass/Species (Concentration): Li_surf
+    % Plot surface concentrations for desired times
+    if FLAG.KPCONT_X_Li_surf
+    figure
+    hold on
+    for i = 1:N_times
+        plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+    end
+    lgn = legend;
+    lgn.Location = 'southwest';
+    title('x_{Li,surf}')
+    xlabel('X Position')
+    ylabel('x_{Li,surf} (-)')
+    xlim([0,SIM.x_half_vec(end)])
+    
+    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+    xl_AS.LabelHorizontalAlignment = 'center';
+    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+    xl_SC.LabelHorizontalAlignment = 'center';
+    end
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- MOO Controller ----
 elseif SIM.SimMode == 5

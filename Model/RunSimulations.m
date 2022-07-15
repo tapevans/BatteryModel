@@ -8,7 +8,8 @@ cd(filepath)
 %% List of Project Folders
 i = 1;
 % Project_Folder{i} = 'phiFsolve_Test';   i = i+1;
-Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
+Project_Folder{i} = 'MoleInitFix';   i = i+1;
+% Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
 % Project_Folder{i} = 'Half_Cell_Test';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
 % Project_Folder{i} = 'Change_Mode_Number_Test';   i = i+1;
@@ -39,10 +40,16 @@ for i = 1:num_sim_files
     disp(' ')
     disp(['Performing Simulation ' num2str(i) '/' num2str(num_sim_files)])
     disp(datestr(datetime));
-    load(sim_filenames{i})
+    load(sim_filenames{i},'SIM')
+    if ~(SIM.SimMode == 0)
+        load(sim_filenames{i},'postProcessComplete')
+    else
+        postProcessComplete = 1;
+    end
     
     %% Check if it has already ran
-    if ~exist('postProcessComplete')
+    if ~postProcessComplete
+        load(sim_filenames{i})
         %% Run simulation
         tSimStart = tic;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Polarization ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -232,7 +239,7 @@ for i = 1:num_sim_files
                     if MO ~= 2 % CC, Relax
                         if FLAG.SaveSolnDiscreteTime
                             new_tfinal = SOLN.x(end);
-                            save_time = (0:SIM.SaveTStep:new_tfinal)';
+                            save_time = (0:SIM.SaveTimeStep:new_tfinal)';
                             t_soln_int  = save_time;
                             SV_soln_int = (deval(SOLN,save_time))';
                         else

@@ -54,15 +54,18 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
 
-folder_name  = 'KBCP_Mode_Test';
-battery_name = 'KBCP_Mode_Test';
+folder_name  = 'MoleInitFix';
+battery_name = 'MoleInitFix';
+
+% folder_name  = 'KBCP_Mode_Test';
+% battery_name = 'KBCP_Mode_Test';
 
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
     C_rates      = []; 
 %     C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5]; 
 %     C_rates      = [-1]; 
-%     C_rates      = [1/20 1/10]; 
+%     C_rates      = [1/20 -1/20]; 
 %     C_rates      = [1/20];
 %     C_rates      = [1/20 1/10 1/3 1 2]; 
 
@@ -87,7 +90,8 @@ battery_name = 'KBCP_Mode_Test';
 % ---- Known BC Profile Controller ----
     KBCP   = 1;
         KBCPProfileOverwrite = 1;
-        KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
+        KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';
+%         KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
 %         KBSOC = 81.93;
         KBSOC = 0;
         

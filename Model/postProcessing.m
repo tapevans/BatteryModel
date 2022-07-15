@@ -2,10 +2,11 @@
 % Take all the data and convert into easy to read vectors
 function postProcessing(filename)
 %% Load file to workspace
-load(filename)
+load(filename,'postProcessComplete')
 
 %% do post-processing if it hasn't already
-if ~exist('postProcessComplete') %~= 1
+if ~postProcessComplete 
+    load(filename)
     %% Make Desired Times Vector
     if FLAG.ReduceSolnTime
         % I want the index of all times before 1 second, every 10 seconds after 1 second up until 500 sec before t_soln(end), All indicies of the last 500 seconds

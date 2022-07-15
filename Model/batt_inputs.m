@@ -88,12 +88,12 @@ if ( FLAG.CONSTANT_PROPS_FROM_HANDLES && FLAG.VARIABLE_PROPS_FROM_HANDLES)
     warning('Both FLAG.CONSTANT_PROPS_FROM_HANDLES and FLAG.VARIABLE_PROPS_FROM_HANDLES are 1.')
 end
 
-FLAG.SaveSolnDiscreteTime = 0;
-	SIM.SaveTimeStep = 1;
+FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
+	SIM.SaveTimeStep = 1;      % [s], Sampling rate of the ode output
 
-FLAG.doPostProcessing = 1; % 1 if the postprocessing function is performed after a simulation completes
-    FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln
-FLAG.Plot             = 1; % 1 if the results plot immediately
+FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
+    FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
+FLAG.Plot             = 1;   % 1 if the results plot immediately
 
 FLAG.PRBS_predefinded = 0; % 1 if using a PRBS current that is predefined
 

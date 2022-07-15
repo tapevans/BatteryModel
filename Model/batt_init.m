@@ -343,51 +343,69 @@ end
     z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
 
 %% Mole Fraction Calculation
-    % x and y are the anode and cathode mole fractions respectively
-    % Points that are being determined
-    % * F: Mole fractions at formation
-    % * A: Mole fraction when x = 0
-    % * B: Mole fraction when x = 1
-    % * C: Mole fraction at V_max
-    % * D: Mole fraction at V_min
-    options = optimoptions('lsqnonlin');
-    options.Display = 'off';
+%     % x and y are the anode and cathode mole fractions respectively
+%     % Points that are being determined
+%     % * F: Mole fractions at formation
+%     % * A: Mole fraction when x = 0
+%     % * B: Mole fraction when x = 1
+%     % * C: Mole fraction at V_max
+%     % * D: Mole fraction at V_min
+%     options = optimoptions('lsqnonlin');
+%     options.Display = 'off';
+% 
+%     F_x = SIM.AnodeFormation_X;
+%     F_y = SIM.CathodeFormation_X;
+%     % y-intercept
+%     y_intcep = F_y + z * F_x;
+% 
+%     % y mole fraction at x limits
+%     A_x = 0;
+%     A_y = -z*A_x + y_intcep;
+%     B_x = 1;
+%     B_y = -z*B_x + y_intcep;
+% 
+%     % Mole fractions at V_max
+%     x0 = F_x;
+%     lb = 0;
+%     ub = 1;
+%     V_des = SIM.VoltageMax;
+%     C_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+%     C_y = YfromX(C_x,z,y_intcep);
+% 
+%     % Mole fractions at V_min
+%     x0 = F_x;
+%     lb = 0;
+%     ub = 1;
+%     V_des = SIM.VoltageMin;
+%     D_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+%     D_y = YfromX(D_x,z,y_intcep);
+% 
+%     % Limits on x and y
+%     SIM.x_min = max(A_x,D_x);
+%     SIM.x_max = min(B_x,C_x);
+%     SIM.y_min = YfromX(SIM.x_max,z,y_intcep);
+%     SIM.y_max = YfromX(SIM.x_min,z,y_intcep);
 
-    F_x = SIM.AnodeFormation_X;
-    F_y = SIM.CathodeFormation_X;
-    % y-intercept
-    y_intcep = F_y + z * F_x;
-
-    % y mole fraction at x limits
-    A_x = 0;
-    A_y = -z*A_x + y_intcep;
-    B_x = 1;
-    B_y = -z*B_x + y_intcep;
-
-    % Mole fractions at V_max
-    x0 = F_x;
-    lb = 0;
-    ub = 1;
-    V_des = SIM.VoltageMax;
-    C_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
-    C_y = YfromX(C_x,z,y_intcep);
-
-    % Mole fractions at V_min
-    x0 = F_x;
-    lb = 0;
-    ub = 1;
-    V_des = SIM.VoltageMin;
-    D_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
-    D_y = YfromX(D_x,z,y_intcep);
-
-    % Limits on x and y
-    SIM.x_min = max(A_x,D_x);
-    SIM.x_max = min(B_x,C_x);
-    SIM.y_min = YfromX(SIM.x_max,z,y_intcep);
-    SIM.y_max = YfromX(SIM.x_min,z,y_intcep);
-
+%     Initial Lithiation Fraction
+%     SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
+%     SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
+% 
+%     Determine electrode initial voltage potential
+%     voltage_ini_an = AN.EqPotentialHandle(SIM.x_ini);
+%     voltage_ini_ca = CA.EqPotentialHandle(SIM.y_ini);
+%     voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
+% 
+%     Calculate electrode initial active material concentration
+%     concen_ini_an = AN.C_Li_max * SIM.x_ini;
+%     concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+    
+    %%%%%%%Testing
+    x_min = 0.0592;
+    x_max = 0.9815;
+    y_intcep = 0.8612;
+    
     % Initial Lithiation Fraction
-    SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
+    SIM.x_ini = (x_max-x_min)*SIM.SOC_start/100 + x_min;
     SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
 
     % Determine electrode initial voltage potential
@@ -398,6 +416,41 @@ end
     % Calculate electrode initial active material concentration
     concen_ini_an = AN.C_Li_max * SIM.x_ini;
     concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+    
+%     %%%%%%%Testing
+%     SOC = 0:5:100;
+%     x_ini = (SIM.x_max-SIM.x_min)*SOC/100 + SIM.x_min;
+%     y_ini = YfromX(x_ini,z,y_intcep);
+%     voltage_an = AN.EqPotentialHandle(x_ini);
+%     voltage_ca = CA.EqPotentialHandle(y_ini);
+%     cell_voltage = voltage_ca - voltage_an;
+%     
+%     %%%%%%
+%     figure
+%     title('Cell Voltage and X_{surf} vs SOC')
+%     xlabel('SOC (%)')
+% 
+%     yyaxis left
+%     plot(SOC , cell_voltage , 'Linewidth' , 2 )
+%     ylabel('Cell Voltage (V)')
+% 
+%     yyaxis right
+%     plot(SOC , x_ini, 'Linewidth' , 2 )
+%     ylabel('X_surf')
+%     
+%     %%%%%
+%     figure
+%     title('X_{surf} vs SOC')
+%     xlabel('SOC (%)')
+% 
+%     yyaxis left
+%     plot(SOC , x_ini , 'Linewidth' , 2 )
+%     ylabel('Anode')
+% 
+%     yyaxis right
+%     plot(SOC , y_ini, 'Linewidth' , 2 )
+%     ylabel('Cathode')
+    
     
 %% Load current
 % ---- Polarization ----
@@ -766,11 +819,12 @@ SIM.M = M;
 %% Set up Jacobian here too (sparse)
 %%%%% Later
 
-
+%%
+postProcessComplete = 0;
 end
 %% Some functions to help with calculations
 function y_out = YfromX(x,z,y_intcep)
-    y_out = -z*x + y_intcep;
+    y_out = -1/z*x + y_intcep;
 end
 
 function res = XfromDesPotential(x,V_des,z,y_intcep,AN,CA)

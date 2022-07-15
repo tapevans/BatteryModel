@@ -2,3 +2,4 @@
 *.asv
 Model/Results/
 Model/EXTRA_CODE_THAT_IS_IN_LIMBO.txt
+Model/FunctionalityTests/
