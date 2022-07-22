@@ -814,13 +814,25 @@ i = 1;
 offset = N.N_SV_AN*(i-1);
 M(P.phi_ed + offset , :) = zeros(1,N.N_SV_tot);
 
+
 SIM.M = M;
+
+
+%% Testing for a new invertable M
+% sum_M = sum(M,2);
+% M_new = [ 1 , 0 , 0 , 0 
+%           0 , AN.C_dl , 0 , 0  
+%           0 , 0 , 1, 0
+%           0 , 0 , 0 , 1];
+% rank_M = rank(M_new);
+% M_inv = inv(M_new);
+
+
+
 
 %% Set up Jacobian here too (sparse)
 %%%%% Later
 
-%%
-postProcessComplete = 0;
 end
 %% Some functions to help with calculations
 function y_out = YfromX(x,z,y_intcep)

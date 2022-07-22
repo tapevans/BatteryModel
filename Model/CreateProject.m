@@ -54,8 +54,8 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
 
-folder_name  = 'MoleInitFix';
-battery_name = 'MoleInitFix';
+folder_name  = 'TestingForTyrone';
+battery_name = 'TestingForTyrone';
 
 % folder_name  = 'KBCP_Mode_Test';
 % battery_name = 'KBCP_Mode_Test';
@@ -90,10 +90,12 @@ battery_name = 'MoleInitFix';
 % ---- Known BC Profile Controller ----
     KBCP   = 1;
         KBCPProfileOverwrite = 1;
+%         KBCPProfileFilename = 'Profile_CC_Test_StepResponse_0.4C';
+%         KBCPProfileFilename = 'Profile_CV_Test_1SmallStep';
         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';
 %         KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
 %         KBSOC = 81.93;
-        KBSOC = 0;
+        KBSOC = 50;
         
 % ---- MOO Controller ----
     MOO = 0;
@@ -185,7 +187,8 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
         [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
         
         % Save Simulation File
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS')
+        postProcessComplete = 0;
+        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         
         % Clear Variables
         clear AN CA SEP EL SIM CONS P N FLAG PROPS
@@ -217,7 +220,8 @@ for i = 1:length(EIS_SIN_freq)
             % Call Init
             [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
             % Save File
-            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS')
+            postProcessComplete = 0;
+            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
             % Clear Variables
             clear AN CA SEP EL SIM CONS P N FLAG PROPS
         end
@@ -248,7 +252,8 @@ for i = 1:length(SS_SOC)
         % Call Init
         [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
         % Save File
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS')
+        postProcessComplete = 0;
+        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         % Clear Variables
         clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
@@ -306,7 +311,8 @@ if KBCP
         [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
         
         % Save Simulation File
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS')
+        postProcessComplete = 0;
+        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         
         % Clear Variables
         clear AN CA SEP EL SIM CONS P N FLAG PROPS
@@ -371,7 +377,8 @@ if ManCurrProfile
                 SIM.Input_Profile_filepath = variables.profile_save_filepath;
             end
         % Save File
-            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS')
+            postProcessComplete = 0;
+            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         % Clear Variables
             clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end

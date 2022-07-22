@@ -8,7 +8,7 @@ cd(filepath)
 %% List of Project Folders
 i = 1;
 % Project_Folder{i} = 'phiFsolve_Test';   i = i+1;
-Project_Folder{i} = 'MoleInitFix';   i = i+1;
+Project_Folder{i} = 'TestingForTyrone';   i = i+1;
 % Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
 % Project_Folder{i} = 'Half_Cell_Test';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
@@ -350,14 +350,14 @@ for i = 1:num_sim_files
                 save(filename,'sys','OutputAtEquil')
             end
         elseif SIM.SimMode == 4
-            save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','mode_soln','step_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS')
+            save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','mode_soln','step_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         elseif SIM.SimMode == 5
-            save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS')
+            save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         else
             if SIZE_SV_soln.bytes > 1e9 % 1 GB = 1e9 bytes
-                save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','-v7.3')
+                save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','-v7.3')
             else
-                save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS')
+                save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
             end
         end
         

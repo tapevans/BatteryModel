@@ -10,9 +10,9 @@ function [i_user] = Controller_CV(SV, P , SIM)
 % 	K_p = 1200;  % Too Aggressive
 %     K_p = 100; % Too Slow
 %     K_p = 700; % Too Aggressive
-    K_p = 500; % Too Aggressive
+%     K_p = 500; % Too Aggressive
 %     K_p = 400; % Aggressive
-%     K_p = 275; % Too Slow
+    K_p = 275; % Too Slow
 %     K_p = 300; % Slightly unstable still
     
 	K_i = 0;

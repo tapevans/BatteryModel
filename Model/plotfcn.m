@@ -38,11 +38,13 @@ FLAG.SS_BODE     = 1;
 
 % ---- Known Profile Controller ----
 FLAG.KPCONT_cellVoltage      = 1; % Terminal voltage of the battery vs time
-FLAG.KPCONT_i_user           = 0; 
+FLAG.KPCONT_i_user           = 1; 
 FLAG.KPCONT_V_and_A_norm_abs = 0;
-FLAG.KPCONT_V_and_A_norm     = 0;
-FLAG.KPCONT_VOLT_v_SOC       = 1;
-FLAG.KPCONT_X_Li_surf        = 1;
+FLAG.KPCONT_V_and_A_norm     = 1;
+FLAG.KPCONT_VOLT_v_SOC       = 0;
+FLAG.KPCONT_X_Li_surf        = 0;
+FLAG.KPCONT_X_Li_surf_v_time = 1; %@ AN/SEP
+FLAG.KPCONT_del_phi_v_time   = 1; %@ AN/SEP
 
 % ---- MOO Controller ----
 FLAG.MOOCONT_cellVoltage = 1;
@@ -508,6 +510,7 @@ elseif SIM.SimMode == 4
     xlabel('Time (s)')
     ylabel('Voltage (V)')
     xlim([0,t_soln(end)])
+%     xlim([1,1+1e-6])
     end
     
     %% Current Plot
@@ -578,6 +581,26 @@ elseif SIM.SimMode == 4
     xl_AS.LabelHorizontalAlignment = 'center';
     xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
     xl_SC.LabelHorizontalAlignment = 'center';
+    end
+    
+    %% Mass/Species (Concentration): Li_surf @ AN/SEP wrt time
+    if FLAG.KPCONT_X_Li_surf_v_time
+    figure
+    plot(t_soln,X_Li_surf(:,N.N_CV_AN),'-','LineWidth',2)
+    title('x_{surf} at AN/SEP')
+    xlabel('Time (s)')
+    ylabel('Mole Fraction (-)')
+%     xlim([1,1+1e-6])
+    end
+    
+    %% Charge Plots: Delta phi
+    if FLAG.KPCONT_del_phi_v_time
+    figure
+    plot(t_soln,del_phi(:,N.N_CV_AN),'-o','LineWidth',2)
+    title('\Delta \phi at AN/SEP')
+    xlabel('Time (s)')
+    ylabel('Voltage (V)')
+%     xlim([1,1+1e-6])
     end
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

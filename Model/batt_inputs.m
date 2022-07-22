@@ -98,11 +98,11 @@ FLAG.Plot             = 1;   % 1 if the results plot immediately
 FLAG.PRBS_predefinded = 0; % 1 if using a PRBS current that is predefined
 
 %% Numerical Parameters
-N.N_CV_AN   = 10;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
-N.N_CV_SEP  = 5;  % Number of x-direction seperator control volumes (CV)
-N.N_CV_CA   = 10;  % Number of x-direction cathode   control volumes (CV)
-N.N_R_AN    = 10;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
-N.N_R_CA    = 10;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
+N.N_CV_AN   = 3;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
+N.N_CV_SEP  = 3;  % Number of x-direction seperator control volumes (CV)
+N.N_CV_CA   = 3;  % Number of x-direction cathode   control volumes (CV)
+N.N_R_AN    = 3;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
+N.N_R_CA    = 3;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
 
 %% fsolve options
 options = optimoptions('fsolve');
