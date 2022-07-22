@@ -25,13 +25,14 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
 % 3) State Space EIS
 % 4) Known BC Profile Controller
 % 5) MOO Controller (MOO: Multi-Objective Optimization)
+% 6) Simulink
 % 7) Manual Current Profile
 
 % 0) Files that are used strictly for data and not to run a simulation
 
 %% Flags
 FLAG.AN_LI_FOIL = 0; % 1 if the anode   is a Li foil
-FLAG.CA_LI_FOIL = 0; % 1 if the cathode is a Li foil
+FLAG.CA_LI_FOIL = 0; % 1 if the cathode is a Li foil %%%%%Not IMplemented
 
 FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
 FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
@@ -98,11 +99,11 @@ FLAG.Plot             = 1;   % 1 if the results plot immediately
 FLAG.PRBS_predefinded = 0; % 1 if using a PRBS current that is predefined
 
 %% Numerical Parameters
-N.N_CV_AN   = 3;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
-N.N_CV_SEP  = 3;  % Number of x-direction seperator control volumes (CV)
-N.N_CV_CA   = 3;  % Number of x-direction cathode   control volumes (CV)
-N.N_R_AN    = 3;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
-N.N_R_CA    = 3;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
+N.N_CV_AN   = 10;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
+N.N_CV_SEP  = 5;  % Number of x-direction seperator control volumes (CV)
+N.N_CV_CA   = 10;  % Number of x-direction cathode   control volumes (CV)
+N.N_R_AN    = 10;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
+N.N_R_CA    = 10;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
 
 %% fsolve options
 options = optimoptions('fsolve');
@@ -162,6 +163,18 @@ end
 %% ---- MOO Controller ----
 if SIM.SimMode == 5
     SIM.SOC_start           = 81.93;    % [%], Initial state of charge of the cell 81.93 ~ 4.0V
+
+%%%% Input from controller
+%     SIM.C_rate              = 2;	% How many charges per hour, ABSOLUTE VALUE
+%     SIM.ChargeOrDischarge   = 1;   % -1 if Charge, 1 if Discharge 
+%     SIM.charge_frac         = 1.0;  % How deep do we want to charge/discharge? 
+%     SIM.t_ramp              = 0;    % [s], Ramp time for load current to go from 0 to i_user
+
+end
+
+%% ---- Simulink ----
+if SIM.SimMode == 6
+%     SIM.SOC_start           = 81.93;    % [%], Initial state of charge of the cell 81.93 ~ 4.0V
 
 %%%% Input from controller
 %     SIM.C_rate              = 2;	% How many charges per hour, ABSOLUTE VALUE

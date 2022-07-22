@@ -4,6 +4,7 @@
 function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Organize (reshape) the SV
 SV = SV1Dto2D(SV , N , P , FLAG);
+SV = addPhiEl2SV(SV,P,N);
 
 %% Obtain Property Values
 if FLAG.VARIABLE_PROPS_FROM_HANDLES
@@ -68,16 +69,16 @@ for i = 1:N.N_CV_AN
     dSVdt_AN(P.T, i) = 0;
     
     % phi_el                    
-    dSVdt_AN(P.phi_el , i) =   (AN.A_c / AN.A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
-                            - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI;
+    dSVdt_AN(P.del_phi , i) =   (AN.A_c / AN.A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
+                             - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI;
                         
     % phi_ed                                        
-    dSVdt_AN(P.phi_ed , i) =   (AN.A_c / AN.A_surf_CV)*(i_ed(i)   - i_ed(i+1))...
-                            -  SV(P.i_PS,i);
+    dSVdt_AN(P.phi_ed , i) =   i_ed(i  ) + i_el(i  )...
+                             - (i_ed(i+1) + i_el(i+1));
     
     % V_1                    
     dSVdt_AN(P.V_1    , i) =   (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI ...
-                            -  i_Far(i);
+                             -  i_Far(i);
                         
     % V_2                    
     dSVdt_AN(P.V_2    , i) =    i_Far(i) -  SV(P.i_PS,i);
@@ -131,24 +132,24 @@ for i = 1:N.N_CV_CA
 %                            / ( props(P.rho,index_offset) * props(P.c_p,index_offset) );
     
     % phi_el
-    dSVdt_CA(P.phi_el , i) =   (CA.A_c / CA.A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
-                             - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI;
+    dSVdt_CA(P.del_phi , i) =   (CA.A_c / CA.A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
+                               - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI;
     
 	% phi_ed                    
-    dSVdt_CA(P.phi_ed , i) =   (CA.A_c / CA.A_surf_CV)*(i_ed(index_offset)   - i_ed(index_offset+1))...
-                             -  SV(P.i_PS,index_offset);
+    dSVdt_CA(P.phi_ed , i)  =   i_ed(index_offset  ) + i_el(index_offset  )...
+                              - (i_ed(index_offset+1) + i_el(index_offset+1));
     
 	% V_1                    
-    dSVdt_CA(P.V_1    , i) =   (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI ...
-                             -  i_Far(index_offset);
+    dSVdt_CA(P.V_1    , i)  =   (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI ...
+                              -  i_Far(index_offset);
     
 	% V_2                    
-    dSVdt_CA(P.V_2    , i) =    i_Far(index_offset)...
-                             -  SV(P.i_PS,index_offset);
+    dSVdt_CA(P.V_2    , i)  =    i_Far(index_offset)...
+                              -  SV(P.i_PS,index_offset);
     
 	% i_PS                    
-    dSVdt_CA(P.i_PS   , i) =    SV(P.phi_ed,index_offset) - SV(P.V_2,index_offset) ...
-                             -  E_eq_vec(index_offset);
+    dSVdt_CA(P.i_PS   , i)  =    SV(P.phi_ed,index_offset) - SV(P.V_2,index_offset) ...
+                              -  E_eq_vec(index_offset);
     
     % C_Li^+
     dSVdt_CA(P.C_Liion, i) = (-(J_Liion(index_offset+1) - J_Liion(index_offset))/ CA.del_x...

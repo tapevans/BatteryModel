@@ -5,8 +5,8 @@ function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props)
     i_Far = zeros(1 , N.N_CV_tot);
 
 %% Concentration Dependent Parameters
-% Delta phi
-    del_phi = SV(P.phi_ed , :) - SV(P.phi_el , :);
+% % Delta phi
+%     del_phi = SV(P.phi_ed , :) - SV(P.phi_el , :);
 
 % eta
     eta_AN   = SV(P.V_2 , N.CV_Region_AN ) - SV(P.V_1 , N.CV_Region_AN );

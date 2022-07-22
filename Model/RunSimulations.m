@@ -8,7 +8,8 @@ cd(filepath)
 %% List of Project Folders
 i = 1;
 % Project_Folder{i} = 'phiFsolve_Test';   i = i+1;
-Project_Folder{i} = 'TestingForTyrone';   i = i+1;
+% Project_Folder{i} = 'TestingForTyrone';   i = i+1;
+Project_Folder{i} = 'Semi_Explicit_Test';   i = i+1;
 % Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
 % Project_Folder{i} = 'Half_Cell_Test';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
@@ -74,7 +75,7 @@ for i = 1:num_sim_files
                     SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
                     if FLAG.SaveSolnDiscreteTime
                         new_tfinal = SOLN.x(end);
-                        save_time = (0:SIM.SaveTStep:new_tfinal)';
+                        save_time = (0:SIM.SaveTimeStep:new_tfinal)';
                         t_soln = save_time;
                         SV_soln = (deval(SOLN,save_time))';
                     else
@@ -88,7 +89,7 @@ for i = 1:num_sim_files
                     SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
                     if FLAG.SaveSolnDiscreteTime
                         new_tfinal = SOLN.x(end);
-                        save_time = (0:SIM.SaveTStep:new_tfinal)';
+                        save_time = (0:SIM.SaveTimeStep:new_tfinal)';
                         t_soln_int = save_time;
                         SV_soln_int = (deval(SOLN,save_time))';
                     else
@@ -119,7 +120,7 @@ for i = 1:num_sim_files
             SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
             if FLAG.SaveSolnDiscreteTime
                 new_tfinal = SOLN.x(end);
-                save_time = (0:SIM.SaveTStep:new_tfinal)';
+                save_time = (0:SIM.SaveTimeStep:new_tfinal)';
                 t_soln = save_time;
                 SV_soln = (deval(SOLN,save_time))';
             else
@@ -268,7 +269,8 @@ for i = 1:num_sim_files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- MOO Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 5
             
-           
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Simulink ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        elseif SIM.SimMode == 6
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Manual Current Profile ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 7 

@@ -11,7 +11,7 @@ phi_temp = NaN(N.N_ES_var, N.N_CV_tot);
     
 % ---- Separator ----
     phi_sep = reshape(phi_in(N.N_CV_AN*N.N_ES_var+1 : N.N_CV_AN*N.N_ES_var+N.N_CV_SEP) , 1 , N.N_CV_SEP);
-    phi_temp( P.ES.phi_el , N.CV_Region_SEP ) = phi_sep;
+    phi_temp( P.ES.del_phi , N.CV_Region_SEP ) = phi_sep;
 
 % ---- Cathode ----
     phi_ca = reshape(phi_in(N.N_CV_AN*N.N_ES_var+N.N_CV_SEP+1:end) , N.N_ES_var , N.N_CV_CA);

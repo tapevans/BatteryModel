@@ -39,14 +39,9 @@ if ~postProcessComplete
     %% Initialize variables
     max_SV = max( N.N_SV_AN , N.N_SV_CA );
 
-    SV          = zeros(max_SV , N.N_CV_tot, N_t_steps );
+    SV          = zeros(max_SV+1 , N.N_CV_tot, N_t_steps );
     
     TemperatureK = zeros( N_t_steps , N.N_CV_tot );
-    
-    C_Liion      = zeros( N_t_steps , N.N_CV_tot );
-    C_Li_surf    = zeros( N_t_steps , N.N_CV_tot );
-    X_Li_surf    = zeros( N_t_steps , N.N_CV_tot );
-    C_Li         = NaN( N.N_R_max , N.N_CV_tot, N_t_steps );
     
     phi_el       = zeros( N_t_steps , N.N_CV_tot );
     phi_ed       = zeros( N_t_steps , N.N_CV_tot );
@@ -60,6 +55,11 @@ if ~postProcessComplete
     i_el         = zeros( N_t_steps , N.N_CV_tot + 1);
     i_ed         = zeros( N_t_steps , N.N_CV_tot + 1);
     Cap          = zeros( N_t_steps , 1 );
+    
+    C_Liion      = zeros( N_t_steps , N.N_CV_tot );
+    C_Li_surf    = zeros( N_t_steps , N.N_CV_tot );
+    X_Li_surf    = zeros( N_t_steps , N.N_CV_tot );
+    C_Li         = NaN( N.N_R_max , N.N_CV_tot, N_t_steps );
     %     J_Liion     = zeros( N_t_steps , N.N_CV_tot + 1);
     % J_Li
     % props
@@ -73,13 +73,16 @@ if ~postProcessComplete
     elseif SIM.SimMode == 5
         % Pull i_user from RunSimulation loop and make into a vector the
         % same size as t_soln
+    elseif SIM.SimMode == 6 % Simulink
+        % Pull i_user from sim output
     else
         i_user = (i_user_calc(t_soln,SIM))';
     end
     
     for i = 1:N_t_steps
         % Go through the solution vector and reshape every SV to 2D (3D matrix)
-        SV( : , : , i )    = SV1Dto2D( SV_soln( idx(i) , : ) , N , P , FLAG );
+        SV_temp    = SV1Dto2D( SV_soln( idx(i) , : ) , N , P , FLAG );
+        SV( : , : , i ) = addPhiEl2SV(SV_temp,P,N);
         
         TemperatureK( i , : ) = SV( P.T , : , i );
         
@@ -96,7 +99,7 @@ if ~postProcessComplete
         eta( i , : ) = [eta_AN  , NaN(1,N.N_CV_SEP) ,eta_CA  ];
         
         V_SEI(   i , : ) = SV( P.V_1    , : , i) - SV( P.phi_el , : , i);
-        del_phi( i , : ) = SV( P.phi_ed , : , i) - SV( P.phi_el , : , i);
+        del_phi( i , : ) = SV( P.del_phi,:  , i);
     end
     
     % Temperature
@@ -195,7 +198,7 @@ if ~postProcessComplete
     mass_error = total_mass(:) - total_mass(1);
     
     %% Calculations specific to sinusoidal pertebations
-    if SIM.SimMode == 2
+    if SIM.SimMode == 2 % ---- Harmonic Perturbation ----
         %% ID Voltage Section
         Y = fft(cell_voltage(1:end-1));
         L = length(cell_voltage(1:end-1));
@@ -220,7 +223,7 @@ if ~postProcessComplete
         if Z_angle_deg <= -358
             Z_angle_deg = Z_angle_deg + 360; % Angle wrapping
         end
-    elseif SIM.SimMode == 7
+    elseif SIM.SimMode == 7 % ---- Manual Profile ----
         if FLAG.Optimize_Profile && FLAG.Save_Current_Profile
             profile_save_filepath   = [filename(1:end-4), '_CurrentProfile_Output.mat'];
             

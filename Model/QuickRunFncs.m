@@ -1,35 +1,31 @@
 clear all
 close all
 clc
-%%
+%
 % Test Initialization
-%%% Mode 1
+%%% Mode 1 ---- Polarization ----
 SIM.SOC_start = 95;   % [%], Initial state of charge
 SIM.SimMode = 1;
 SIM.C_rate = 1/20;
 SIM.ChargeOrDischarge = 1;
 
-%%% Mode 2
+%%% Mode 2 ---- Harmonic Perturbation ----
 
-%%% Mode 3
+%%% Mode 3 ---- State Space EIS ----
 % SIM.SimMode = 3;
 % SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
 % SIM.SOC_start = 95;   % [%], Initial state of charge
 
-%%% Mode 4
+%%% Mode 4 ---- Known BC Profile Controller ----
 
-%%% Mode 5
+%%% Mode 5 ---- MOO Controller ----
 
-%%% Mode 6
+%%% Mode 6 ---- Simulink ----
 
-%%% Mode 7
-
-% SIM.SOC_start = 50;
-% SIM.ChargeOrDischarge = -1; %Charge
-% SIM.SOC_start = 5;
+%%% Mode 7 ---- Manual Profile ----
 
 
-
+%%%
 [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
 %
 [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
