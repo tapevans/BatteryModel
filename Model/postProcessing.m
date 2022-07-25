@@ -169,6 +169,9 @@ if ~postProcessComplete
 
     % Conservation of Charge Check
     % Divergence of the sum of current flux should equal 0
+    % #### This equation is now used in the solver in place of the old
+    % phi_ed equation. The old phi_ed equation could be used here later but
+    % for now I'll stick with this
     for i = 1:N_t_steps
         for j = 1:N.N_CV_tot
             CoC(i , j) = (i_el(i,j+1) + i_ed(i,j+1)) - (i_el(i,j) + i_ed(i,j));

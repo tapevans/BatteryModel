@@ -572,10 +572,8 @@ if SIM.SimMode == 3
             index_offset = (i-1)*N.N_SV_AN;
         % Delta Phi   @AN/SEP
             j = j+1;
-            idx_ed = index_offset + P.phi_ed;
-            idx_el = index_offset + P.phi_el;
-            SIM.OutputMatrix(j,idx_ed) =  1;
-            SIM.OutputMatrix(j,idx_el) = -1;
+            idx = index_offset + P.del_phi;
+            SIM.OutputMatrix(j,idx) =  1;
         % Temperature @AN/SEP
             j = j+1;
             idx = index_offset + P.T;
@@ -652,7 +650,8 @@ end
 
 %% Save the Equilibrium Values of the Output (Only Mode 3)
 if SIM.SimMode == 3
-    SIM.OutputAtEquil = SIM.OutputMatrix*SV_IC;    
+    SIM.OutputAtEquil = SIM.OutputMatrix*SV_IC;
+    SIM.SV_IC_Static = SV_IC;
 end
 
 %% Solve for better Initial conditions for phi
@@ -675,7 +674,8 @@ end
         SIM.current_MO_step = 1;
         MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
         if MO == 2 % CV
-            i_user = SIM.Cell_Cap/20; %Start fsolve assuming the voltage should be close
+%             i_user = SIM.Cell_Cap/20; %Start fsolve assuming the voltage should be close
+            i_user = SIM.Cell_Cap; %Start fsolve assuming the voltage should be close
         else % CC or Relax
             if SIM.Controller_MO_File(SIM.current_MO_step).CorD == 'C'
                 i_user = -SIM.Controller_MO_File(SIM.current_MO_step).C_rate * SIM.Cell_Cap / SIM.A_c;
@@ -686,7 +686,8 @@ end
     elseif SIM.SimMode == 5 % MOO Controller
         i_user = 0;
     elseif SIM.SimMode == 6 % Simulink %%%%%%%%%%%%Testing
-        i_user = SIM.Cell_Cap/20;
+        %i_user = SIM.Cell_Cap/20;
+        i_user = 0;
     else
         i_user = i_user_calc(0,SIM); 
     end
@@ -768,7 +769,7 @@ for i = 1:N.N_CV_AN
     % Temp
     M(index_offset+P.T       , index_offset+P.T )        =  1;
     % del_phi
-    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  AN.C_dl;
+    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  1;
     % phi_ed 
     M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
     % V_1
@@ -802,7 +803,7 @@ for i = 1:N.N_CV_CA
     % Temp
     M(index_offset+P.T       , index_offset+P.T )        =  1;
     % del_phi
-    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  CA.C_dl;
+    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  1;
     % phi_ed
     M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
     % V_1
@@ -829,8 +830,8 @@ SIM.M = M;
 
 
 %% Make Mass for just diffEq
-% if SIM.SimMode == 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
-if SIM.SimMode == 6 % Simulink
+if SIM.SimMode == 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
+    % if SIM.SimMode == 6 % Simulink
     % Make indices vector
     idx_diff = [];
     idx_algb = [];
@@ -841,7 +842,7 @@ if SIM.SimMode == 6 % Simulink
         idx_diff(end+1) = index_offset+P.T;
         % del_phi
         idx_diff(end+1) = index_offset+P.del_phi;
-        % phi_ed 
+        % phi_ed
         idx_algb(end+1) = index_offset+P.phi_ed;
         % V_1
         idx_algb(end+1) = index_offset+P.V_1;
@@ -856,7 +857,7 @@ if SIM.SimMode == 6 % Simulink
             idx_diff(end+1) = index_offset+P.C_Li+j-1;
         end
     end
-    
+
     % ---- Separator ----
     for i = 1:N.N_CV_SEP
         index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
@@ -867,7 +868,7 @@ if SIM.SimMode == 6 % Simulink
         % C_Li^+
         idx_diff(end+1) = index_offset+P.SEP.C_Liion;
     end
-    
+
     % ---- Cathode ----
     for i = 1:N.N_CV_CA
         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
@@ -875,7 +876,7 @@ if SIM.SimMode == 6 % Simulink
         idx_diff(end+1) = index_offset+P.T;
         % del_phi
         idx_diff(end+1) = index_offset+P.del_phi;
-        % phi_ed 
+        % phi_ed
         idx_algb(end+1) = index_offset+P.phi_ed;
         % V_1
         idx_algb(end+1) = index_offset+P.V_1;
@@ -891,10 +892,13 @@ if SIM.SimMode == 6 % Simulink
         end
     end
 
-SIM.M_DiffEq = M(idx_diff,idx_diff);
-SIM.M_DiffEq_Inv = inv(SIM.M_DiffEq);
-SIM.Diff_idx = idx_diff;
-SIM.Algb_idx = idx_algb;
+    SIM.M_DiffEq = M(idx_diff,idx_diff);
+    SIM.M_DiffEq_Inv = inv(SIM.M_DiffEq);
+    SIM.Diff_idx = idx_diff;
+    SIM.Algb_idx = idx_algb;
+
+    N.N_Diff = length(SIM.Diff_idx);
+    N.N_Algb = length(SIM.Algb_idx);
 end
 
 %% Set up Jacobian here too (sparse)
