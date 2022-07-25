@@ -3,37 +3,34 @@ close all
 clc
 %%
 % Test Initialization
-%%% Mode 1
-SIM.SOC_start = 95;   % [%], Initial state of charge
+%%% Mode 1 ---- Polarization ----
+SIM.SOC_start = 50;   % [%], Initial state of charge
 SIM.SimMode = 1;
 SIM.C_rate = 1/20;
 SIM.ChargeOrDischarge = 1;
 
-%%% Mode 2
+%%% Mode 2 ---- Harmonic Perturbation ----
 
-%%% Mode 3
+%%% Mode 3 ---- State Space EIS ----
 % SIM.SimMode = 3;
 % SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
 % SIM.SOC_start = 95;   % [%], Initial state of charge
 
-%%% Mode 4
+%%% Mode 4 ---- Known BC Profile Controller ----
 
-%%% Mode 5
+%%% Mode 5 ---- MOO Controller ----
 
-%%% Mode 6
+%%% Mode 6 ---- Simulink ----
 
-%%% Mode 7
-
-% SIM.SOC_start = 50;
-% SIM.ChargeOrDischarge = -1; %Charge
-% SIM.SOC_start = 5;
+%%% Mode 7 ---- Manual Profile ----
 
 
-
+%%%
 [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
 %
 [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
 
+cell_voltage = SIM.SV_IC(341) - SIM.SV_IC(3)
 %% Test Governing Eqns Output
 t = 2;
 i_user = 14;
@@ -58,7 +55,8 @@ postProcessing(filename)
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\KBCP_Mode_Test\KBCP_Mode_Test_KPCont_Profile_CCChg4.2_CCDchg3.4SOC0.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\KBCP_Mode_Test\KBCP_Mode_Test_KPCont_Profile_CCChg4.2_CCDchg3.4_C3SOC0.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\MoleInitFix\MoleInitFix_KPCont_Profile_CC_Test_3Step_wRelaxSOC0.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Semi_Explicit_Test\Semi_Explicit_Test_Polar_1.00C_D.mat';
 plotfcn(filename)
 
 %%
@@ -66,12 +64,13 @@ clear all
 close all
 clc
 
-%% Load Results
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_KPCont_Profile_CV_Test_1SmallStepSOC81.93.mat';
+% Load Results
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_KPCont_Profile_CV_Test_1SmallStepSOC81.93.mat';
 
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2022_07_13_Lui_SS\StairStepSim.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2022_07_11_Lui_SS\50SOC.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2022_07_11_Lui_SS\50SOC.mat';
 
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Semi_Explicit_Test\Semi_Explicit_Test_SS_EIS_SOC95.mat';
 load(filename)
 
 

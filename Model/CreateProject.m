@@ -22,6 +22,9 @@
         
     % ---- MOO Controller ----
         % 'battery_name'_MOOCont_'ControllerName'
+
+    % ---- Simulink ----
+        % 'battery_name'_Simulink_'SimulinkTestName'
     
     % ---- Manual Current Profile ----
         % For platingRefinement
@@ -54,8 +57,11 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
 
-folder_name  = 'TestingForTyrone';
-battery_name = 'TestingForTyrone';
+% folder_name  = 'Semi_Explicit_Test';
+% battery_name = 'Semi_Explicit_Test';
+
+folder_name  = 'MassIdentity_Test';
+battery_name = 'MassIdentity_Test';
 
 % folder_name  = 'KBCP_Mode_Test';
 % battery_name = 'KBCP_Mode_Test';
@@ -64,7 +70,7 @@ battery_name = 'TestingForTyrone';
 % Positive is discharge, Negative is charge
     C_rates      = []; 
 %     C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5]; 
-%     C_rates      = [-1]; 
+%     C_rates      = [1]; 
 %     C_rates      = [1/20 -1/20]; 
 %     C_rates      = [1/20];
 %     C_rates      = [1/20 1/10 1/3 1 2]; 
@@ -79,28 +85,36 @@ battery_name = 'TestingForTyrone';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    SS_SOC = [];
+%     SS_SOC = [];
 %     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
-%     SS_SOC = [81.93];
+%     SS_SOC = [80.46];
+    SS_SOC = [50];
     
 %         SS_freq = [];
         SS_freq = logspace(-1,11,101);
 %         SS_freq = (logspace(-2,6,75) *(2*pi));
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 1;
-        KBCPProfileOverwrite = 1;
+    KBCP   = 0;
+        KBCPProfileOverwrite = 0;
+        KBCPProfileFilename = 'ManualMOSOC25';
+%         KBCPProfileFilename = 'ManualMO';        
+%         KBCPProfileFilename = 'Profile_CV_Test_1SmallStep_IC4.0V';        
 %         KBCPProfileFilename = 'Profile_CC_Test_StepResponse_0.4C';
 %         KBCPProfileFilename = 'Profile_CV_Test_1SmallStep';
-        KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';
+%         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';
 %         KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
 %         KBSOC = 81.93;
-        KBSOC = 50;
+        KBSOC = 25;
         
 % ---- MOO Controller ----
     MOO = 0;
         ControllerName = '';
-        
+
+% ---- Simulink ----
+    slink = 0;
+        SimulinkTestName = 'TestSemiExplicit';
+
 % ---- Manual Current Profile ----
     ManCurrProfile = 0; % 1 if want to make a manual current profile simulation from what is currently in makeCurrentProfile.m and input.m
         MCP.plating_refine = 1; % 1 if to use the plating refinement naming structure; if 0, then ManProfileName will be used
@@ -108,7 +122,7 @@ battery_name = 'TestingForTyrone';
             MCP.max_iterations = 1000; % Number of refinements used in the while loop
             MCP.tol_Delta_phi  = 0.01; % Goal for the largest delta_phi
             
-        MCP.UseExistingProfile = 1; % 1 if using file found at MCP.Existing_Profile_filepath
+        MCP.UseExistingProfile = 0; % 1 if using file found at MCP.Existing_Profile_filepath
             MCP.Existing_Profile_filepath = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_ManCurrProf_100steps_1000Iter_0.03tol_CurrentProfile_Output.mat';
         MCP.ManProfileName = ''; % Use this if MCP.plating_refine = 0;
         
@@ -322,6 +336,40 @@ end
 %% ---- MOO Controller ----
 if MOO
     
+end
+
+%% ---- Simulink ----
+if slink
+    filename = [ battery_name , '_Simulink_' , SimulinkTestName , '.mat'];
+    % Check if sim already exist
+    if isfile([save_file_path filesep filename])
+        if FLAG_local.sim_overwrite
+            disp('Deleting previous sim')% delete old file
+            delete([save_file_path filesep filename])
+        else
+            disp('Simulation already exists')
+        end        
+    end
+    
+    % Create sim if it doesn't exist
+    if ~isfile([save_file_path filesep filename])
+        disp('Making sim')
+        SIM.results_filename = filename;
+        SIM.SimMode = 6;
+                
+        % Call Inputs
+        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+        
+        % Call Init
+        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+        
+        % Save Simulation File
+        postProcessComplete = 0;
+        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+        
+        % Clear Variables
+        clear AN CA SEP EL SIM CONS P N FLAG PROPS
+    end
 end
 
 %%

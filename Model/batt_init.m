@@ -38,7 +38,7 @@ N.N_R_max = max(N.N_R_AN,N.N_R_CA);
 %% Pointers for Tracked Variables
     i = 1;
     P.T         = i; i = i + 1;
-    P.phi_el    = i; i = i + 1;
+    P.del_phi   = i; i = i + 1; % This row will be del_phi for the AN and CA, then phi_el for the SEP for initialization. Inside fsolve and GovnEqns, phi_el and del_phi are restructured properly.
     P.phi_ed    = i; i = i + 1;
     P.V_1       = i; i = i + 1;
     P.V_2       = i; i = i + 1;
@@ -49,21 +49,24 @@ N.N_R_max = max(N.N_R_AN,N.N_R_CA);
 	P.C_Li_surf_AN  = P.C_Li + N.N_R_AN - 1;
 	P.C_Li_surf_CA  = P.C_Li + N.N_R_CA - 1;
 	P.C_Li_surf_max = max( P.C_Li_surf_AN , P.C_Li_surf_CA );
-    
+
 % Pointers for SEP region
     i = 1;
     P.SEP.T       = i; i = i + 1;
     P.SEP.phi_el  = i; i = i + 1;
     P.SEP.C_Liion = i; i = i + 1;
+
+% Extra Pointer for phi_el
+    P.phi_el    = P.C_Li_surf_max + 1;
     
 % Pointers for Electrostatic 
     i = 1;
-    P.ES.phi_el = i; i = i + 1;
-    P.ES.phi_ed = i; i = i + 1;
-    P.ES.V_1    = i; i = i + 1;
-    P.ES.V_2    = i; i = i + 1;
-    P.ES.i_PS   = i; i = i + 1;
-    P.ES.i_dl   = i; i = i + 1;
+    P.ES.del_phi = i; i = i + 1;
+    P.ES.phi_ed  = i; i = i + 1;
+    P.ES.V_1     = i; i = i + 1;
+    P.ES.V_2     = i; i = i + 1;
+    P.ES.i_PS    = i; i = i + 1;
+    P.ES.i_dl    = i; i = i + 1;
     
     N.N_ES_var  = 6;
 
@@ -162,8 +165,8 @@ end
     PROPS( P.D_o_Li_ion , : )              = EL.D_o_Li_ion * ones( 1 , N.N_CV_tot );
     PROPS( P.activity   , : )              = EL.Activity   * ones( 1 , N.N_CV_tot );
     PROPS( P.tf_num     , : )              = EL.tf_num     * ones( 1 , N.N_CV_tot );
-    PROPS( P.D_o:end    , N.CV_Region_AN ) = AN.D_o        * ones( N.N_R_AN , N.N_CV_AN );
-    PROPS( P.D_o:end    , N.CV_Region_CA ) = CA.D_o        * ones( N.N_R_CA , N.N_CV_CA );
+    PROPS( P.D_o:(P.D_o+N.N_R_AN-1)    , N.CV_Region_AN ) = AN.D_o        * ones( N.N_R_AN , N.N_CV_AN );
+    PROPS( P.D_o:(P.D_o+N.N_R_CA-1)    , N.CV_Region_CA ) = CA.D_o        * ones( N.N_R_CA , N.N_CV_CA );
     
 % Electrolyte volume fraction
     AN.eps_el  = 1 - AN.eps_ed - AN.eps_b;
@@ -481,6 +484,10 @@ elseif SIM.SimMode == 5
     SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
     %!!!!!!!! May need to do something here for SV initialization with a
     %proper i_user value
+% ---- Simulink ----
+elseif SIM.SimMode == 6
+    SIM.A_c        = min( AN.A_c, CA.A_c );
+    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
 % ---- Manual Current Profile ----
 elseif SIM.SimMode == 7 
     SIM.A_c        = min( AN.A_c, CA.A_c );
@@ -527,6 +534,10 @@ elseif SIM.SimMode == 4
 % ---- MOO Controller ----
 elseif SIM.SimMode == 5
     % Determine inside RunSimulation from MO_List
+
+% ---- Simulink ----
+elseif SIM.SimMode == 6
+    % Determine inside RunSimulation from MO_List
     
 % ---- Manual Current Profile ----
 elseif SIM.SimMode == 7 % Manual Current Profile
@@ -561,10 +572,8 @@ if SIM.SimMode == 3
             index_offset = (i-1)*N.N_SV_AN;
         % Delta Phi   @AN/SEP
             j = j+1;
-            idx_ed = index_offset + P.phi_ed;
-            idx_el = index_offset + P.phi_el;
-            SIM.OutputMatrix(j,idx_ed) =  1;
-            SIM.OutputMatrix(j,idx_el) = -1;
+            idx = index_offset + P.del_phi;
+            SIM.OutputMatrix(j,idx) =  1;
         % Temperature @AN/SEP
             j = j+1;
             idx = index_offset + P.T;
@@ -588,7 +597,7 @@ for i = 1:N.N_CV_AN
     % Temp
     SV_IC(index_offset + P.T)       =  SIM.Temp_start;
     % phi_el
-    SV_IC(index_offset + P.phi_el)  = -voltage_ini_an;
+    SV_IC(index_offset + P.del_phi) =  voltage_ini_an;
     % phi_ed
     SV_IC(index_offset + P.phi_ed)  =  0;
     % V_1
@@ -622,7 +631,7 @@ for i = 1:N.N_CV_CA
     % Temp
     SV_IC(index_offset + P.T)       =  SIM.Temp_start;
     % phi_el
-    SV_IC(index_offset + P.phi_el)  = -voltage_ini_an;
+    SV_IC(index_offset + P.del_phi) =  voltage_ini_ca;
     % phi_ed
     SV_IC(index_offset + P.phi_ed)  =  voltage_ini_cell;
     % V_1
@@ -641,7 +650,8 @@ end
 
 %% Save the Equilibrium Values of the Output (Only Mode 3)
 if SIM.SimMode == 3
-    SIM.OutputAtEquil = SIM.OutputMatrix*SV_IC;    
+    SIM.OutputAtEquil = SIM.OutputMatrix*SV_IC;
+    SIM.SV_IC_Static = SV_IC;
 end
 
 %% Solve for better Initial conditions for phi
@@ -663,9 +673,10 @@ end
     elseif SIM.SimMode == 4 % KBCP
         SIM.current_MO_step = 1;
         MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
-        if MO == 2
-            i_user = SIM.Cell_Cap/20; %Start fsolve assuming the voltage should be close
-        else
+        if MO == 2 % CV
+%             i_user = SIM.Cell_Cap/20; %Start fsolve assuming the voltage should be close
+            i_user = SIM.Cell_Cap; %Start fsolve assuming the voltage should be close
+        else % CC or Relax
             if SIM.Controller_MO_File(SIM.current_MO_step).CorD == 'C'
                 i_user = -SIM.Controller_MO_File(SIM.current_MO_step).C_rate * SIM.Cell_Cap / SIM.A_c;
             else
@@ -674,11 +685,15 @@ end
         end
     elseif SIM.SimMode == 5 % MOO Controller
         i_user = 0;
+    elseif SIM.SimMode == 6 % Simulink %%%%%%%%%%%%Testing
+        %i_user = SIM.Cell_Cap/20;
+        i_user = 0;
     else
         i_user = i_user_calc(0,SIM); 
     end
 
-phi_temp = SV(P.phi_el:P.i_PS, :);
+% Create phi vectpr    
+phi_temp = SV(P.del_phi:P.i_PS, :);
 phi_temp(end+1,: ) = zeros(1,N.N_CV_tot ); % Adding a row for the new constraint equation(i_dl)
 phi_temp(end,N.CV_Region_SEP) =   NaN(1,N.N_CV_SEP); % No SV in the SEP region for the new constraint
 phi_temp = reshape(phi_temp, [],1);
@@ -709,37 +724,37 @@ phi = phi1Dto2D( phi_soln(1:end-1) , N , P , FLAG);
 for i = 1:N.N_CV_AN
     index_offset = (i-1)*N.N_SV_AN; 
     % phi_el
-    SV_IC(index_offset + P.phi_el) =  phi(P.ES.phi_el,i); 
+    SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi,i); 
     % phi_ed
-    SV_IC(index_offset + P.phi_ed) =  phi(P.ES.phi_ed,i);  
+    SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed,i);  
     % V_1
-    SV_IC(index_offset + P.V_1)    =  phi(P.ES.V_1   ,i);  
+    SV_IC(index_offset + P.V_1)     =  phi(P.ES.V_1   ,i);  
     % V_2
-    SV_IC(index_offset + P.V_2)    =  phi(P.ES.V_2   ,i);  
+    SV_IC(index_offset + P.V_2)     =  phi(P.ES.V_2   ,i);  
     % i_PS
-    SV_IC(index_offset + P.i_PS)   =  phi(P.ES.i_PS  ,i); 
+    SV_IC(index_offset + P.i_PS)    =  phi(P.ES.i_PS  ,i); 
 end
 
 % ---- Separator ----
 for i = 1:N.N_CV_SEP
     index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
     % phi_el
-    SV_IC(index_offset + P.SEP.phi_el) =  phi(P.ES.phi_el,i+N.N_CV_AN); 
+    SV_IC(index_offset + P.SEP.phi_el) =  phi(P.ES.del_phi,i+N.N_CV_AN); 
 end
 
 % ---- Cathode ----
 for i = 1:N.N_CV_CA
     index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
     % phi_el
-    SV_IC(index_offset + P.phi_el) =  phi(P.ES.phi_el , i+N.N_CV_AN+N.N_CV_SEP); 
+    SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi , i+N.N_CV_AN+N.N_CV_SEP); 
     % phi_ed
-    SV_IC(index_offset + P.phi_ed) =  phi(P.ES.phi_ed , i+N.N_CV_AN+N.N_CV_SEP);  
+    SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed , i+N.N_CV_AN+N.N_CV_SEP);  
     % V_1
-    SV_IC(index_offset + P.V_1   ) =  phi(P.ES.V_1    , i+N.N_CV_AN+N.N_CV_SEP);  
+    SV_IC(index_offset + P.V_1   )  =  phi(P.ES.V_1    , i+N.N_CV_AN+N.N_CV_SEP);  
     % V_2
-    SV_IC(index_offset + P.V_2   ) =  phi(P.ES.V_2    , i+N.N_CV_AN+N.N_CV_SEP);  
+    SV_IC(index_offset + P.V_2   )  =  phi(P.ES.V_2    , i+N.N_CV_AN+N.N_CV_SEP);  
     % i_PS
-    SV_IC(index_offset + P.i_PS  ) =  phi(P.ES.i_PS   , i+N.N_CV_AN+N.N_CV_SEP); 
+    SV_IC(index_offset + P.i_PS  )  =  phi(P.ES.i_PS   , i+N.N_CV_AN+N.N_CV_SEP); 
 end
 
 SIM.SV_IC = SV_IC;
@@ -753,12 +768,10 @@ for i = 1:N.N_CV_AN
     index_offset = (i-1)*N.N_SV_AN;
     % Temp
     M(index_offset+P.T       , index_offset+P.T )        =  1;
-    % phi_el
-    M(index_offset+P.phi_el  , index_offset+P.phi_el )   =  -AN.C_dl;
-    M(index_offset+P.phi_el  , index_offset+P.phi_ed )   =   AN.C_dl;
-    % phi_ed
-    M(index_offset+P.phi_ed  , index_offset+P.phi_el )   =  -AN.C_dl; 
-    M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =   AN.C_dl; 
+    % del_phi
+    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  1;
+    % phi_ed 
+    M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
     % V_1
     M(index_offset+P.V_1     , index_offset+P.V_1    )   =  sim_cap; 
     % V_2
@@ -766,7 +779,7 @@ for i = 1:N.N_CV_AN
     % i_PS
     M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
     % C_Li^+
-    M(index_offset+P.C_Liion , index_offset+P.C_Liion)  =  1; 
+    M(index_offset+P.C_Liion , index_offset+P.C_Liion)   =  1; 
     % C_Li
     for j = 1:N.N_R_AN
         M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
@@ -789,12 +802,10 @@ for i = 1:N.N_CV_CA
     index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
     % Temp
     M(index_offset+P.T       , index_offset+P.T )        =  1;
-    % phi_el
-    M(index_offset+P.phi_el  , index_offset+P.phi_el )   =  -CA.C_dl;
-    M(index_offset+P.phi_el  , index_offset+P.phi_ed )   =   CA.C_dl;
+    % del_phi
+    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  1;
     % phi_ed
-    M(index_offset+P.phi_ed  , index_offset+P.phi_el )   =  -CA.C_dl; 
-    M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =   CA.C_dl; 
+    M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
     % V_1
     M(index_offset+P.V_1     , index_offset+P.V_1    )   =  sim_cap; 
     % V_2
@@ -818,17 +829,77 @@ M(P.phi_ed + offset , :) = zeros(1,N.N_SV_tot);
 SIM.M = M;
 
 
-%% Testing for a new invertable M
-% sum_M = sum(M,2);
-% M_new = [ 1 , 0 , 0 , 0 
-%           0 , AN.C_dl , 0 , 0  
-%           0 , 0 , 1, 0
-%           0 , 0 , 0 , 1];
-% rank_M = rank(M_new);
-% M_inv = inv(M_new);
+%% Make Mass for just diffEq
+if SIM.SimMode == 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
+    % if SIM.SimMode == 6 % Simulink
+    % Make indices vector
+    idx_diff = [];
+    idx_algb = [];
+    % ---- Anode ----
+    for i = 1:N.N_CV_AN
+        index_offset = (i-1)*N.N_SV_AN;
+        % Temp
+        idx_diff(end+1) = index_offset+P.T;
+        % del_phi
+        idx_diff(end+1) = index_offset+P.del_phi;
+        % phi_ed
+        idx_algb(end+1) = index_offset+P.phi_ed;
+        % V_1
+        idx_algb(end+1) = index_offset+P.V_1;
+        % V_2
+        idx_algb(end+1) = index_offset+P.V_2;
+        % i_PS
+        idx_algb(end+1) = index_offset+P.i_PS;
+        % C_Li^+
+        idx_diff(end+1) = index_offset+P.C_Liion;
+        % C_Li
+        for j = 1:N.N_R_AN
+            idx_diff(end+1) = index_offset+P.C_Li+j-1;
+        end
+    end
 
+    % ---- Separator ----
+    for i = 1:N.N_CV_SEP
+        index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
+        % Temp
+        idx_diff(end+1) = index_offset+P.SEP.T;
+        % phi_el
+        idx_algb(end+1) = index_offset+P.SEP.phi_el;
+        % C_Li^+
+        idx_diff(end+1) = index_offset+P.SEP.C_Liion;
+    end
 
+    % ---- Cathode ----
+    for i = 1:N.N_CV_CA
+        index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+        % Temp
+        idx_diff(end+1) = index_offset+P.T;
+        % del_phi
+        idx_diff(end+1) = index_offset+P.del_phi;
+        % phi_ed
+        idx_algb(end+1) = index_offset+P.phi_ed;
+        % V_1
+        idx_algb(end+1) = index_offset+P.V_1;
+        % V_2
+        idx_algb(end+1) = index_offset+P.V_2;
+        % i_PS
+        idx_algb(end+1) = index_offset+P.i_PS;
+        % C_Li^+
+        idx_diff(end+1) = index_offset+P.C_Liion;
+        % C_Li
+        for j = 1:N.N_R_CA
+            idx_diff(end+1) = index_offset+P.C_Li+j-1;
+        end
+    end
 
+    SIM.M_DiffEq = M(idx_diff,idx_diff);
+    SIM.M_DiffEq_Inv = inv(SIM.M_DiffEq);
+    SIM.Diff_idx = idx_diff;
+    SIM.Algb_idx = idx_algb;
+
+    N.N_Diff = length(SIM.Diff_idx);
+    N.N_Algb = length(SIM.Algb_idx);
+end
 
 %% Set up Jacobian here too (sparse)
 %%%%% Later

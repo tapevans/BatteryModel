@@ -8,7 +8,9 @@ cd(filepath)
 %% List of Project Folders
 i = 1;
 % Project_Folder{i} = 'phiFsolve_Test';   i = i+1;
-Project_Folder{i} = 'TestingForTyrone';   i = i+1;
+% Project_Folder{i} = 'TestingForTyrone';   i = i+1;
+% Project_Folder{i} = 'Semi_Explicit_Test';   i = i+1;
+Project_Folder{i} = 'MassIdentity_Test';   i = i+1;
 % Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
 % Project_Folder{i} = 'Half_Cell_Test';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
@@ -74,7 +76,7 @@ for i = 1:num_sim_files
                     SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
                     if FLAG.SaveSolnDiscreteTime
                         new_tfinal = SOLN.x(end);
-                        save_time = (0:SIM.SaveTStep:new_tfinal)';
+                        save_time = (0:SIM.SaveTimeStep:new_tfinal)';
                         t_soln = save_time;
                         SV_soln = (deval(SOLN,save_time))';
                     else
@@ -88,7 +90,7 @@ for i = 1:num_sim_files
                     SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
                     if FLAG.SaveSolnDiscreteTime
                         new_tfinal = SOLN.x(end);
-                        save_time = (0:SIM.SaveTStep:new_tfinal)';
+                        save_time = (0:SIM.SaveTimeStep:new_tfinal)';
                         t_soln_int = save_time;
                         SV_soln_int = (deval(SOLN,save_time))';
                     else
@@ -119,7 +121,7 @@ for i = 1:num_sim_files
             SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
             if FLAG.SaveSolnDiscreteTime
                 new_tfinal = SOLN.x(end);
-                save_time = (0:SIM.SaveTStep:new_tfinal)';
+                save_time = (0:SIM.SaveTimeStep:new_tfinal)';
                 t_soln = save_time;
                 SV_soln = (deval(SOLN,save_time))';
             else
@@ -145,7 +147,7 @@ for i = 1:num_sim_files
                 SIM.current_MO_step = k;
                 MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
                 
-                % Set SV
+                % Set SV_IC
                     if k == 1
                         SV_IC = SIM.SV_IC;
                     else
@@ -170,8 +172,8 @@ for i = 1:num_sim_files
                         tspan = [0,tfinal];
                     end
                 
-                % call ODE
                 % Simulation Parameters
+                % Needs to be inside loop since the voltage limits change with each type
                 Tol.Abs = 1E-7;
                 Tol.Rel = 1E-7;
 
@@ -186,6 +188,8 @@ for i = 1:num_sim_files
                 options_CV = odeset('RelTol' ,Tol.Rel,      ...
                                     'AbsTol' ,Tol.Abs,      ...
                                     'Mass'   ,SIM.M);
+
+                % call ODE
                     if MO == 1 %CC
                         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options_CC);
                     elseif MO == 2 % CV
@@ -251,24 +255,31 @@ for i = 1:num_sim_files
                         %
                     end
                     
-                    if ~isempty(t_soln)
+                    if ~isempty(t_soln) % Adjust time values for continuing sims
                         t_soln_int = t_soln_int + t_soln(end);
                     end
                     
                     mode_soln_int = MO * ones(length(t_soln_int),1);
                     step_soln_int = k  * ones(length(t_soln_int),1);
                     
-                    t_soln      = [t_soln      ; t_soln_int     ];
-                    SV_soln     = [SV_soln     ; SV_soln_int    ];
-                    i_user_soln = [i_user_soln ; i_user_soln_int];
-                    mode_soln   = [mode_soln   ; mode_soln_int  ];
-                    step_soln   = [step_soln   ; step_soln_int  ];
+                    if k == 1
+                        idx = 1;
+                    else
+                        idx = 2;
+                    end
+
+                    t_soln      = [t_soln      ; t_soln_int(idx:end)     ];
+                    SV_soln     = [SV_soln     ; SV_soln_int(idx:end,:)  ];
+                    i_user_soln = [i_user_soln ; i_user_soln_int(idx:end)];
+                    mode_soln   = [mode_soln   ; mode_soln_int(idx:end)  ];
+                    step_soln   = [step_soln   ; step_soln_int(idx:end)  ];
             end
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- MOO Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 5
             
-           
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Simulink ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        elseif SIM.SimMode == 6
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Manual Current Profile ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 7 
@@ -307,7 +318,7 @@ for i = 1:num_sim_files
 
                 for j = 1:length(t_soln)
                     SV( : , : , j )  = SV1Dto2D( SV_soln( j , : ) , N , P , FLAG );
-                    del_phi( j , : ) = SV( P.phi_ed , : , j) - SV( P.phi_el , : , j);
+                    del_phi( j , : ) = SV( P.del_phi , : , j);
                 end
 
                 %% Modify the charge profile
