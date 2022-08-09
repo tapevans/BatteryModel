@@ -59,19 +59,68 @@ postProcessing(filename)
 filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Semi_Explicit_Test\Semi_Explicit_Test_Polar_1.00C_D.mat';
 plotfcn(filename)
 
-%%
+%% Load Results
 clear all
 close all
 clc
 
-% Load Results
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_KPCont_Profile_CV_Test_1SmallStepSOC81.93.mat';
-
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2022_07_13_Lui_SS\StairStepSim.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2022_07_11_Lui_SS\50SOC.mat';
-
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Semi_Explicit_Test\Semi_Explicit_Test_SS_EIS_SOC95.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_SingleStep200sRelaxSOC80.mat';
 load(filename)
+
+%% Make SS from SV during simulation
+% Load results from a simulation using the previous section, then set the
+% index in the next line from which time you'd like to pull SV from
+SIM.SV_IC = SV_soln(320,:)';
+SIM.freq = logspace(-1,11,101);
+SIM.i_user = -SIM.Cell_Cap/20;
+N.N_In = 1;
+N.N_Out = 5;
+
+SIM.OutputMatrix = zeros(N.N_Out , N.N_SV_tot);
+    j = 0;
+    % Cell Voltage
+    j = j+1;
+    idx_phi_ed_AN = P.phi_ed;
+    i = N.N_CV_CA(end);
+    index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+    idx_phi_ed_CA = index_offset + P.phi_ed;
+    SIM.OutputMatrix(j,idx_phi_ed_AN) = -1;
+    SIM.OutputMatrix(j,idx_phi_ed_CA) =  1;
+    % @AN/SEP
+    i = N.N_CV_AN(end);
+    index_offset = (i-1)*N.N_SV_AN;
+    % Delta Phi   @AN/SEP
+    j = j+1;
+    idx = index_offset + P.del_phi;
+    SIM.OutputMatrix(j,idx) =  1;
+    % Temperature @AN/SEP
+    j = j+1;
+    idx = index_offset + P.T;
+    SIM.OutputMatrix(j,idx) = 1;
+    % C_Liion     @AN/SEP
+    j = j+1;
+    idx = index_offset + P.C_Liion;
+    SIM.OutputMatrix(j,idx) = 1;
+    % X_surf      @AN/SEP
+    j = j+1;
+    idx = index_offset + P.C_Li_surf_AN;
+    SIM.OutputMatrix(j,idx) = 1/AN.C_Li_max;
+
+i = 1;
+P.SS.omega    = i; i = i + 1;
+P.SS.Z_mag    = i; i = i + 1;
+P.SS.Z_Re     = i; i = i + 1;
+P.SS.Z_Im     = i; i = i + 1;
+P.SS.Z_dB     = i; i = i + 1;
+P.SS.Z_ps_deg = i; i = i + 1;
+
+[A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
+
+save_filename = [num2str(SIM.SOC_start) 'SOC.mat'];
+multiple = -SIM.A_c^-1;
+sys = multiple*ss(A,B,C,D,'E',SIM.M);
+save(save_filename, 'sys')
+
 
 
 %% Change Parameters of an existing sim
@@ -92,73 +141,106 @@ save(filename,'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG')
 clear all;
 close all;
 clc;
-SS_sys = load('F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2022_07_15_Lui_SS\5SOC.mat');
-tFinal = 1e-6;
-figure
-[y,tOut] = step(SS_sys.sys,tFinal);
+
+% Model
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_SingleStep200sRelaxSOC80.mat';
+model = load(filename);
+idx = find(model.t_soln == 200);
+idx = idx(1);
+OneCRate = model.SIM.Cell_Cap;
+
+% Linear SS Model
+% SS_sys = load('F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2202_08_09_Lui_SS\SS80SOC.mat');
+% SS_sys = load('F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2202_08_09_Lui_SS\79.9SOC.mat');
+% SS_sys = load('F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2202_08_09_Lui_SS\79.95SOC.mat');
+SS_sys = load('F:\TylerFiles\GitHubRepos\BatteryModelingExtras\DataToTyrone\2202_08_09_Lui_SS\80SOCfromC3Sim.mat');
+tFinal = 13*60;
+Amplitude = OneCRate/3;
+opt = stepDataOptions;
+opt.StepAmplitude = Amplitude;
+
+% figure
+[y,tOut] = step(SS_sys.sys,tFinal,opt);
 SS_sys.cell_voltage = y(:,1);
 SS_sys.del_phi      = y(:,2);
 SS_sys.TempK        = y(:,3);
 SS_sys.C_Liion      = y(:,4);
 SS_sys.X_surf       = y(:,5);
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_StepResponse_0.4CSOC50.mat';
-model = load(filename);
-idx = find(model.t_soln == 1);
-idx = idx(1);
-close all;
-
-% Cell Voltage
+% close all;
+% Cell Voltage (min)
 figure
 hold on
-plot(model.t_soln(idx:end) - model.t_soln(idx) , model.cell_voltage(idx:end) , 'ob', 'LineWidth',2,'DisplayName','Model')
-plot(tOut , SS_sys.cell_voltage + model.cell_voltage(idx,1), 'k' , 'LineWidth',2,'DisplayName','SS')
-xlabel('Time (s)')
+plot((model.t_soln(idx:end) - model.t_soln(idx))/60 , model.cell_voltage(idx:end) , 'or', 'LineWidth',2,'DisplayName','Model')
+plot((tOut)/60 , SS_sys.cell_voltage + model.cell_voltage(idx,1), 'k' , 'LineWidth',2,'DisplayName','SS')
+xlabel('Time (min)')
 ylabel('Voltage (V)')
 title('Cell Voltage')
-xlim([0,1e-6])
+xlim([0,tFinal/60])
 lgn = legend;
 
-% Del_phi
+% Del_phi (min)
 figure
 hold on
-plot(model.t_soln(idx:end) - model.t_soln(idx), model.del_phi(idx:end,model.N.N_CV_AN) , 'ob', 'LineWidth',2,'DisplayName','Model')
-plot(tOut , SS_sys.del_phi + model.del_phi(idx,model.N.N_CV_AN) , 'k' , 'LineWidth',2,'DisplayName','SS')
-xlabel('Time (s)')
+plot((model.t_soln(idx:end) - model.t_soln(idx))/60, model.del_phi(idx:end,model.N.N_CV_AN) , 'or', 'LineWidth',2,'DisplayName','Model')
+plot((tOut)/60 , SS_sys.del_phi + model.del_phi(idx,model.N.N_CV_AN) , 'k' , 'LineWidth',2,'DisplayName','SS')
+xlabel('Time (min)')
 ylabel('Voltage (V)')
 title('\Delta \phi')
-xlim([0,1e-6])
+xlim([0,(tFinal)/60])
 lgn = legend;
 
-% Temperature
-figure
-hold on
-plot(model.t_soln(idx:end) - model.t_soln(idx) , model.TemperatureK(idx:end,model.N.N_CV_AN) , 'ob', 'LineWidth',2,'DisplayName','Model')
-plot(tOut , SS_sys.TempK + model.TemperatureK(idx,model.N.N_CV_AN) , 'k' , 'LineWidth',2,'DisplayName','SS')
-xlabel('Time (s)')
-ylabel('Temperature (K)')
-title('Temperature')
-xlim([0,1e-6])
-lgn = legend;
+% % Cell Voltage (s)
+% figure
+% hold on
+% plot(model.t_soln(idx:end) - model.t_soln(idx) , model.cell_voltage(idx:end) , 'or', 'LineWidth',2,'DisplayName','Model')
+% plot(tOut , SS_sys.cell_voltage + model.cell_voltage(idx,1), 'k' , 'LineWidth',2,'DisplayName','SS')
+% xlabel('Time (min)')
+% ylabel('Voltage (V)')
+% title('Cell Voltage')
+% xlim([0,tFinal])
+% lgn = legend;
+% 
+% % Del_phi (s)
+% figure
+% hold on
+% plot(model.t_soln(idx:end) - model.t_soln(idx), model.del_phi(idx:end,model.N.N_CV_AN) , 'or', 'LineWidth',2,'DisplayName','Model')
+% plot(tOut , SS_sys.del_phi + model.del_phi(idx,model.N.N_CV_AN) , 'k' , 'LineWidth',2,'DisplayName','SS')
+% xlabel('Time (min)')
+% ylabel('Voltage (V)')
+% title('\Delta \phi')
+% xlim([0,tFinal])
+% lgn = legend;
+
+% % Temperature
+% figure
+% hold on
+% plot(model.t_soln(idx:end) - model.t_soln(idx) , model.TemperatureK(idx:end,model.N.N_CV_AN) , 'or', 'LineWidth',2,'DisplayName','Model')
+% plot(tOut , SS_sys.TempK + model.TemperatureK(idx,model.N.N_CV_AN) , 'k' , 'LineWidth',2,'DisplayName','SS')
+% xlabel('Time (s)')
+% ylabel('Temperature (K)')
+% title('Temperature')
+% xlim([0,tFinal])
+% lgn = legend;
 
 % C_Liion
 figure
 hold on
-plot(model.t_soln(idx:end) - model.t_soln(idx) , model.C_Liion(idx:end,model.N.N_CV_AN) , 'ob', 'LineWidth',2,'DisplayName','Model')
+plot(model.t_soln(idx:end) - model.t_soln(idx) , model.C_Liion(idx:end,model.N.N_CV_AN) , 'or', 'LineWidth',2,'DisplayName','Model')
 plot(tOut , SS_sys.C_Liion + model.C_Liion(idx,model.N.N_CV_AN) , 'k' , 'LineWidth',2,'DisplayName','SS')
 xlabel('Time (s)')
 ylabel('Concentration (kmol/m^3)')
 title('C_{Li^+}')
-xlim([0,1e-6])
+xlim([0,tFinal])
 lgn = legend;
-
-% X_surf
-figure
-hold on
-plot(model.t_soln(idx:end) - model.t_soln(idx) , model.X_Li_surf(idx:end,model.N.N_CV_AN) , 'ob', 'LineWidth',2,'DisplayName','Model')
-plot(tOut , SS_sys.X_surf + model.X_Li_surf(idx,model.N.N_CV_AN) , 'k' , 'LineWidth',2,'DisplayName','SS')
-xlabel('Time (s)')
-ylabel('Mole Frac (-)')
-title('X_{surf}')
-xlim([0,1e-6])
-lgn = legend;
+% 
+% % X_surf
+% figure
+% hold on
+% plot(model.t_soln(idx:end) - model.t_soln(idx) , model.X_Li_surf(idx:end,model.N.N_CV_AN) , 'or', 'LineWidth',2,'DisplayName','Model')
+% plot(tOut , SS_sys.X_surf + model.X_Li_surf(idx,model.N.N_CV_AN) , 'k' , 'LineWidth',2,'DisplayName','SS')
+% xlabel('Time (s)')
+% ylabel('Mole Frac (-)')
+% title('X_{surf}')
+% xlim([0,tFinal])
+% lgn = legend;

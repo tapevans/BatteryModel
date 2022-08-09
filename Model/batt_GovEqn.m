@@ -66,31 +66,30 @@ for i = 1:N.N_CV_AN
 %                           - q_conv(i)...
 %                           + q_gen(i)  )...
 %                         / ( props(P.rho,i) * props(P.c_p,i) );
-    dSVdt_AN(P.T, i) = 0;
+    dSVdt_AN(P.T, i) = -(SV(P.T,i) - SIM.T_inf);
     
     % phi_el                    
-    dSVdt_AN(P.del_phi , i) =  ( (AN.A_c / AN.A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
-                                - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI...
-                                )/AN.C_dl;
+    dSVdt_AN(P.del_phi , i) =  (AN.A_c / AN.A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
+                                - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI;
                         
     % phi_ed                                        
     dSVdt_AN(P.phi_ed , i) =   i_ed(i  ) + i_el(i  )...
                              - (i_ed(i+1) + i_el(i+1));
     
     % V_1                    
-    dSVdt_AN(P.V_1    , i) =   (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI ...
-                             -  i_Far(i);
+    dSVdt_AN(P.V_1    , i) = - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI ...
+                             +  i_Far(i);
                         
     % V_2                    
-    dSVdt_AN(P.V_2    , i) =    i_Far(i) -  SV(P.i_PS,i);
+    dSVdt_AN(P.V_2    , i) = - i_Far(i)...
+                             + SV(P.i_PS,i);
     
 	% i_PS                    
     dSVdt_AN(P.i_PS   , i) =    SV(P.phi_ed,i) - SV(P.V_2,i) -  E_eq_vec(i);
                         
 	% C_Li^+
-    dSVdt_AN(P.C_Liion, i) = (-(J_Liion(i+1) - J_Liion(i))/ AN.del_x...
-                              + s_dot(i) * AN.A_s) ...
-                              / AN.eps_el;
+    dSVdt_AN(P.C_Liion, i) = -(J_Liion(i+1) - J_Liion(i))/ AN.del_x...
+                              + s_dot(i) * AN.A_s;
                 
     % C_Li
     for j = 1:N.N_R_AN
@@ -100,25 +99,24 @@ for i = 1:N.N_CV_AN
 end
 % Fix Boundary Conditions
 i = 1;
-dSVdt_AN(P.phi_ed, i) = SV(P.phi_ed,i);
+dSVdt_AN(P.phi_ed, i) = -SV(P.phi_ed,i);
 
 %% ---- Separator ----
 dSVdt_SEP = zeros(N.N_SV_SEP,N.N_CV_SEP);
 for i = 1:N.N_CV_SEP 
     index_offset = N.N_CV_AN + i;  
     % Temp
-    dSVdt_SEP(P.SEP.T, i) = 0;
+    dSVdt_SEP(P.SEP.T, i) = -(SV(P.T,index_offset) - SIM.T_inf);
 %     dSVdt_SEP(P.SEP.T, i) = (  -(q_cond(index_offset+1) - q_cond(index_offset))/ SEP.del_x...
 %                                - q_conv(index_offset)...
 %                                + q_gen(index_offset)  )...
 %                             / ( props(P.rho,index_offset) * props(P.c_p,index_offset) );
     
     % phi_el
-    dSVdt_SEP(P.SEP.phi_el, i) = i_el(index_offset+1)-i_el(index_offset);
+    dSVdt_SEP(P.SEP.phi_el, i) = -(i_el(index_offset+1)-i_el(index_offset));
     
     % C_Li^+
-    dSVdt_SEP(P.SEP.C_Liion, i)= (-(J_Liion(index_offset+1) - J_Liion(index_offset))/SEP.del_x)...
-                                    /SEP.eps_el;
+    dSVdt_SEP(P.SEP.C_Liion, i)= -(J_Liion(index_offset+1) - J_Liion(index_offset))/SEP.del_x;
 end
 
 %% ---- Cathode ----
@@ -126,37 +124,35 @@ dSVdt_CA = zeros(N.N_SV_CA,N.N_CV_CA);
 for i = 1:N.N_CV_CA
     index_offset = N.N_CV_AN + N.N_CV_SEP + i;  
     % Temp
-    dSVdt_CA(P.T, i) =  0;
+    dSVdt_CA(P.T, i) =  -(SV(P.T,index_offset) - SIM.T_inf);
 % 	dSVdt_CA(P.T, i) =  (  -(q_cond(index_offset+1) - q_cond(index_offset))/ CA.del_x...
 %                            - q_conv(index_offset)...
 %                            + q_gen(index_offset)  )...
 %                            / ( props(P.rho,index_offset) * props(P.c_p,index_offset) );
     
     % phi_el
-    dSVdt_CA(P.del_phi , i) =  ( (CA.A_c / CA.A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
-                                - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI...
-                                )/CA.C_dl;
+    dSVdt_CA(P.del_phi , i) =  (CA.A_c / CA.A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
+                                - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI;
     
 	% phi_ed                    
     dSVdt_CA(P.phi_ed , i)  =   i_ed(index_offset  ) + i_el(index_offset  )...
                               - (i_ed(index_offset+1) + i_el(index_offset+1));
     
 	% V_1                    
-    dSVdt_CA(P.V_1    , i)  =   (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI ...
-                              -  i_Far(index_offset);
+    dSVdt_CA(P.V_1    , i)  = - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI ...
+                              +  i_Far(index_offset);
     
 	% V_2                    
-    dSVdt_CA(P.V_2    , i)  =    i_Far(index_offset)...
-                              -  SV(P.i_PS,index_offset);
+    dSVdt_CA(P.V_2    , i)  = -  i_Far(index_offset)...
+                              +  SV(P.i_PS,index_offset);
     
 	% i_PS                    
     dSVdt_CA(P.i_PS   , i)  =    SV(P.phi_ed,index_offset) - SV(P.V_2,index_offset) ...
                               -  E_eq_vec(index_offset);
     
     % C_Li^+
-    dSVdt_CA(P.C_Liion, i) = (-(J_Liion(index_offset+1) - J_Liion(index_offset))/ CA.del_x...
-                              + s_dot(index_offset) * CA.A_s) ...
-                              / CA.eps_el;
+    dSVdt_CA(P.C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset))/ CA.del_x...
+                              + s_dot(index_offset) * CA.A_s;
     % C_Li
     for j = 1:N.N_R_CA
             dSVdt_CA(P.C_Li+j-1, i) = -3*(CA.r_half_vec(j+1)^2 * J_Li(j+1,index_offset) - CA.r_half_vec(j)^2 * J_Li(j,index_offset)) ...

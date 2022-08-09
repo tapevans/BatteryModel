@@ -92,6 +92,8 @@ end
 FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
 	SIM.SaveTimeStep = 1;      % [s], Sampling rate of the ode output
 
+FLAG.SaveSystemForEst = 0; % 1, if save the system to be used in the estimator ONLY FOR SS EIS (SimMode 3)
+
 FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
     FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
 FLAG.Plot             = 1;   % 1 if the results plot immediately
@@ -144,7 +146,6 @@ if SIM.SimMode == 3
     SIM.C_rate    = 1/5;  % How many charges per hour, ABSOLUTE VALUE
     SIM.t_ramp    = 0;
     
-    FLAG.SaveSystemForEst = 1; % 1, if save the system to be used in the estimator
 %%%% Input from batch mode 
 %     SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
 %     SIM.SOC_start = 50;   % [%], Initial state of charge

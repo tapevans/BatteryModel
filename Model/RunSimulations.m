@@ -9,8 +9,9 @@ cd(filepath)
 i = 1;
 % Project_Folder{i} = 'phiFsolve_Test';   i = i+1;
 % Project_Folder{i} = 'TestingForTyrone';   i = i+1;
+Project_Folder{i} = 'TestingSimulink';   i = i+1;
 % Project_Folder{i} = 'Semi_Explicit_Test';   i = i+1;
-Project_Folder{i} = 'MassIdentity_Test';   i = i+1;
+% Project_Folder{i} = 'MassIdentity_Test';   i = i+1;
 % Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
 % Project_Folder{i} = 'Half_Cell_Test';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;

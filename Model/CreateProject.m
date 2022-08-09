@@ -57,22 +57,20 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
 
-% folder_name  = 'Semi_Explicit_Test';
-% battery_name = 'Semi_Explicit_Test';
+% folder_name  = 'TestingForTyrone';
+% battery_name = 'TestingForTyrone';
 
-folder_name  = 'MassIdentity_Test';
-battery_name = 'MassIdentity_Test';
+folder_name  = 'TestingSimulink';
+battery_name = 'TestingSimulink';
 
-% folder_name  = 'KBCP_Mode_Test';
-% battery_name = 'KBCP_Mode_Test';
 
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    C_rates      = []; 
+%     C_rates      = []; 
 %     C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5]; 
-%     C_rates      = [1]; 
+    C_rates      = [1]; 
 %     C_rates      = [1/20 -1/20]; 
-%     C_rates      = [1/20];
+%     C_rates      = [-1/3];
 %     C_rates      = [1/20 1/10 1/3 1 2]; 
 
 % ---- Harmonic Perturbation ----
@@ -85,10 +83,10 @@ battery_name = 'MassIdentity_Test';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-%     SS_SOC = [];
+    SS_SOC = [];
 %     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
 %     SS_SOC = [80.46];
-    SS_SOC = [50];
+%     SS_SOC = [82];
     
 %         SS_freq = [];
         SS_freq = logspace(-1,11,101);
@@ -96,8 +94,8 @@ battery_name = 'MassIdentity_Test';
         
 % ---- Known BC Profile Controller ----
     KBCP   = 0;
-        KBCPProfileOverwrite = 0;
-        KBCPProfileFilename = 'ManualMOSOC25';
+        KBCPProfileOverwrite = 1;
+        KBCPProfileFilename = 'SingleStepSlow';
 %         KBCPProfileFilename = 'ManualMO';        
 %         KBCPProfileFilename = 'Profile_CV_Test_1SmallStep_IC4.0V';        
 %         KBCPProfileFilename = 'Profile_CC_Test_StepResponse_0.4C';
@@ -105,7 +103,7 @@ battery_name = 'MassIdentity_Test';
 %         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';
 %         KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
 %         KBSOC = 81.93;
-        KBSOC = 25;
+        KBSOC = 79.95;
         
 % ---- MOO Controller ----
     MOO = 0;

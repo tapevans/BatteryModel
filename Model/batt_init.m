@@ -769,7 +769,7 @@ for i = 1:N.N_CV_AN
     % Temp
     M(index_offset+P.T       , index_offset+P.T )        =  1;
     % del_phi
-    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  1;
+    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  AN.C_dl;
     % phi_ed 
     M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
     % V_1
@@ -779,7 +779,7 @@ for i = 1:N.N_CV_AN
     % i_PS
     M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
     % C_Li^+
-    M(index_offset+P.C_Liion , index_offset+P.C_Liion)   =  1; 
+    M(index_offset+P.C_Liion , index_offset+P.C_Liion)   =  AN.eps_el; 
     % C_Li
     for j = 1:N.N_R_AN
         M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
@@ -794,7 +794,7 @@ for i = 1:N.N_CV_SEP
     % phi_el
     M(index_offset+P.SEP.phi_el  , index_offset+P.SEP.phi_el )   =  sim_cap;
     % C_Li^+
-    M(index_offset+P.SEP.C_Liion , index_offset+P.SEP.C_Liion )  =  1; 
+    M(index_offset+P.SEP.C_Liion , index_offset+P.SEP.C_Liion )  =  SEP.eps_el; 
 end
 
 % ---- Cathode ----
@@ -803,7 +803,7 @@ for i = 1:N.N_CV_CA
     % Temp
     M(index_offset+P.T       , index_offset+P.T )        =  1;
     % del_phi
-    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  1;
+    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  CA.C_dl;
     % phi_ed
     M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
     % V_1
@@ -813,7 +813,7 @@ for i = 1:N.N_CV_CA
     % i_PS
     M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
     % C_Li^+
-    M(index_offset+P.C_Liion , index_offset+P.C_Liion )  =  1; 
+    M(index_offset+P.C_Liion , index_offset+P.C_Liion )  =  CA.eps_el; 
     % C_Li
     for j = 1:N.N_R_CA
         M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
@@ -830,7 +830,7 @@ SIM.M = M;
 
 
 %% Make Mass for just diffEq
-if SIM.SimMode == 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
+% if SIM.SimMode == 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
     % if SIM.SimMode == 6 % Simulink
     % Make indices vector
     idx_diff = [];
@@ -892,14 +892,14 @@ if SIM.SimMode == 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
         end
     end
 
-    SIM.M_DiffEq = M(idx_diff,idx_diff);
-    SIM.M_DiffEq_Inv = inv(SIM.M_DiffEq);
-    SIM.Diff_idx = idx_diff;
-    SIM.Algb_idx = idx_algb;
+%     SIM.M_DiffEq = M(idx_diff,idx_diff);
+%     SIM.M_DiffEq_Inv = inv(SIM.M_DiffEq);
+    SIM.diff_idx = idx_diff;
+    SIM.algb_idx = idx_algb;
 
-    N.N_Diff = length(SIM.Diff_idx);
-    N.N_Algb = length(SIM.Algb_idx);
-end
+    N.N_diff = length(SIM.diff_idx);
+    N.N_algb = length(SIM.algb_idx);
+% end
 
 %% Set up Jacobian here too (sparse)
 %%%%% Later
