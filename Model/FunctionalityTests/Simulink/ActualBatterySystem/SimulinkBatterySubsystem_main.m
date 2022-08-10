@@ -4,7 +4,8 @@ clear all; close all; clc;
 %% Load File
 filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_Polar_1.00C_D.mat';
 load(filename)
-
+[current_file_path,~,~] = fileparts(mfilename('fullpath'));
+cd(current_file_path)
 %% ODE Simulation
 % Simulation Parameters
     tspan = SIM.tspan;
@@ -21,7 +22,7 @@ load(filename)
     SV_IC = SIM.SV_IC;
     i_user = 0;
     tStart = tic;
-    SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
+    SOLN = ode15s(@(t,SV)batt_GovEqn_test(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
     tODE = toc(tStart);
     t_soln_ode  = SOLN.x';
     SV_soln_ode = SOLN.y';
@@ -259,3 +260,4 @@ end
     ylabel('Voltage (V)')
     xlim([0,t_soln(end)])
     lgn = legend;
+    exportgraphics(gcf,'ODEvSIMULINK.png','Resolution',1000)
