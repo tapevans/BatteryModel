@@ -57,18 +57,18 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
 
-% folder_name  = 'TestingForTyrone';
-% battery_name = 'TestingForTyrone';
+folder_name  = 'TestingForTyrone';
+battery_name = 'TestingForTyrone_newOut';
 
-folder_name  = 'TestingSimulink';
-battery_name = 'TestingSimulink';
+% folder_name  = 'TestingSimulink';
+% battery_name = 'TestingSimulink';
 
 
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-%     C_rates      = []; 
+    C_rates      = []; 
 %     C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5]; 
-    C_rates      = [1]; 
+%     C_rates      = [1]; 
 %     C_rates      = [1/20 -1/20]; 
 %     C_rates      = [-1/3];
 %     C_rates      = [1/20 1/10 1/3 1 2]; 
@@ -83,10 +83,10 @@ battery_name = 'TestingSimulink';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    SS_SOC = [];
-%     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
+%     SS_SOC = [];
+    SS_SOC = [5, 10, 25, 50, 75, 90, 95];
 %     SS_SOC = [80.46];
-%     SS_SOC = [82];
+%     SS_SOC = [80];
     
 %         SS_freq = [];
         SS_freq = logspace(-1,11,101);
