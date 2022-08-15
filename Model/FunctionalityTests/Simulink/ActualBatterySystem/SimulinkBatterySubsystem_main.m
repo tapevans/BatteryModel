@@ -260,4 +260,4 @@ end
     ylabel('Voltage (V)')
     xlim([0,t_soln(end)])
     lgn = legend;
-    exportgraphics(gcf,'ODEvSIMULINK.png','Resolution',1000)
+%     exportgraphics(gcf,'ODEvSIMULINK.png','Resolution',1000)

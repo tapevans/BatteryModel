@@ -113,6 +113,7 @@ if SIM.SimMode == 3
     
     N.N_Out = length(fieldnames(P.OM));
 end
+
 %% Region Indexing
 % Number of state variables in each CV
     N.N_SV_AN  = N.N_SV_nR + N.N_R_AN;

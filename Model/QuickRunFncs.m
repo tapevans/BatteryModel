@@ -4,17 +4,17 @@ clc
 %%
 % Test Initialization
 %%% Mode 1 ---- Polarization ----
-    % SIM.SOC_start = 50;   % [%], Initial state of charge
-    % SIM.SimMode = 1;
-    % SIM.C_rate = 1/20;
-    % SIM.ChargeOrDischarge = 1;
+    SIM.SOC_start = 50;   % [%], Initial state of charge
+    SIM.SimMode = 1;
+    SIM.C_rate = 1/20;
+    SIM.ChargeOrDischarge = 1;
 
 %%% Mode 2 ---- Harmonic Perturbation ----
 
 %%% Mode 3 ---- State Space EIS ----
-    SIM.SimMode = 3;
-    SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
-    SIM.SOC_start = 95;   % [%], Initial state of charge
+%     SIM.SimMode = 3;
+%     SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
+%     SIM.SOC_start = 95;   % [%], Initial state of charge
 
 %%% Mode 4 ---- Known BC Profile Controller ----
 
@@ -30,7 +30,8 @@ clc
 %
 [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
 
-% cell_voltage = SIM.SV_IC(341) - SIM.SV_IC(3)
+% format long
+cell_voltage = SIM.SV_IC(341) - SIM.SV_IC(3)
 
 %% Test Governing Eqns Output
 t = 2;
