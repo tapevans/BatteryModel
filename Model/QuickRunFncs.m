@@ -4,7 +4,7 @@ clc
 %%
 % Test Initialization
 %%% Mode 1 ---- Polarization ----
-    SIM.SOC_start = 50;   % [%], Initial state of charge
+    SIM.SOC_start = 80;   % [%], Initial state of charge
     SIM.SimMode = 1;
     SIM.C_rate = 1/20;
     SIM.ChargeOrDischarge = 1;
@@ -55,11 +55,8 @@ postProcessing(filename)
 
 %% Plot Single Results
 clc; close all;
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\KBCP_Mode_Test\KBCP_Mode_Test_KPCont_Profile_CCChg4.2_CCDchg3.4SOC0.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\KBCP_Mode_Test\KBCP_Mode_Test_KPCont_Profile_CCChg4.2_CCDchg3.4_C3SOC0.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\MoleInitFix\MoleInitFix_KPCont_Profile_CC_Test_3Step_wRelaxSOC0.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Semi_Explicit_Test\Semi_Explicit_Test_Polar_1.00C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelax_LowCrateSOC50.mat';
 plotfcn(filename)
 
 %% Load Results
@@ -67,47 +64,62 @@ clear all
 close all
 clc
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_SingleStep200sRelaxSOC80.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\80SOC_SimEndState.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
 load(filename)
 
 %% Make SS from SV during simulation
 % Load results from a simulation using the previous section, then set the
 % index in the next line from which time you'd like to pull SV from
-SIM.SV_IC = SV_soln(320,:)';
+SIM.SV_IC = SV_soln(end,:)';
 SIM.freq = logspace(-1,11,101);
-SIM.i_user = -SIM.Cell_Cap/20;
-N.N_In = 1;
-N.N_Out = 5;
+SIM.i_user = -SIM.Cell_Cap/3;
 
-SIM.OutputMatrix = zeros(N.N_Out , N.N_SV_tot);
-    j = 0;
-    % Cell Voltage
-    j = j+1;
-    idx_phi_ed_AN = P.phi_ed;
-    i = N.N_CV_CA(end);
-    index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
-    idx_phi_ed_CA = index_offset + P.phi_ed;
-    SIM.OutputMatrix(j,idx_phi_ed_AN) = -1;
-    SIM.OutputMatrix(j,idx_phi_ed_CA) =  1;
-    % @AN/SEP
-    i = N.N_CV_AN(end);
-    index_offset = (i-1)*N.N_SV_AN;
-    % Delta Phi   @AN/SEP
-    j = j+1;
-    idx = index_offset + P.del_phi;
-    SIM.OutputMatrix(j,idx) =  1;
-    % Temperature @AN/SEP
-    j = j+1;
-    idx = index_offset + P.T;
-    SIM.OutputMatrix(j,idx) = 1;
-    % C_Liion     @AN/SEP
-    j = j+1;
-    idx = index_offset + P.C_Liion;
-    SIM.OutputMatrix(j,idx) = 1;
-    % X_surf      @AN/SEP
-    j = j+1;
-    idx = index_offset + P.C_Li_surf_AN;
-    SIM.OutputMatrix(j,idx) = 1/AN.C_Li_max;
+i = 1;
+    P.OM.cell_volt = i; i = i + 1;
+    P.OM.del_phi   = i; i = i + 1;
+    P.OM.temp      = i; i = i + 1;
+    P.OM.C_Liion   = i; i = i + 1;
+    P.OM.X_surf    = i; i = i + 1;
+    P.OM.i_Far     = i; i = i + 1;
+    P.OM.eta       = i; i = i + 1;
+
+N.N_In = 1;
+N.N_Out = length(fieldnames(P.OM));
+
+    SIM.OutputMatrix = zeros(N.N_Out , N.N_SV_tot);
+        % Cell Voltage
+            idx_phi_ed_AN = P.phi_ed;
+
+            i = N.N_CV_CA(end);
+            index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+            idx_phi_ed_CA = index_offset + P.phi_ed;
+
+            SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_AN) = -1;
+            SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_CA) =  1;
+        % @AN/SEP
+            i = N.N_CV_AN(end);
+            index_offset = (i-1)*N.N_SV_AN;
+        % Delta Phi   @AN/SEP
+            idx = index_offset + P.del_phi;
+            SIM.OutputMatrix(P.OM.del_phi,idx) =  1;
+        % Temperature @AN/SEP
+            idx = index_offset + P.T;
+            SIM.OutputMatrix(P.OM.temp,idx) = 1;
+        % C_Liion     @AN/SEP
+            idx = index_offset + P.C_Liion;
+            SIM.OutputMatrix(P.OM.C_Liion,idx) = 1;
+        % X_surf      @AN/SEP
+            idx = index_offset + P.C_Li_surf_AN;
+            SIM.OutputMatrix(P.OM.X_surf,idx) = 1/AN.C_Li_max;
+        % i_Far      @AN/SEP
+            idx = index_offset + P.i_PS;
+            SIM.OutputMatrix(P.OM.i_Far,idx) = 1;
+        % Eta      @AN/SEP
+            idx = index_offset + P.V_2;
+            SIM.OutputMatrix(P.OM.eta,idx) = 1;
+            idx = index_offset + P.V_1;
+            SIM.OutputMatrix(P.OM.eta,idx) = -1;
 
 i = 1;
 P.SS.omega    = i; i = i + 1;
@@ -119,7 +131,8 @@ P.SS.Z_ps_deg = i; i = i + 1;
 
 [A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
 
-save_filename = [num2str(SIM.SOC_start) 'SOC.mat'];
+% save_filename = [num2str(SIM.SOC_start) 'SOC.mat'];
+save_filename = ['80SOC_SimEndState.mat'];
 multiple = -SIM.A_c^-1;
 sys = multiple*ss(A,B,C,D,'E',SIM.M);
 save(save_filename, 'sys')

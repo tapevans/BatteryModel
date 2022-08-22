@@ -45,6 +45,7 @@ FLAG.KPCONT_VOLT_v_SOC       = 0;
 FLAG.KPCONT_X_Li_surf        = 0;
 FLAG.KPCONT_X_Li_surf_v_time = 1; %@ AN/SEP
 FLAG.KPCONT_del_phi_v_time   = 1; %@ AN/SEP
+FLAG.KPCONT_i_Far_v_time     = 1; %@ AN/SEP
 
 % ---- MOO Controller ----
 FLAG.MOOCONT_cellVoltage = 1;
@@ -603,6 +604,15 @@ elseif SIM.SimMode == 4
 %     xlim([1,1+1e-6])
     end
     
+    %% 
+    if FLAG.KPCONT_i_Far_v_time
+    figure
+    plot(t_soln,i_Far(:,N.N_CV_AN),'-o','LineWidth',2)
+    title('i_{Far} at AN/SEP')
+    xlabel('Time (s)')
+    ylabel('i_{Far} (A/m^2)')
+%     xlim([1,1+1e-6])
+    end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- MOO Controller ----
 elseif SIM.SimMode == 5
