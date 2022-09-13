@@ -2,24 +2,24 @@
 clear all; close all; clc;
 
 %% Parameters
-    p_OS = 1e-6; % [%], Percent Overshoot
-    t_s  = 2e-4; % [s], Settling Time
+%     p_OS = 1e-6; % [%], Percent Overshoot
+%     t_s  = 2e-4; % [s], Settling Time
 %     tfinal = 30*60; % [s], Final Simulation Time
-    tfinal = 1; % [s], Final Simulation Time
+    tfinal = 20; % [s], Final Simulation Time
     
     model_filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_KPCont_SingleStepTo50SOCSOC0.mat';
     equil_filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_SS_EIS_SOC50.mat';
     save_filename  = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\SimulinkResults.mat';
 
-    FLAG.CalcSS      = 1;
-    FLAG.PostProcess = 0;
-    FLAG.PLOT = 0;
+    localFLAG.CalcSS      = 1;
+    localFLAG.PostProcess = 1;
+    localFLAG.PLOT = 1;
 
 %% Update Working Directory
     [current_file_path,~,~] = fileparts(mfilename('fullpath'));
     cd(current_file_path)
 
-% Add Model Folder
+% Add 'Model' Folder
     idx = find(current_file_path == '\',1,'last');
     model_folder = [ current_file_path(1:idx) 'Model'];
     addpath(genpath(model_folder));
@@ -30,26 +30,32 @@ clear all; close all; clc;
 %% Load Model File
 model = load(model_filename);
 SV_IC = model.SV_soln(end,:)';
-if ~FLAG.CalcSS
+SIM = model.SIM;
+N     = model.N;
+if ~localFLAG.CalcSS
     clear model;
 end
 
 %% Load Equilibrium State File
-if ~FLAG.CalcSS
+if ~localFLAG.CalcSS
     equil = load(equil_filename);
+    A = equil.A; B = equil.B; C = equil.C; D = equil.D;
+    C = C(1,:); % Cell_Voltage is the first row
+    D = 0;
+    syseq_ctrb = ctrb(ss(A,B,C,D,'E',SIM.M))
 end
 
 %% Get SS Matricies
-if FLAG.CalcSS
-AN = model.AN;
-CA = model.CA;
-SEP = model.SEP;
-EL = model.EL;
-SIM = model.SIM;
-CONS = model.CONS;
-P = model.P;
-N = model.N;
-FLAG = model.FLAG;
+if localFLAG.CalcSS
+AN    = model.AN;
+CA    = model.CA;
+SEP   = model.SEP;
+EL    = model.EL;
+SIM   = model.SIM;
+CONS  = model.CONS;
+P     = model.P;
+N     = model.N;
+FLAG  = model.FLAG;
 PROPS = model.PROPS;
 
 i = 1;
@@ -110,10 +116,38 @@ SIM.SV_IC  = SV_IC;
 SIM.freq   = logspace(-1,11,101);
 SIM.i_user = -model.SIM.Cell_Cap/20;
 
+
 [A,B,C,D,~] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
 C = C(1,:); % Cell_Voltage is the first row
 D = 0;
+CV = C*SV_IC;
+
+% Save the system for troubleshooting
+    multiple = -SIM.A_c^-1;
+    sys = multiple*ss(A,B,C,D,'E',SIM.M);
+    sys_min = minreal(sys);
+%     postProcessComplete = 1;
+%     save('Calc_SS','sys','postProcessComplete')
+    
+    A = sys.A; B = sys.B; C = sys.C; D = sys.D;
+
 end
+
+
+% sorteig = sort(real(eig(A)));
+% [vec , poles] = eig(A);
+% poles = diag(poles);
+% find(poles>0)
+% reduced_vec = real(vec);
+%     for i = 1:length(reduced_vec)
+%         for j = 1:length(reduced_vec)
+%             if abs(reduced_vec(i,j))<1e-2
+%                 reduced_vec(i,j) = 0;
+%             else
+%                 reduced_vec(i,j) = reduced_vec(i,j);
+%             end
+%         end
+%     end
 
 %% Calculate Algebraic Control Value
 % Pseudo-inverse of Mass
@@ -122,13 +156,26 @@ end
     S_cross = pinv(S,threshold);
     M_cross = V*S_cross*U';
 
-
-
 % Calculate differential variable dynamics
     A_cross = M_cross*A;
+%     sorteig_cross = sort(real(eig(A_cross)));
     [ol_vec , ol_poles] = eig(M_cross*A);
     fastest_diff_pole = min(diag(real(ol_poles)));
-%%%     ol_poles_diag = diag(real(ol_poles));
+%     ol_poles_diag = diag(real(ol_poles));
+%     idx_cross = find(ol_poles_diag>0);
+%     reduced_ol_vec = real(ol_vec);
+%     for i = 1:length(reduced_ol_vec)
+%         for j = 1:length(reduced_ol_vec)
+%             if abs(reduced_ol_vec(i,j))<1e-2
+%                 reduced_ol_vec(i,j) = 0;
+%             else
+%                 reduced_ol_vec(i,j) = reduced_ol_vec(i,j);
+%             end
+%         end
+%     end
+
+    
+    
 
 % Calculate Null Space matricies
     r = rank(S_cross); 
@@ -146,25 +193,34 @@ end
     diag_vec(SIM.algb_idx) = algb_poles;
     K_algb = diag(diag_vec);
 
-% Calculate New System A,B
-    A_comb = M_cross*A - K_algb*U_NV_NT*A;
-    B_comb = M_cross*B - K_algb*U_NV_NT*B;
-%     B_comb = M_cross*B;
+% % Calculate New System A,B
+%     A_comb = M_cross*A - K_algb*U_NV_NT*A;
+%     B_comb = M_cross*B - K_algb*U_NV_NT*B;
+%     %     B_comb = M_cross*B;
     
-    [sys_eig_vec ,sys_poles] = eig(A_comb);
-    sys_poles_diag = diag(real(sys_poles));
-    find(sys_poles_diag>0)
-%     find(sys_poles_diag>0)
-    reduced_sys_eig_vec = real(sys_eig_vec);
-    for i = 1:length(reduced_sys_eig_vec)
-        for j = 1:length(reduced_sys_eig_vec)
-            if abs(reduced_sys_eig_vec(i,j))<1e-5
-                reduced_sys_eig_vec(i,j) = 0;
-            else
-                reduced_sys_eig_vec(i,j) = reduced_sys_eig_vec(i,j);
-            end
-        end
-    end
+
+% % Save the system for troubleshooting
+%     multiple = 1;
+% %     multiple = -SIM.A_c^-1;
+%     sys = multiple*ss(A_comb,B_comb,C,D);
+%     postProcessComplete = 1;
+%     save('LCNull_SS','sys','postProcessComplete')
+
+% % Calc eig
+%     sorteig_comb = sort(real(eig(A_comb)));
+%     [sys_eig_vec ,sys_poles] = eig(A_comb);
+%     sys_poles_diag = diag(real(sys_poles));
+%     idx_comb = find(sys_poles_diag>0);
+%     reduced_sys_eig_vec = real(sys_eig_vec);
+%     for i = 1:length(reduced_sys_eig_vec)
+%         for j = 1:length(reduced_sys_eig_vec)
+%             if abs(reduced_sys_eig_vec(i,j))<1e-2
+%                 reduced_sys_eig_vec(i,j) = 0;
+%             else
+%                 reduced_sys_eig_vec(i,j) = reduced_sys_eig_vec(i,j);
+%             end
+%         end
+%     end
 %     for i = 1:length(A_comb)
 %         if i == 1
 %             Controllability_comb = [ B_comb];
@@ -175,28 +231,30 @@ end
 % %     Controllability_comb = [ B_comb A_comb*B_comb A_comb^2*B_comb];
 %     rank_comb = rank(Controllability_comb)
 
-
+% idx_comb'
+% sys_poles_diag(idx_comb)'
+% D;
 %% Calculate Closed Loop Pole Dynamics
-    zeta = sqrt( ((log(p_OS/100))^2)/ ( pi^2 + (log(p_OS/100))^2  )   );
-    omega_n = 4.6/( zeta*t_s );
-
-    pole_p = -omega_n*(zeta + 1i*sqrt(1-zeta^2));
-    pole_m = -omega_n*(zeta - 1i*sqrt(1-zeta^2));
-    fast_pole = -5*zeta*omega_n;
-%     fast_pole_vec = linspace(0,1,(N.N_SV_tot-2))';
-    fast_pole_vec = -(0:1:N.N_SV_tot-3)';
-    fast_pole_vec = fast_pole_vec + fast_pole;
-
-    cl_poles = [pole_p ; pole_m ; fast_pole_vec];
+%     zeta = sqrt( ((log(p_OS/100))^2)/ ( pi^2 + (log(p_OS/100))^2  )   );
+%     omega_n = 4.6/( zeta*t_s );
+% 
+%     pole_p = -omega_n*(zeta + 1i*sqrt(1-zeta^2));
+%     pole_m = -omega_n*(zeta - 1i*sqrt(1-zeta^2));
+%     fast_pole = -5*zeta*omega_n;
+% %     fast_pole_vec = linspace(0,1,(N.N_SV_tot-2))';
+%     fast_pole_vec = -(0:1:N.N_SV_tot-3)';
+%     fast_pole_vec = fast_pole_vec + fast_pole;
+% 
+%     cl_poles = [pole_p ; pole_m ; fast_pole_vec];
 
 %% Calculate Controller Matricies
 % sys   = ss(A,B,C,D);  Co    = ctrb(A,B);
 % sysr  =  minreal(sys);Co_r  = ctrb(sysr.A ,sysr.B);
 % sysrs = sminreal(sys);Co_rs = ctrb(sysrs.A,sysrs.B);
 
-sys_c   = ss(A_comb,B_comb,C,D);  Co_c    = ctrb(A_comb,B_comb);
-sysr_c  =  minreal(sys_c);        Co_r_c  = ctrb(sysr_c.A ,sysr_c.B);
-sysrs_c = sminreal(sys_c);        Co_rs_c = ctrb(sysrs_c.A,sysrs_c.B);
+% sys_c   = ss(A_comb,B_comb,C,D);  Co_c    = ctrb(A_comb,B_comb);
+% sysr_c  =  minreal(sys_c);        Co_r_c  = ctrb(sysr_c.A ,sysr_c.B);
+% sysrs_c = sminreal(sys_c);        Co_rs_c = ctrb(sysrs_c.A,sysrs_c.B);
 
 % step(sys,'r',sysr,'--g',sysrs,'--b')
 % step(sys,sys_c)
@@ -215,19 +273,69 @@ sysrs_c = sminreal(sys_c);        Co_rs_c = ctrb(sysrs_c.A,sysrs_c.B);
 %     rank(Co);
 %     unco = length(A_comb) - rank(Co); % Number of Uncontrollable State
 
-% Determine N_x and N_u (See notes or control textbook)
-    zero_vec = zeros(N.N_SV_tot,1);
-    a = [A_comb , B_comb; C , D];
-%     a = [A , B; C , D];
-    b = [zeros(N.N_SV_tot,1) ;1];
-    N_vec = a\b;
+% % Determine N_x and N_u (See notes or control textbook)
+%     zero_vec = zeros(N.N_SV_tot,1);
+%     a = [A_comb , B_comb; C , D];
+% %     a = [A , B; C , D];
+%     b = [zeros(N.N_SV_tot,1) ;1];
+%     N_vec = a\b;
+% 
+%     N_x = N_vec(1:N.N_SV_tot,1);
+%     N_u = N_vec(N.N_SV_tot+1,1);
 
-    N_x = N_vec(1:N.N_SV_tot,1);
-    N_u = N_vec(N.N_SV_tot+1,1);
+%% LQG
+N_states = N.N_SV_tot;
+N_output = 1;
+
+% t_s  = 2e-4; % [s], Settling Time
+% t_s  = 1; % [s], Settling Time
+% sys = ss(A_comb,B_comb,C,D);
+% sys_ctrb = ctrb(sys)
+
+rho = 1e5;
+Q_LQG = rho * (sys_min.C' * sys_min.C) ;%+ 1e-10*eye(length(sys.A));
+Q_LQG = blkdiag(Q_LQG,1);
+R_LQG = 1e0; % Inputs is length 1, makes R (1x1) %%%%!!!! Needs better comment
+N_LQG = zeros(length(sys_min.A)+1,1); % (states+1 x inputs)
+
+[K_LQI,~,~] = lqi(sys_min,Q_LQG,R_LQG,N_LQG);
+
+% Kalman Filter
+% Modify the system?
+LQGsysMOD = sys_min;
+LQGsysMOD.OutputName = 'Voltage';
+LQGsysMOD.InputName  = 'CurrentWNoise';
+
+Sum = sumblk('CurrentWNoise = Current + w');
+sys_LQG = connect(LQGsysMOD,Sum,{'Current','w'},'Voltage');
+
+
+Qn = rho;
+Rn = R_LQG;
+Nn = 0;
+[kest,~,~] = kalman(sys_LQG,Qn,Rn,Nn);
+
+% Combining Kalman filter and Gains
+Controller = lqgtrack(kest,K_LQI);
+
+% QXU = blkdiag(Q,R);
+% QXU = eye(size(QXU));
+% 
+% QWU = eye(size(QXU)); % Needs to be positive definite
+% 
+% rho_I = 1e0;
+% QI = rho_I*eye(N_output);
+% 
+% 
+% reg_SS = lqg(sys,QXU,QWU,QI);
+% A_SS = reg_SS.A;
+% B_SS = reg_SS.B;
+% C_SS = reg_SS.C;
+% D_SS = reg_SS.D;
 
 
 %% Other Constants
-CV = C*SV_IC;
+
 
 %% Function Handle Conversion
 AN.EqPotentialHandle = func2str(AN.EqPotentialHandle);
@@ -246,7 +354,8 @@ EL.D_o_Li_ionHandle  = func2str(EL.D_o_Li_ionHandle);
 EL.kappaHandle       = func2str(EL.kappaHandle);
 
 SIM = rmfield(SIM,'fsolve_options');
-% SIM = rmfield(SIM,'ControllerHandle');
+SIM = rmfield(SIM,'ControllerHandle');
+SIM = rmfield(SIM,'Controller_MO_File');
 
 %% Run Simulation
 mdl = 'battery_system_CV';
@@ -254,18 +363,23 @@ in = Simulink.SimulationInput(mdl);
 in = in.setModelParameter('StartTime','0','StopTime',num2str(tfinal));
 
 tStart = tic;
-% out = sim(in);
+out = sim(in);
 t_solve = toc(tStart);
 
 
 %% Post-Processing
-if FLAG.PostProcess
-
+if localFLAG.PostProcess
+out.i_user = reshape(out.i_user,[],1);
 end
 
 %% Plotting
-if FLAG.PLOT
+if localFLAG.PLOT
+figure
+yyaxis left
+plot(out.tout,out.SV(:,341))
 
+yyaxis right
+plot(out.tout,out.i_user)
 end
 
 

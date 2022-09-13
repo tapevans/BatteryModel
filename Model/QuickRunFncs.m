@@ -4,7 +4,7 @@ clc
 %%
 % Test Initialization
 %%% Mode 1 ---- Polarization ----
-    SIM.SOC_start = 80;   % [%], Initial state of charge
+    SIM.SOC_start = 90;   % [%], Initial state of charge
     SIM.SimMode = 1;
     SIM.C_rate = 1/20;
     SIM.ChargeOrDischarge = 1;
@@ -30,8 +30,8 @@ clc
 %
 [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
 
-% format long
 cell_voltage = SIM.SV_IC(341) - SIM.SV_IC(3)
+x_surf = SIM.SV_IC(17)/AN.C_Li_max
 
 %% Test Governing Eqns Output
 t = 2;
@@ -55,8 +55,13 @@ postProcessing(filename)
 
 %% Plot Single Results
 clc; close all;
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelax_LowCrateSOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepChargeSOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepCharge_ext5SOC25.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepDischarge_ext5SOC25.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingLinearLC\TestingLinearLC_KPCont_SingleStepForLinStepCompSOC0.mat';
+
 plotfcn(filename)
 
 %% Load Results
@@ -64,16 +69,40 @@ clear all
 close all
 clc
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\80SOC_SimEndState.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_SS_EIS_SOC50.mat';
+
 load(filename)
+
+%%
+multiple = -SIM.A_c^-1;
+C = C(1,:); % Cell_Voltage is the first row
+D = 0;
+sys_E = multiple*ss(A,B,C,D,'E',SIM.M);
+sys_min = minreal(sys_E);
+LQGsys = sys_min;
+    N_output = 1;
+
+    rho = 1e0;
+    Q = rho * (LQGsys.C' * LQGsys.C) + 1e-10*eye(length(LQGsys.A));
+    R = 1e0; % Inputs is length 1, makes R (1x1) %%%%!!!! Needs better comment
+    QXU = blkdiag(Q,R);
+    QXU = eye(size(QXU));
+
+    QWV = eye(size(QXU)); % Needs to be positive definite
+
+    rho_I = 1e0;
+    QI = rho_I*eye(N_output);
+
+
+    reg_SS = lqg(LQGsys,QXU,QWV,QI);
+
 
 %% Make SS from SV during simulation
 % Load results from a simulation using the previous section, then set the
 % index in the next line from which time you'd like to pull SV from
 SIM.SV_IC = SV_soln(end,:)';
 SIM.freq = logspace(-1,11,101);
-SIM.i_user = -SIM.Cell_Cap/3;
+SIM.i_user = -SIM.Cell_Cap/20;
 
 i = 1;
     P.OM.cell_volt = i; i = i + 1;
@@ -129,14 +158,17 @@ P.SS.Z_Im     = i; i = i + 1;
 P.SS.Z_dB     = i; i = i + 1;
 P.SS.Z_ps_deg = i; i = i + 1;
 
-[A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
+[A,B,C,D,~] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
 
 % save_filename = [num2str(SIM.SOC_start) 'SOC.mat'];
-save_filename = ['80SOC_SimEndState.mat'];
+% save_filename = ['80SOC_SimEndState.mat'];
+save_filename = ['LongTau'];
 multiple = -SIM.A_c^-1;
 sys = multiple*ss(A,B,C,D,'E',SIM.M);
-save(save_filename, 'sys')
-
+postProcessComplete = 1;
+clear SIM
+SIM.SimMode = 0;
+save(save_filename, 'sys','postProcessComplete','SIM')
 
 
 %% Change Parameters of an existing sim
@@ -153,3 +185,34 @@ SIM.tspan = [0, t_final];
 save(filename,'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG')
 
 
+
+%% Testing Cap Calc
+% OneC = SIM.Cell_Cap;
+% C2   = OneC/2;
+% C3   = OneC/3;
+% C20  = OneC/20;
+% 
+% idx_1C   = find(I_user == -OneC,1,'first');
+% idx_C2   = find(I_user == -C2,1,'first');
+% idx_C3   = find(abs(I_user - (-1*C3))<1e-3,1,'first');
+% idx_C20  = find(abs(I_user - (-1*C20))<1e-3,1,'first');
+% idx_Rest = find(abs(I_user - (-1*C20))<1e-3,1,'last') + 1;
+% 
+% t_1C  = t_soln(idx_C2)   - t_soln(idx_1C);
+% t_C2  = t_soln(idx_C3)   - t_soln(idx_C2);
+% t_C3  = t_soln(idx_C20)  - t_soln(idx_C3);
+% t_C20 = t_soln(idx_Rest) - t_soln(idx_C20);
+% 
+% Cap_1C  = OneC*t_1C /3600;
+% Cap_C2  = C2  *t_C2 /3600;
+% Cap_C3  = C3  *t_C3 /3600;
+% Cap_C20 = C20 *t_C20/3600;
+% Cap_tot = Cap_1C + Cap_C2 + Cap_C3 + Cap_C20;
+% 
+% SOC_1C  = 100*Cap_1C  / SIM.Cell_Cap;
+% SOC_C2  = 100*Cap_C2  / SIM.Cell_Cap;
+% SOC_C3  = 100*Cap_C3  / SIM.Cell_Cap;
+% SOC_C20 = 100*Cap_C20 / SIM.Cell_Cap;
+% SOC_tot = SOC_1C + SOC_C2 + SOC_C3 + SOC_C20;
+% 
+% SOC_error = SIM.SOC_start - (SOC(end) - SOC_tot)

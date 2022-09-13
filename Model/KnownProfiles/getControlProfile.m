@@ -79,79 +79,80 @@ j = 0;
 % MO_File(j).C_rate_sat = 2;
 % end
 
-%% CC
-% Relaxation
-j = j + 1;
-MO_File(j).MO         = 3;
-MO_File(j).CorD       = 'C';
-MO_File(j).C_rate     = 0;
-MO_File(j).Volt_ref   = []; % [V]
-MO_File(j).Volt_lim   = 4.4;  % [V]
-MO_File(j).Time_lim   = 200; % [s]
-MO_File(j).delta_tol  = 1e-10;
-MO_File(j).C_rate_sat = 2;
-
-% Constant Current Charge 1C
-j = j + 1;
-MO_File(j).MO        = 1;
-MO_File(j).CorD      = 'C';
-MO_File(j).C_rate    = 1;
-MO_File(j).Volt_ref  = [];
-MO_File(j).Volt_lim  = 3.9;
-MO_File(j).Time_lim  = 3600*10;
-MO_File(j).delta_tol = [];
-
-% Constant Current Charge C/2
-j = j + 1;
-MO_File(j).MO        = 1;
-MO_File(j).CorD      = 'C';
-MO_File(j).C_rate    = 1/2;
-MO_File(j).Volt_ref  = [];
-MO_File(j).Volt_lim  = 4.0;
-MO_File(j).Time_lim  = 3600*100;
-MO_File(j).delta_tol = [];
-
-% Constant Current Charge C/3
-j = j + 1;
-MO_File(j).MO        = 1;
-MO_File(j).CorD      = 'C';
-MO_File(j).C_rate    = 1/3;
-MO_File(j).Volt_ref  = [];
-MO_File(j).Volt_lim  = 4.1;
-MO_File(j).Time_lim  = 3600*100;
-MO_File(j).delta_tol = [];
-
-% Constant Current Charge 1C (Step Up)
-j = j + 1;
-MO_File(j).MO        = 1;
-MO_File(j).CorD      = 'C';
-MO_File(j).C_rate    = 1;
-MO_File(j).Volt_ref  = [];
-MO_File(j).Volt_lim  = 4.2;
-MO_File(j).Time_lim  = 3600*100;
-MO_File(j).delta_tol = [];
-
-% % Constant Current Charge C/5 (Step Down)
+%% Stair Step with intial and ending Relax
+% % Relaxation
+% j = j + 1;
+% MO_File(j).MO         = 3;
+% MO_File(j).CorD       = 'C';
+% MO_File(j).C_rate     = 0;
+% MO_File(j).Volt_ref   = []; % [V]
+% MO_File(j).Volt_lim   = 4.4;  % [V]
+% MO_File(j).Time_lim   = 5*60; %200; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+% 
+% % Constant Current Charge 1C
 % j = j + 1;
 % MO_File(j).MO        = 1;
 % MO_File(j).CorD      = 'C';
-% MO_File(j).C_rate    = 1/5;
+% MO_File(j).C_rate    = 1;
 % MO_File(j).Volt_ref  = [];
-% MO_File(j).Volt_lim  = 4.2;
-% MO_File(j).Time_lim  = 3600*100;
+% MO_File(j).Volt_lim  = 4.2;%3.9;
+% MO_File(j).Time_lim  = 5*60;%3600*10;
 % MO_File(j).delta_tol = [];
-
-%%
-% % Constant Current Charge C/20
+% 
+% % Constant Current Charge C/2
 % j = j + 1;
 % MO_File(j).MO        = 1;
 % MO_File(j).CorD      = 'C';
+% MO_File(j).C_rate    = 1/2;
+% MO_File(j).Volt_ref  = [];
+% MO_File(j).Volt_lim  = 4.2;%4.0;
+% MO_File(j).Time_lim  = 4*5*60;%3600*100;
+% MO_File(j).delta_tol = [];
+% 
+% % Constant Current Charge C/3
+% j = j + 1;
+% MO_File(j).MO        = 1;
+% MO_File(j).CorD      = 'C';
+% MO_File(j).C_rate    = 1/3;
+% MO_File(j).Volt_ref  = [];
+% MO_File(j).Volt_lim  = 4.2;%4.1;
+% MO_File(j).Time_lim  = 4*5*60;%3600*100;
+% MO_File(j).delta_tol = [];
+% 
+% % % Constant Current Charge C/20 (Step Small Charge)
+% % j = j + 1;
+% % MO_File(j).MO        = 1;
+% % MO_File(j).CorD      = 'C';
+% % MO_File(j).C_rate    = 1/20;
+% % MO_File(j).Volt_ref  = [];
+% % MO_File(j).Volt_lim  = 4.4;
+% % MO_File(j).Time_lim  = 12*5*60;%1000;
+% % MO_File(j).delta_tol = [];
+% 
+% % Constant Current Discharge C/20 (Step Small Discharge)
+% j = j + 1;
+% MO_File(j).MO        = 1;
+% MO_File(j).CorD      = 'D';
 % MO_File(j).C_rate    = 1/20;
 % MO_File(j).Volt_ref  = [];
-% MO_File(j).Volt_lim  = 3.748851818523682; % 50% SOC
-% MO_File(j).Time_lim  = 3600*100;
+% MO_File(j).Volt_lim  = 3.4;
+% MO_File(j).Time_lim  = 12*5*60;%1000;
 % MO_File(j).delta_tol = [];
-%
+% 
+% % Relaxation
+% j = j + 1;
+% MO_File(j).MO         = 3;
+% MO_File(j).CorD       = 'C';
+% MO_File(j).C_rate     = 0;
+% MO_File(j).Volt_ref   = []; % [V]
+% MO_File(j).Volt_lim   = 4.2;  % [V]
+% MO_File(j).Time_lim   = 4*60*60; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+
+%% Stair Step, No Relax
 % % Constant Current Charge 1C
 % j = j + 1;
 % MO_File(j).MO        = 1;
@@ -182,7 +183,7 @@ MO_File(j).delta_tol = [];
 % MO_File(j).Time_lim  = 3600*1;
 % MO_File(j).delta_tol = [];
 
-%%
+%% Charge to 50% SOC
 % % Relaxation
 % j = j + 1;
 % MO_File(j).MO         = 3;
@@ -190,31 +191,85 @@ MO_File(j).delta_tol = [];
 % MO_File(j).C_rate     = 0;
 % MO_File(j).Volt_ref   = []; % [V]
 % MO_File(j).Volt_lim   = 4.4;  % [V]
-% MO_File(j).Time_lim   = 200; % [s]
+% MO_File(j).Time_lim   = 10; % [s]
 % MO_File(j).delta_tol  = 1e-10;
 % MO_File(j).C_rate_sat = 2;
 % 
-% % Constant Current Charge C/3
+% % Constant Current Charge C/20
 % j = j + 1;
 % MO_File(j).MO        = 1;
 % MO_File(j).CorD      = 'C';
-% MO_File(j).C_rate    = 0.408434744050100;
+% MO_File(j).C_rate    = 1/20;
 % MO_File(j).Volt_ref  = [];
-% MO_File(j).Volt_lim  = 4.1;
-% MO_File(j).Time_lim  = 1;
-% MO_File(j).delta_tol = [];
-
-%%
-% % Constant Current Charge 1C/3
-% j = j + 1;
-% MO_File(j).MO        = 1;
-% MO_File(j).CorD      = 'C';
-% MO_File(j).C_rate    = 1/3;
-% MO_File(j).Volt_ref  = [];
-% MO_File(j).Volt_lim  = 4.15;
-% MO_File(j).Time_lim  = 3600*4;
+% MO_File(j).Volt_lim  = 3.748851818523682; % 50% SOC equilibrium voltage 
+% MO_File(j).Time_lim  = 20*3600;
 % MO_File(j).delta_tol = [];
 % 
+% % Relaxation
+% j = j + 1;
+% MO_File(j).MO         = 3;
+% MO_File(j).CorD       = 'C';
+% MO_File(j).C_rate     = 0;
+% MO_File(j).Volt_ref   = []; % [V]
+% MO_File(j).Volt_lim   = 4.4;  % [V]
+% MO_File(j).Time_lim   = 4*3600; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+% 
+% % Constant Current Charge C/20 after Relaxing
+% j = j + 1;
+% MO_File(j).MO        = 1;
+% MO_File(j).CorD      = 'C';
+% MO_File(j).C_rate    = 1/20;
+% MO_File(j).Volt_ref  = [];
+% MO_File(j).Volt_lim  = 4.5;
+% MO_File(j).Time_lim  = 4*3600;
+% MO_File(j).delta_tol = [];
+
+%% Impulse Simulation
+% % Relaxation
+% j = j + 1;
+% MO_File(j).MO         = 3;
+% MO_File(j).CorD       = 'C';
+% MO_File(j).C_rate     = 0;
+% MO_File(j).Volt_ref   = []; % [V]
+% MO_File(j).Volt_lim   = 4.4;  % [V]
+% MO_File(j).Time_lim   = 1; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+% 
+% % Constant Current Charge C/20
+% j = j + 1;
+% MO_File(j).MO        = 1;
+% MO_File(j).CorD      = 'C';
+% MO_File(j).C_rate    = 1/20;
+% MO_File(j).Volt_ref  = [];
+% MO_File(j).Volt_lim  = 4.2;
+% MO_File(j).Time_lim  = 5*60;
+% MO_File(j).delta_tol = [];
+% 
+% % Relaxation
+% j = j + 1;
+% MO_File(j).MO         = 3;
+% MO_File(j).CorD       = 'C';
+% MO_File(j).C_rate     = 0;
+% MO_File(j).Volt_ref   = []; % [V]
+% MO_File(j).Volt_lim   = 4.4;  % [V]
+% MO_File(j).Time_lim   = 4*3600; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+
+%%
+% Constant Current Charge C/20
+j = j + 1;
+MO_File(j).MO        = 1;
+MO_File(j).CorD      = 'C';
+MO_File(j).C_rate    = 1;
+MO_File(j).Volt_ref  = [];
+MO_File(j).Volt_lim  = 3.75;
+MO_File(j).Time_lim  = 3600*20;
+MO_File(j).delta_tol = [];
+
 % % Constant Current Discharge 1C/3
 % j = j + 1;
 % MO_File(j).MO        = 1;

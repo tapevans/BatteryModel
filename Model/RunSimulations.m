@@ -7,9 +7,9 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
-% Project_Folder{i} = 'phiFsolve_Test';   i = i+1;
-Project_Folder{i} = 'TestingForTyrone';   i = i+1;
-% Project_Folder{i} = 'TestingSimulink';   i = i+1;
+% Project_Folder{i} = 'TestingLinearLC';   i = i+1;
+% Project_Folder{i} = 'TestingForTyrone';   i = i+1;
+Project_Folder{i} = 'TestingSimulink';   i = i+1;
 % Project_Folder{i} = 'Semi_Explicit_Test';   i = i+1;
 % Project_Folder{i} = 'MassIdentity_Test';   i = i+1;
 % Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
@@ -184,7 +184,7 @@ for i = 1:num_sim_files
                                     'AbsTol' ,Tol.Abs,      ...
                                     'Mass'   ,SIM.M,        ...
                                     'Events' ,events);%,       ...
-                                   %'MaxStep',1e2);
+%                                     'MaxStep',1e0);%
 
                 options_CV = odeset('RelTol' ,Tol.Rel,      ...
                                     'AbsTol' ,Tol.Abs,      ...
@@ -319,6 +319,7 @@ for i = 1:num_sim_files
 
                 for j = 1:length(t_soln)
                     SV( : , : , j )  = SV1Dto2D( SV_soln( j , : ) , N , P , FLAG );
+% !!!!!!!!!!!!!!!!                    SV( : , : , i ) = addPhiEl2SV(SV_temp,P,N);
                     del_phi( j , : ) = SV( P.del_phi , : , j);
                 end
 

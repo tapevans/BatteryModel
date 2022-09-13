@@ -57,11 +57,14 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
 
-folder_name  = 'TestingForTyrone';
-battery_name = 'TestingForTyrone';
+% folder_name  = 'TestingForTyrone';
+% battery_name = 'TestingForTyrone';
 
-% folder_name  = 'TestingSimulink';
-% battery_name = 'TestingSimulink';
+folder_name  = 'TestingSimulink';
+battery_name = 'TestingSimulink';
+
+% folder_name  = 'TestingLinearLC';
+% battery_name = 'TestingLinearLC';
 
 
 % ---- Polarization ----
@@ -95,9 +98,12 @@ battery_name = 'TestingForTyrone';
 % ---- Known BC Profile Controller ----
     KBCP   = 1;
         KBCPProfileOverwrite = 1;
-        KBCPProfileFilename = 'FourStep_StepUp';
-%         KBCPProfileFilename = 'FourStep_StepDown';
-%         KBCPProfileFilename = 'SingleStepTo50SOC';
+        KBCPProfileFilename = 'SingleStepTo3.75V_1C';
+%         KBCPProfileFilename = '5minImpulseLongResponse';
+%         KBCPProfileFilename = 'LongTau_wStep';
+%         KBCPProfileFilename = 'FourStep_StepCharge_ext5';
+%         KBCPProfileFilename = 'FourStep_StepDischarge_ext5';
+%         KBCPProfileFilename = 'SingleStepTo50SOC_extfulltime';
 %         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';        
 %         KBCPProfileFilename = 'SingleStep';
 %         KBCPProfileFilename = 'ManualMO';        
@@ -107,7 +113,7 @@ battery_name = 'TestingForTyrone';
 %         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';
 %         KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
 %         KBSOC = 81.93;
-        KBSOC = 50;
+        KBSOC = 0;
         
 % ---- MOO Controller ----
     MOO = 0;

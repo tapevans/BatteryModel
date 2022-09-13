@@ -41,7 +41,7 @@ FLAG.KPCONT_cellVoltage      = 1; % Terminal voltage of the battery vs time
 FLAG.KPCONT_i_user           = 1; 
 FLAG.KPCONT_V_and_A_norm_abs = 0;
 FLAG.KPCONT_V_and_A_norm     = 1;
-FLAG.KPCONT_VOLT_v_SOC       = 0;
+FLAG.KPCONT_VOLT_v_SOC       = 1;
 FLAG.KPCONT_X_Li_surf        = 0;
 FLAG.KPCONT_X_Li_surf_v_time = 1; %@ AN/SEP
 FLAG.KPCONT_del_phi_v_time   = 1; %@ AN/SEP
@@ -569,7 +569,7 @@ elseif SIM.SimMode == 4
     figure
     hold on
     for i = 1:N_times
-        plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
     end
     lgn = legend;
     lgn.Location = 'southwest';
@@ -597,7 +597,7 @@ elseif SIM.SimMode == 4
     %% Charge Plots: Delta phi
     if FLAG.KPCONT_del_phi_v_time
     figure
-    plot(t_soln,del_phi(:,N.N_CV_AN),'-o','LineWidth',2)
+    plot(t_soln,del_phi(:,N.N_CV_AN),'-','LineWidth',2)
     title('\Delta \phi at AN/SEP')
     xlabel('Time (s)')
     ylabel('Voltage (V)')
@@ -607,7 +607,7 @@ elseif SIM.SimMode == 4
     %% 
     if FLAG.KPCONT_i_Far_v_time
     figure
-    plot(t_soln,i_Far(:,N.N_CV_AN),'-o','LineWidth',2)
+    plot(t_soln,i_Far(:,N.N_CV_AN),'-','LineWidth',2)
     title('i_{Far} at AN/SEP')
     xlabel('Time (s)')
     ylabel('i_{Far} (A/m^2)')

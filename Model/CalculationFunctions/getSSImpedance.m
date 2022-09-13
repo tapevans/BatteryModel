@@ -10,8 +10,13 @@ SV      = SIM.SV_IC;
 i_user  = SIM.i_user;
 M       = SIM.M;
 freq    = SIM.freq;
-TOL.Rel = 1e-3; % Relative tolerance for perturbation
-TOL.Abs = 1e-6; % Absolute tolerance for perturbation
+% TOL.Rel = 1e-3; % Relative tolerance for perturbation
+% TOL.Abs = 1e-6; % Absolute tolerance for perturbation
+
+TOL.Rel = 1e-5; % Relative tolerance for perturbation
+TOL.Abs = 1.5e-8; % Absolute tolerance for perturbation
+
+FLAG.CentralDiff = 1;
 
 %% Solve for State Space (SS) Matricies
 [A,B,C,D] = getSSMatricies(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,SV,i_user,TOL);
@@ -62,12 +67,22 @@ for i = 1:N.N_SV_tot
     p    = zeros(N.N_SV_tot,1);
     p(i) = TOL.Rel * SV(i) + TOL.Abs;
     SV_p = SV + p;
-    dSVdt = batt_GovEqn(t,SV_p,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
-        
-    A(:,i) = ( dSVdt - dSVdt_init ) / p(i);
+    dSVdt_p  = batt_GovEqn(t,SV_p,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
+    output_p = get_output( t,SV_p,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
     
-    output = get_output(t,SV_p,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
-    C(:,i) = ( output - output_init ) / p(i);
+    if FLAG.CentralDiff
+        SV_m = SV - p;
+        dSVdt_m  = batt_GovEqn(t,SV_m,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
+        output_m = get_output( t,SV_m,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
+        
+        A(:,i) = ( dSVdt_p  - dSVdt_m  ) / (2*p(i));
+        C(:,i) = ( output_p - output_m ) / (2*p(i));
+    else
+        A(:,i) = ( dSVdt_p  - dSVdt_init  ) / p(i);
+        C(:,i) = ( output_p - output_init ) / p(i);
+    end
+    
+    
 end
 
 % Perturb Inputs
@@ -75,12 +90,20 @@ for i = 1:N.N_In
     p    = zeros(N.N_In,1);
     p(i) = TOL.Rel * inputs_vec(i) + TOL.Abs; 
     inputs_vec_p = inputs_vec + p;
-    dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec_p);
-        
-    B(:,i) = ( dSVdt - dSVdt_init ) / p(i);
-    
-    output = get_output(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec_p);
-    D(:,i) = ( output - output_init ) / p(i);
+    dSVdt_p  = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec_p);
+    output_p = get_output( t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec_p);
+
+    if FLAG.CentralDiff
+        inputs_vec_m = inputs_vec - p;
+        dSVdt_m  = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec_m);
+        output_m = get_output( t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec_m);
+
+        B(:,i) = ( dSVdt_p  - dSVdt_m  ) / (2*p(i));
+        D(:,i) = ( output_p - output_m ) / (2*p(i));
+    else
+        B(:,i) = ( dSVdt_p  - dSVdt_init  ) / p(i);
+        D(:,i) = ( output_p - output_init ) / p(i);
+    end
 end
 
 end

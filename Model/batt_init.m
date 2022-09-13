@@ -615,7 +615,7 @@ for i = 1:N.N_CV_AN
     index_offset = (i-1)*N.N_SV_AN; 
     % Temp
     SV_IC(index_offset + P.T)       =  SIM.Temp_start;
-    % phi_el
+    % delta phi
     SV_IC(index_offset + P.del_phi) =  voltage_ini_an;
     % phi_ed
     SV_IC(index_offset + P.phi_ed)  =  0;
@@ -649,7 +649,7 @@ for i = 1:N.N_CV_CA
     index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
     % Temp
     SV_IC(index_offset + P.T)       =  SIM.Temp_start;
-    % phi_el
+    % delta phi
     SV_IC(index_offset + P.del_phi) =  voltage_ini_ca;
     % phi_ed
     SV_IC(index_offset + P.phi_ed)  =  voltage_ini_cell;

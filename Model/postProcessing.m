@@ -158,7 +158,7 @@ if ~postProcessComplete
     Cap = -SIM.A_c/3600 * cumtrapz( t_soln , i_user );   
         
     % SOC
-    SOC = Cap/SIM.Cell_Cap + SIM.SOC_start;
+    SOC = 100*Cap/SIM.Cell_Cap + SIM.SOC_start;
 
     % Current Vectors
     I_user = i_user * SIM.A_c;
