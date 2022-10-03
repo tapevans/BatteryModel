@@ -10,13 +10,14 @@ clc;
 %     tfinal = 10*60; % [s], Final Simulation Time
 %     tfinal = 1e-5; % [s], Final Simulation Time
 
-    t_r = 1e1;
+    t_r = 1e0;
     
     model_filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_KPCont_SingleStepTo50SOCSOC0.mat';
     equil_filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_SS_EIS_SOC50.mat';
     save_filename  = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\SimulinkResults.mat';
+%     save_filename  = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\SimulinkResults_CC_C20SOC50_CV.mat';
 
-    localFLAG.CalcSS      = 0; % 1 if calculating SS from the end of CC, 0 if using the equilibrium model for SS
+    localFLAG.CalcSS      = 1; % 1 if calculating SS from the end of CC, 0 if using the equilibrium model for SS
     localFLAG.PID         = 1;
     localFLAG.LQR         = 0;
     localFLAG.AddTunedController = 0;
@@ -42,20 +43,21 @@ SV_IC = model.SV_soln(end,:)';
 SIM   = model.SIM;
 N     = model.N;
 
-multiple = -model.SIM.A_c^-1;
-CC_init  = multiple*model.i_user_soln(end);
+% multiple = -model.SIM.A_c^-1;
+% CC_init  = multiple*model.i_user_soln(end); % [A m^-2], The current used at the last time step of the previous mode. Initializes the CV with this current
+CC_init  = model.i_user_soln(end); % [A m^-2], The current used at the last time step of the previous mode. Initializes the CV with this current
 % if ~localFLAG.CalcSS
 %     clear model;
 % end
 
-%% Load Equilibrium State File
+%% Load Equilibrium State Space File
 if ~localFLAG.CalcSS
     equil = load(equil_filename);
     A = equil.A; B = equil.B; C = equil.C; D = equil.D;
     C = C(1,:); % Cell_Voltage is the first row
     D = 0;
     %     syseq_ctrb = ctrb(ss(A,B,C,D,'E',SIM.M))
-    CV = C*model.SV_soln(end,:)'; %!!!!!!!Can change this back to SV_IC
+    CV = C*model.SV_soln(end,:)'; %!!!!!!!Can change this back to SV_IC, reference voltage where the hold occurs
 end
 
 %% Get SS Matricies
@@ -71,78 +73,84 @@ N     = model.N;
 FLAG  = model.FLAG;
 PROPS = model.PROPS;
 
-i = 1;
-    P.OM.cell_volt = i; i = i + 1;
-    P.OM.del_phi   = i; i = i + 1;
-    P.OM.temp      = i; i = i + 1;
-    P.OM.C_Liion   = i; i = i + 1;
-    P.OM.X_surf    = i; i = i + 1;
-    P.OM.i_Far     = i; i = i + 1;
-    P.OM.eta       = i; i = i + 1;
 
-N.N_In = 1;
-N.N_Out = length(fieldnames(P.OM));
-
-SIM.OutputMatrix = zeros(N.N_Out , N.N_SV_tot);
-    % Cell Voltage
-        idx_phi_ed_AN = P.phi_ed;
-
-        i = N.N_CV_CA(end);
-        index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
-        idx_phi_ed_CA = index_offset + P.phi_ed;
-
-        SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_AN) = -1;
-        SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_CA) =  1;
-    % @AN/SEP
-        i = N.N_CV_AN(end);
-        index_offset = (i-1)*N.N_SV_AN;
-    % Delta Phi   @AN/SEP
-        idx = index_offset + P.del_phi;
-        SIM.OutputMatrix(P.OM.del_phi,idx) =  1;
-    % Temperature @AN/SEP
-        idx = index_offset + P.T;
-        SIM.OutputMatrix(P.OM.temp,idx) = 1;
-    % C_Liion     @AN/SEP
-        idx = index_offset + P.C_Liion;
-        SIM.OutputMatrix(P.OM.C_Liion,idx) = 1;
-    % X_surf      @AN/SEP
-        idx = index_offset + P.C_Li_surf_AN;
-        SIM.OutputMatrix(P.OM.X_surf,idx) = 1/AN.C_Li_max;
-    % i_Far      @AN/SEP
-        idx = index_offset + P.i_PS;
-        SIM.OutputMatrix(P.OM.i_Far,idx) = 1;
-    % Eta      @AN/SEP
-        idx = index_offset + P.V_2;
-        SIM.OutputMatrix(P.OM.eta,idx) = 1;
-        idx = index_offset + P.V_1;
-        SIM.OutputMatrix(P.OM.eta,idx) = -1;
-
-i = 1;
-P.SS.omega    = i; i = i + 1;
-P.SS.Z_mag    = i; i = i + 1;
-P.SS.Z_Re     = i; i = i + 1;
-P.SS.Z_Im     = i; i = i + 1;
-P.SS.Z_dB     = i; i = i + 1;
-P.SS.Z_ps_deg = i; i = i + 1;
-
-SIM.SV_IC  = SV_IC;
-SIM.freq   = logspace(-1,11,101);
-SIM.i_user = -model.SIM.Cell_Cap/20;
-
-
-[A,B,C,D,~] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
+[A,B,C,D] = getSSfromSV(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,SV_IC,CC_init);
 C = C(1,:); % Cell_Voltage is the first row
 D = 0;
 CV = C*SV_IC;
 
+% i = 1;
+%     P.OM.cell_volt = i; i = i + 1;
+%     P.OM.del_phi   = i; i = i + 1;
+%     P.OM.temp      = i; i = i + 1;
+%     P.OM.C_Liion   = i; i = i + 1;
+%     P.OM.X_surf    = i; i = i + 1;
+%     P.OM.i_Far     = i; i = i + 1;
+%     P.OM.eta       = i; i = i + 1;
 
-    multiple = -SIM.A_c^-1;
-    sys = multiple*ss(A,B,C,D,'E',SIM.M);
-    sys_min = minreal(sys);
-%     postProcessComplete = 1;
-%     save('Calc_SS','sys','postProcessComplete')
-    
-    A = sys.A; B = sys.B; C = sys.C; D = sys.D;
+% N.N_In = 1;
+% N.N_Out = length(fieldnames(P.OM));
+
+% SIM.OutputMatrix = zeros(N.N_Out , N.N_SV_tot);
+%     % Cell Voltage
+%         idx_phi_ed_AN = P.phi_ed;
+% 
+%         i = N.N_CV_CA(end);
+%         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+%         idx_phi_ed_CA = index_offset + P.phi_ed;
+% 
+%         SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_AN) = -1;
+%         SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_CA) =  1;
+%     % @AN/SEP
+%         i = N.N_CV_AN(end);
+%         index_offset = (i-1)*N.N_SV_AN;
+%     % Delta Phi   @AN/SEP
+%         idx = index_offset + P.del_phi;
+%         SIM.OutputMatrix(P.OM.del_phi,idx) =  1;
+%     % Temperature @AN/SEP
+%         idx = index_offset + P.T;
+%         SIM.OutputMatrix(P.OM.temp,idx) = 1;
+%     % C_Liion     @AN/SEP
+%         idx = index_offset + P.C_Liion;
+%         SIM.OutputMatrix(P.OM.C_Liion,idx) = 1;
+%     % X_surf      @AN/SEP
+%         idx = index_offset + P.C_Li_surf_AN;
+%         SIM.OutputMatrix(P.OM.X_surf,idx) = 1/AN.C_Li_max;
+%     % i_Far      @AN/SEP
+%         idx = index_offset + P.i_PS;
+%         SIM.OutputMatrix(P.OM.i_Far,idx) = 1;
+%     % Eta      @AN/SEP
+%         idx = index_offset + P.V_2;
+%         SIM.OutputMatrix(P.OM.eta,idx) = 1;
+%         idx = index_offset + P.V_1;
+%         SIM.OutputMatrix(P.OM.eta,idx) = -1;
+
+% i = 1;
+% P.SS.omega    = i; i = i + 1;
+% P.SS.Z_mag    = i; i = i + 1;
+% P.SS.Z_Re     = i; i = i + 1;
+% P.SS.Z_Im     = i; i = i + 1;
+% P.SS.Z_dB     = i; i = i + 1;
+% P.SS.Z_ps_deg = i; i = i + 1;
+
+% SIM.SV_IC  = SV_IC;
+% % SIM.freq   = logspace(-1,11,101);
+% SIM.i_user = -model.SIM.Cell_Cap/20;
+
+
+% [A,B,C,D,~] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
+% C = C(1,:); % Cell_Voltage is the first row
+% D = 0;
+% CV = C*SV_IC;
+
+
+%     multiple = -SIM.A_c^-1;
+%     sys = multiple*ss(A,B,C,D,'E',SIM.M);
+%     sys_min = minreal(sys);
+% %     postProcessComplete = 1;
+% %     save('Calc_SS','sys','postProcessComplete')
+%     
+%     A = sys.A; B = sys.B; C = sys.C; D = sys.D;
 
 end
 
@@ -207,10 +215,23 @@ end
 
 %% PID Controller
 if localFLAG.PID
+
+AN    = model.AN;
+CA    = model.CA;
+SEP   = model.SEP;
+EL    = model.EL;
+SIM   = model.SIM;
+CONS  = model.CONS;
+P     = model.P;
+N     = model.N;
+FLAG  = model.FLAG;
+PROPS = model.PROPS;
+
+
 % Going to use Configuration 1 of the Control System Designer
-multiple = -SIM.A_c^-1;
-plant = multiple*ss(A,B,C,D,'E',SIM.M);
-% plant = ss(A,B,C,D,'E',SIM.M);
+% multiple = -SIM.A_c^-1;
+% plant = multiple*ss(A,B,C,D,'E',SIM.M);
+plant = ss(A,B,C,D,'E',SIM.M);
 
 % Control System Designer
     % s = sisoinit(1);
@@ -239,16 +260,7 @@ K_D = 0;
 % K_D = Controller.Kd;
 
 
-AN    = model.AN;
-CA    = model.CA;
-SEP   = model.SEP;
-EL    = model.EL;
-SIM   = model.SIM;
-CONS  = model.CONS;
-P     = model.P;
-N     = model.N;
-FLAG  = model.FLAG;
-PROPS = model.PROPS;
+
 
 end
 % if localFLAG.AddTunedController
@@ -291,7 +303,7 @@ SIM = rmfield(SIM,'Controller_MO_File');
 
 %% Run Simulation
 % mdl = 'battery_system_CV_PID';
-mdl = 'battery_system_CV_PID_Block';
+mdl = 'battery_system_CV_PID_Block_NoMultiple';
 in = Simulink.SimulationInput(mdl);
 in = in.setModelParameter('StartTime','0','StopTime',num2str(tfinal));
 % for i = 1:length(allController)

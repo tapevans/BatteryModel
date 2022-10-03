@@ -98,11 +98,12 @@ battery_name = 'TestingSimulink';
 % ---- Known BC Profile Controller ----
     KBCP   = 1;
         KBCPProfileOverwrite = 1;
-        KBCPProfileFilename = 'SingleStepTo3.75V_1C';
+%         KBCPProfileFilename = 'SingleStepTo3.75V_1C';
 %         KBCPProfileFilename = '5minImpulseLongResponse';
 %         KBCPProfileFilename = 'LongTau_wStep';
 %         KBCPProfileFilename = 'FourStep_StepCharge_ext5';
 %         KBCPProfileFilename = 'FourStep_StepDischarge_ext5';
+%         KBCPProfileFilename = 'SingleStepTo50SOC';
 %         KBCPProfileFilename = 'SingleStepTo50SOC_extfulltime';
 %         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';        
 %         KBCPProfileFilename = 'SingleStep';
@@ -112,6 +113,45 @@ battery_name = 'TestingSimulink';
 %         KBCPProfileFilename = 'Profile_CV_Test_1SmallStep';
 %         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';
 %         KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
+        
+%         KBCPProfileFilename = 'C0.05_CVSOC10_';
+%         KBCPProfileFilename = 'C0.05_CVSOC25_';
+%         KBCPProfileFilename = 'C0.05_CVSOC50_';
+%         KBCPProfileFilename = 'C0.05_CVSOC75_';
+%         KBCPProfileFilename = 'C0.05_CVSOC90_';
+% 
+%         KBCPProfileFilename = 'C0.10_CVSOC10_';
+%         KBCPProfileFilename = 'C0.10_CVSOC25_';
+%         KBCPProfileFilename = 'C0.10_CVSOC50_';
+%         KBCPProfileFilename = 'C0.10_CVSOC75_';
+%         KBCPProfileFilename = 'C0.10_CVSOC90_';
+% 
+%         KBCPProfileFilename = 'C0.20_CVSOC10_';
+%         KBCPProfileFilename = 'C0.20_CVSOC25_';
+%         KBCPProfileFilename = 'C0.20_CVSOC50_';
+%         KBCPProfileFilename = 'C0.20_CVSOC75_';
+%         KBCPProfileFilename = 'C0.20_CVSOC90_';
+% 
+%         KBCPProfileFilename = 'C0.50_CVSOC10_';
+%         KBCPProfileFilename = 'C0.50_CVSOC25_';
+%         KBCPProfileFilename = 'C0.50_CVSOC50_';
+%         KBCPProfileFilename = 'C0.50_CVSOC75_';
+%         KBCPProfileFilename = 'C0.50_CVSOC90_';
+% 
+%         KBCPProfileFilename = 'C1.00_CVSOC10_';
+%         KBCPProfileFilename = 'C1.00_CVSOC25_';
+%         KBCPProfileFilename = 'C1.00_CVSOC50_';
+%         KBCPProfileFilename = 'C1.00_CVSOC75_';
+%         KBCPProfileFilename = 'C1.00_CVSOC90_';
+% 
+%         KBCPProfileFilename = 'C2.00_CVSOC10_';
+%         KBCPProfileFilename = 'C2.00_CVSOC25_';
+%         KBCPProfileFilename = 'C2.00_CVSOC50_';
+%         KBCPProfileFilename = 'C2.00_CVSOC75_';
+        KBCPProfileFilename = 'C2.00_CVSOC90_';
+
+
+
 %         KBSOC = 81.93;
         KBSOC = 0;
         
