@@ -26,7 +26,7 @@ for i = 1:num_Proj
     oldFolder = cd([pwd filesep 'Results' filesep Project_Folder{i}]);
     list = dir('*.mat*');
     num_files = length(list);
-    for j = 1:num_files
+    for j = 1:num_files % Creates a cell array with all simulations' full path name
         if ~exist('sim_filenames')
             sim_filenames{1} = [pwd filesep list(j).name];
         else
@@ -165,8 +165,13 @@ for i = 1:num_sim_files
                         tfinal = SIM.Controller_MO_File(SIM.current_MO_step).Time_lim;
                         tspan = [0,tfinal];
                     elseif MO == 2 % CV
-                        % i_user will be solved for in the next section
-                        tspan_vec = 0:SIM.DiscreteTimeStep:SIM.Controller_MO_File(SIM.current_MO_step).Time_lim;
+%                         tspan_vec = 0:SIM.DiscreteTimeStep:SIM.Controller_MO_File(SIM.current_MO_step).Time_lim;
+                        tspan_vec = [0,SIM.Controller_MO_File(SIM.current_MO_step).Time_lim];
+                        if isempty(i_user_soln)
+                            i_user = 0;
+                        else
+                            i_user = i_user_soln(end);
+                        end
                     elseif MO == 3 % Relaxation
                         i_user = 0;
                         tfinal = SIM.Controller_MO_File(SIM.current_MO_step).Time_lim;
@@ -194,48 +199,13 @@ for i = 1:num_sim_files
                     if MO == 1 %CC
                         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options_CC);
                     elseif MO == 2 % CV
-                        % First iteration is not using ODExtend
-                        % Setup variables to track i_user history
-                        N_history = ceil(SIM.ZeroTime / SIM.DiscreteTimeStep);
-%                         SIM.i_user_history = ones(N_history,1);
-                        SIM.i_user_history = zeros(N_history,1);
-                        % Calc i_user from controller
-                            SV = SV_IC;
-                            SV = SV1Dto2D(SV , N , P , FLAG);
-                            i_user = SIM.ControllerHandle(SV, P , SIM);
-                            % Update history
-                            SIM.i_user_history = [SIM.i_user_history(2:end); i_user];
-                            
-                        % Call ode solver
-                            SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan_vec(1:2),SV_IC,options_CV);
-                            i_user_soln_int = i_user*ones(length(SOLN.x),1);
-                        for j = 3:length(tspan_vec)
-                            % Calc i_user
-                                SV_temp = SOLN.y';
-                                SV = SV_temp(end,:);
-                                SV = SV1Dto2D(SV , N , P , FLAG);
-                                i_user = SIM.ControllerHandle(SV, P , SIM);
-                                % Update history
-                                SIM.i_user_history = [SIM.i_user_history(2:end); i_user];
-                            % Call ODE solver %%%%% Will this change i_user for the GovEqn or do I need to add the fnc handle for GovEqn
-                                SOLN = odextend(SOLN,@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan_vec(j));
-                            % add something to account for C/20 and Delta SV
-                                
-                            % Update i_user variables
-                                old_size = length(i_user_soln_int);
-                                new_size = length(SOLN.x);
-                                
-                                i_user_int_int  = i_user*ones((new_size - old_size),1);
-                                i_user_soln_int = [i_user_soln_int ; i_user_int_int];
-                                
-                            % Break out of the for loop if time_zero has been reached
-                                if sum(SIM.i_user_history) == 0
-                                    break
-                                end
-                        end
-                        t_soln_int  = SOLN.x';
-                        SV_soln_int = SOLN.y';
-
+                        [time_CV, voltage_CV, current_CV] = runCVHold(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,SV_IC,i_user);
+                        SOLN.x = time_CV;
+                        SOLN.y = voltage_CV;
+%                         SOLN.solver = 'ode15s';
+                        SOLN_c.x = time_CV;
+                        SOLN_c.y = current_CV;
+%                         SOLN_c.solver = 'ode15s';
                     elseif MO == 3 % Relaxation
                         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options_CC);
                     end
@@ -243,17 +213,29 @@ for i = 1:num_sim_files
                 % Save solution
                     if MO ~= 2 % CC, Relax
                         if FLAG.SaveSolnDiscreteTime
-                            new_tfinal = SOLN.x(end);
-                            save_time = (0:SIM.SaveTimeStep:new_tfinal)';
+                            new_tfinal  = SOLN.x(end);
+                            save_time   = (0:SIM.SaveTimeStep:new_tfinal)';
                             t_soln_int  = save_time;
                             SV_soln_int = (deval(SOLN,save_time))';
                         else
-                            t_soln_int = SOLN.x';
+                            t_soln_int  = SOLN.x';
                             SV_soln_int = SOLN.y';
                         end
                         i_user_soln_int = i_user*ones(length(t_soln_int),1);
                     else % CV
-                        %
+                        if FLAG.SaveSolnDiscreteTime
+                            new_tfinal  = SOLN.x(end);
+                            save_time   = (0:SIM.SaveTimeStep:new_tfinal)';
+                            t_soln_int  = save_time;
+                            SV_soln_int = (deval(SOLN,save_time))';
+
+                            i_user_soln_int = (deval(SOLN_c,save_time))';
+                        else
+                            t_soln_int  = SOLN.x'; %%!!!!!!!!!
+                            SV_soln_int = SOLN.y'; %%!!!!!!!!!
+
+                            i_user_soln_int = current_CV; %%!!!!!!!!!
+                        end
                     end
                     
                     if ~isempty(t_soln) % Adjust time values for continuing sims
@@ -398,3 +380,50 @@ for i = 1:num_sim_files
     clearvars -except sim_filenames i k num_sim_files
 end
 disp('Finished all simulations')
+
+
+%% OLD CODE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This is from CV HOLD
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                         % First iteration is not using ODExtend
+%                         % Setup variables to track i_user history
+%                         N_history = ceil(SIM.ZeroTime / SIM.DiscreteTimeStep);
+% %                         SIM.i_user_history = ones(N_history,1);
+%                         SIM.i_user_history = zeros(N_history,1);
+%                         % Calc i_user from controller
+%                             SV = SV_IC;
+%                             SV = SV1Dto2D(SV , N , P , FLAG);
+%                             i_user = SIM.ControllerHandle(SV, P , SIM);
+%                             % Update history
+%                             SIM.i_user_history = [SIM.i_user_history(2:end); i_user];
+%                             
+%                         % Call ode solver
+%                             SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan_vec(1:2),SV_IC,options_CV);
+%                             i_user_soln_int = i_user*ones(length(SOLN.x),1);
+%                         for j = 3:length(tspan_vec)
+%                             % Calc i_user
+%                                 SV_temp = SOLN.y';
+%                                 SV = SV_temp(end,:);
+%                                 SV = SV1Dto2D(SV , N , P , FLAG);
+%                                 i_user = SIM.ControllerHandle(SV, P , SIM);
+%                                 % Update history
+%                                 SIM.i_user_history = [SIM.i_user_history(2:end); i_user];
+%                             % Call ODE solver %%%%% Will this change i_user for the GovEqn or do I need to add the fnc handle for GovEqn
+%                                 SOLN = odextend(SOLN,@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan_vec(j));
+%                             % add something to account for C/20 and Delta SV
+%                                 
+%                             % Update i_user variables
+%                                 old_size = length(i_user_soln_int);
+%                                 new_size = length(SOLN.x);
+%                                 
+%                                 i_user_int_int  = i_user*ones((new_size - old_size),1);
+%                                 i_user_soln_int = [i_user_soln_int ; i_user_int_int];
+%                                 
+%                             % Break out of the for loop if time_zero has been reached
+%                                 if sum(SIM.i_user_history) == 0
+%                                     break
+%                                 end
+%                         end
+%                         t_soln_int  = SOLN.x';
+%                         SV_soln_int = SOLN.y';
