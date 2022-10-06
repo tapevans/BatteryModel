@@ -152,7 +152,7 @@ for i = 1:num_sim_files
                     if k == 1
                         SV_IC = SIM.SV_IC;
                     else
-                        SV_IC = SV_soln(end,:);
+                        SV_IC = SV_soln(end,:)';
                     end
                 
                 % Determine i_user and tspan
@@ -165,7 +165,6 @@ for i = 1:num_sim_files
                         tfinal = SIM.Controller_MO_File(SIM.current_MO_step).Time_lim;
                         tspan = [0,tfinal];
                     elseif MO == 2 % CV
-%                         tspan_vec = 0:SIM.DiscreteTimeStep:SIM.Controller_MO_File(SIM.current_MO_step).Time_lim;
                         tspan_vec = [0,SIM.Controller_MO_File(SIM.current_MO_step).Time_lim];
                         if isempty(i_user_soln)
                             i_user = 0;
@@ -196,16 +195,19 @@ for i = 1:num_sim_files
                                     'Mass'   ,SIM.M);
 
                 % call ODE
+                    if k~=1
+                        clear SOLN
+                    end
                     if MO == 1 %CC
                         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options_CC);
                     elseif MO == 2 % CV
-                        [time_CV, voltage_CV, current_CV] = runCVHold(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,SV_IC,i_user);
+                        [time_CV, SV_CV, current_CV, solver_CV] = runCVHold(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,SV_IC,i_user);
+                        
                         SOLN.x = time_CV;
-                        SOLN.y = voltage_CV;
-%                         SOLN.solver = 'ode15s';
-                        SOLN_c.x = time_CV;
-                        SOLN_c.y = current_CV;
-%                         SOLN_c.solver = 'ode15s';
+                        SOLN.y = SV_CV;
+                        SOLN.c = current_CV;
+                        SOLN.solver = solver_CV;
+
                     elseif MO == 3 % Relaxation
                         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options_CC);
                     end
@@ -223,19 +225,9 @@ for i = 1:num_sim_files
                         end
                         i_user_soln_int = i_user*ones(length(t_soln_int),1);
                     else % CV
-                        if FLAG.SaveSolnDiscreteTime
-                            new_tfinal  = SOLN.x(end);
-                            save_time   = (0:SIM.SaveTimeStep:new_tfinal)';
-                            t_soln_int  = save_time;
-                            SV_soln_int = (deval(SOLN,save_time))';
-
-                            i_user_soln_int = (deval(SOLN_c,save_time))';
-                        else
-                            t_soln_int  = SOLN.x'; %%!!!!!!!!!
-                            SV_soln_int = SOLN.y'; %%!!!!!!!!!
-
-                            i_user_soln_int = current_CV; %%!!!!!!!!!
-                        end
+                        t_soln_int      = SOLN.x'; 
+                        SV_soln_int     = SOLN.y';
+                        i_user_soln_int = SOLN.c';
                     end
                     
                     if ~isempty(t_soln) % Adjust time values for continuing sims

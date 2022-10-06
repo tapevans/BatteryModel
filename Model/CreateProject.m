@@ -37,6 +37,7 @@
 %%
 clear all; close all; clc;
 
+
 %% Subdirecties to Include
 % Script's filepath
 [current_file_path,~,~] = fileparts(mfilename('fullpath'));
@@ -45,6 +46,7 @@ clear all; close all; clc;
 addpath(genpath(current_file_path)); 
 % genpath creates a string with all folders and subfolders in a given directory
 % addpath then adds all of them to the current workspace
+
 
 %% Inputs
 FLAG_local.folder_overwrite = 0; % 1 if delete folder if it already exists
@@ -148,20 +150,24 @@ battery_name = 'TestingSimulink';
 %         KBCPProfileFilename = 'C2.00_CVSOC25_';
 %         KBCPProfileFilename = 'C2.00_CVSOC50_';
 %         KBCPProfileFilename = 'C2.00_CVSOC75_';
-        KBCPProfileFilename = 'C2.00_CVSOC90_';
+%         KBCPProfileFilename = 'C2.00_CVSOC90_';
+
+        KBCPProfileFilename = '1C_CCCVCCTest_SOC50_';
+
+% Initial SOC
+    %         KBSOC = 81.93;
+            KBSOC = 0; 
 
 
-
-%         KBSOC = 81.93;
-        KBSOC = 0;
-        
 % ---- MOO Controller ----
     MOO = 0;
         ControllerName = '';
 
+
 % ---- Simulink ----
     slink = 0;
         SimulinkTestName = 'TestSemiExplicit';
+
 
 % ---- Manual Current Profile ----
     ManCurrProfile = 0; % 1 if want to make a manual current profile simulation from what is currently in makeCurrentProfile.m and input.m
@@ -207,6 +213,7 @@ if folder_exist
 else
     mkdir(save_file_path)
 end
+
 
 %% Create Simulation Files
 %%
@@ -257,6 +264,7 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
     end
 end
 
+
 %%
 % ---- Harmonic Perturbation ----
 for i = 1:length(EIS_SIN_freq)
@@ -290,6 +298,7 @@ for i = 1:length(EIS_SIN_freq)
     end
 end
 
+
 %%
 % ---- State Space EIS ----
 for i = 1:length(SS_SOC)
@@ -320,6 +329,7 @@ for i = 1:length(SS_SOC)
         clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 end
+
 
 %%
 % ---- Known BC Profile ----
@@ -381,10 +391,12 @@ if KBCP
     end
 end
 
+
 %% ---- MOO Controller ----
 if MOO
     
 end
+
 
 %% ---- Simulink ----
 if slink
@@ -419,6 +431,7 @@ if slink
         clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 end
+
 
 %%
 % ---- Manual Current Profile ----
@@ -479,3 +492,4 @@ if ManCurrProfile
             clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 end
+

@@ -184,39 +184,36 @@ j = 0;
 % MO_File(j).delta_tol = [];
 
 %% Charge to 50% SOC
-% Relaxation
-j = j + 1;
-MO_File(j).MO         = 3;
-MO_File(j).CorD       = 'C';
-MO_File(j).C_rate     = 0;
-MO_File(j).Volt_ref   = []; % [V]
-MO_File(j).Volt_lim   = 4.4;  % [V]
-MO_File(j).Time_lim   = 10; % [s]
-MO_File(j).delta_tol  = 1e-10;
-MO_File(j).C_rate_sat = 2;
-
-% Constant Current Charge C/20
-j = j + 1;
-MO_File(j).MO        = 1;
-MO_File(j).CorD      = 'C';
-
-% MO_File(j).C_rate    = 1/20; % 0.05
-% MO_File(j).C_rate    = 1/10; % 0.10
-% MO_File(j).C_rate    = 1/5; % 0.20
-% MO_File(j).C_rate    = 1/2; % 0.50
-% MO_File(j).C_rate    = 1; % 1.00
-MO_File(j).C_rate    = 2; % 2.00
-
-MO_File(j).Volt_ref  = [];
-
-% MO_File(j).Volt_lim  = 3.553062401138020; % 10% SOC equilibrium voltage 
-% MO_File(j).Volt_lim  = 3.635333656536661; % 25% SOC equilibrium voltage 
-% MO_File(j).Volt_lim  = 3.749054804993171; % 50% SOC equilibrium voltage 
-% MO_File(j).Volt_lim  = 3.954758227144845; % 75% SOC equilibrium voltage 
-MO_File(j).Volt_lim  = 4.082762550630444; % 90% SOC equilibrium voltage 
-
-MO_File(j).Time_lim  = 100*3600;
-MO_File(j).delta_tol = [];
+% % Relaxation
+% j = j + 1;
+% MO_File(j).MO         = 3;
+% MO_File(j).CorD       = 'C';
+% MO_File(j).C_rate     = 0;
+% MO_File(j).Volt_ref   = []; % [V]
+% MO_File(j).Volt_lim   = 4.4;  % [V]
+% MO_File(j).Time_lim   = 10; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+% 
+% % Constant Current Charge C/20
+% j = j + 1;
+% MO_File(j).MO        = 1;
+% MO_File(j).CorD      = 'C';
+%     % MO_File(j).C_rate    = 1/20; % 0.05
+%     % MO_File(j).C_rate    = 1/10; % 0.10
+%     % MO_File(j).C_rate    = 1/5; % 0.20
+%     % MO_File(j).C_rate    = 1/2; % 0.50
+%     % MO_File(j).C_rate    = 1; % 1.00
+%     MO_File(j).C_rate    = 2; % 2.00
+% MO_File(j).Volt_ref  = [];
+%     % MO_File(j).Volt_lim  = 3.553062401138020; % 10% SOC equilibrium voltage 
+%     % MO_File(j).Volt_lim  = 3.635333656536661; % 25% SOC equilibrium voltage 
+%     % MO_File(j).Volt_lim  = 3.749054804993171; % 50% SOC equilibrium voltage 
+%     % MO_File(j).Volt_lim  = 3.954758227144845; % 75% SOC equilibrium voltage 
+%     MO_File(j).Volt_lim  = 4.082762550630444; % 90% SOC equilibrium voltage 
+% 
+% MO_File(j).Time_lim  = 100*3600;
+% MO_File(j).delta_tol = [];
 % 
 % % Relaxation
 % j = j + 1;
@@ -338,24 +335,34 @@ MO_File(j).delta_tol = [];
 % MO_File(j).C_rate_sat = 2;
 
 %% CC to CV
-% % Constant Current Charge 1C
-% j = j + 1;
-% MO_File(j).MO        = 1;
-% MO_File(j).CorD      = 'C';
-% MO_File(j).C_rate    = 1;
-% MO_File(j).Volt_ref  = [];
-% MO_File(j).Volt_lim  = 4.2;
-% MO_File(j).Time_lim  = 3600*1;
-% MO_File(j).delta_tol = [];
-% 
-% % Constant Voltage @ 4.0V
-% j = j + 1;
-% MO_File(j).MO         = 2;
-% MO_File(j).CorD       = [];
-% MO_File(j).C_rate     = [];
-% MO_File(j).Volt_ref   = 4.2;  % [V]
-% MO_File(j).Volt_lim   = [];   % [V]
-% MO_File(j).Time_lim   = 10; % [s]
-% MO_File(j).delta_tol  = 1e-10;
-% MO_File(j).C_rate_sat = 2;
+% Constant Current Charge 1C
+j = j + 1;
+MO_File(j).MO        = 1;
+MO_File(j).CorD      = 'C';
+MO_File(j).C_rate    = 1;
+MO_File(j).Volt_ref  = [];
+MO_File(j).Volt_lim  = 3.749054804993171;
+MO_File(j).Time_lim  = 3600*1;
+MO_File(j).delta_tol = [];
+
+% Constant Voltage @ 50% SOC
+j = j + 1;
+MO_File(j).MO         = 2;
+MO_File(j).CorD       = [];
+MO_File(j).C_rate     = [];
+MO_File(j).Volt_ref   = 3.749054804993171;  % [V]
+MO_File(j).Volt_lim   = [];   % [V]
+MO_File(j).Time_lim   = 2000; % [s]
+MO_File(j).delta_tol  = 1e-10;
+MO_File(j).C_rate_sat = 2;
+
+% Constant Current Charge 1C
+j = j + 1;
+MO_File(j).MO        = 1;
+MO_File(j).CorD      = 'D';
+MO_File(j).C_rate    = 1;
+MO_File(j).Volt_ref  = [];
+MO_File(j).Volt_lim  = 3.44;
+MO_File(j).Time_lim  = 3600*1;
+MO_File(j).delta_tol = [];
 end
