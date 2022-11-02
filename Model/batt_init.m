@@ -498,10 +498,6 @@ elseif SIM.SimMode == 5
     SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
     %!!!!!!!! May need to do something here for SV initialization with a
     %proper i_user value
-% ---- Simulink ----
-elseif SIM.SimMode == 6
-    SIM.A_c        = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
 % ---- Manual Current Profile ----
 elseif SIM.SimMode == 7 
     SIM.A_c        = min( AN.A_c, CA.A_c );
@@ -547,10 +543,6 @@ elseif SIM.SimMode == 4
     
 % ---- MOO Controller ----
 elseif SIM.SimMode == 5
-    % Determine inside RunSimulation from MO_List
-
-% ---- Simulink ----
-elseif SIM.SimMode == 6
     % Determine inside RunSimulation from MO_List
     
 % ---- Manual Current Profile ----
@@ -704,9 +696,6 @@ end
         end
     elseif SIM.SimMode == 5 % MOO Controller
         i_user = 0;
-    elseif SIM.SimMode == 6 % Simulink %%%%%%%%%%%%Testing
-        %i_user = SIM.Cell_Cap/20;
-        i_user = 0;
     else
         i_user = i_user_calc(0,SIM); 
     end
@@ -850,7 +839,6 @@ SIM.M = M;
 
 %% Make Mass for just diffEq
 % if SIM.SimMode == 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
-    % if SIM.SimMode == 6 % Simulink
     % Make indices vector
     idx_diff = [];
     idx_algb = [];

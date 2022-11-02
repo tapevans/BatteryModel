@@ -22,9 +22,6 @@
         
     % ---- MOO Controller ----
         % 'battery_name'_MOOCont_'ControllerName'
-
-    % ---- Simulink ----
-        % 'battery_name'_Simulink_'SimulinkTestName'
     
     % ---- Manual Current Profile ----
         % For platingRefinement
@@ -62,17 +59,15 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'TestingForTyrone';
 % battery_name = 'TestingForTyrone';
 
-folder_name  = 'TestingSimulink';
-battery_name = 'TestingSimulink';
-
-% folder_name  = 'TestingLinearLC';
-% battery_name = 'TestingLinearLC';
+folder_name  = 'SeminarPres_Nov2022';
+battery_name = 'SeminarPres_Nov2022';
 
 
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
     C_rates      = []; 
-%     C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5]; 
+%     C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
+%     C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
 %     C_rates      = [1]; 
 %     C_rates      = [1/20 -1/20]; 
 %     C_rates      = [-1/3];
@@ -100,73 +95,19 @@ battery_name = 'TestingSimulink';
 % ---- Known BC Profile Controller ----
     KBCP   = 1;
         KBCPProfileOverwrite = 1;
-%         KBCPProfileFilename = 'SingleStepTo3.75V_1C';
+%         KBCPProfileFilename = 'CCCV_1.5C';
+        KBCPProfileFilename = 'CCCV_2C';
 %         KBCPProfileFilename = '5minImpulseLongResponse';
 %         KBCPProfileFilename = 'LongTau_wStep';
-%         KBCPProfileFilename = 'FourStep_StepCharge_ext5';
-%         KBCPProfileFilename = 'FourStep_StepDischarge_ext5';
-%         KBCPProfileFilename = 'SingleStepTo50SOC';
-%         KBCPProfileFilename = 'SingleStepTo50SOC_extfulltime';
-%         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';        
-%         KBCPProfileFilename = 'SingleStep';
-%         KBCPProfileFilename = 'ManualMO';        
-%         KBCPProfileFilename = 'Profile_CV_Test_1SmallStep_IC4.0V';        
-%         KBCPProfileFilename = 'Profile_CC_Test_StepResponse_0.4C';
-%         KBCPProfileFilename = 'Profile_CV_Test_1SmallStep';
-%         KBCPProfileFilename = 'Profile_CC_Test_3Step_wRelax';
-%         KBCPProfileFilename = 'Profile_CCChg4.2_CCDchg3.4_C3';
-        
-%         KBCPProfileFilename = 'C0.05_CVSOC10_';
-%         KBCPProfileFilename = 'C0.05_CVSOC25_';
-%         KBCPProfileFilename = 'C0.05_CVSOC50_';
-%         KBCPProfileFilename = 'C0.05_CVSOC75_';
-%         KBCPProfileFilename = 'C0.05_CVSOC90_';
-% 
-%         KBCPProfileFilename = 'C0.10_CVSOC10_';
-%         KBCPProfileFilename = 'C0.10_CVSOC25_';
-%         KBCPProfileFilename = 'C0.10_CVSOC50_';
-%         KBCPProfileFilename = 'C0.10_CVSOC75_';
-%         KBCPProfileFilename = 'C0.10_CVSOC90_';
-% 
-%         KBCPProfileFilename = 'C0.20_CVSOC10_';
-%         KBCPProfileFilename = 'C0.20_CVSOC25_';
-%         KBCPProfileFilename = 'C0.20_CVSOC50_';
-%         KBCPProfileFilename = 'C0.20_CVSOC75_';
-%         KBCPProfileFilename = 'C0.20_CVSOC90_';
-% 
-%         KBCPProfileFilename = 'C0.50_CVSOC10_';
-%         KBCPProfileFilename = 'C0.50_CVSOC25_';
-%         KBCPProfileFilename = 'C0.50_CVSOC50_';
-%         KBCPProfileFilename = 'C0.50_CVSOC75_';
-%         KBCPProfileFilename = 'C0.50_CVSOC90_';
-% 
-%         KBCPProfileFilename = 'C1.00_CVSOC10_';
-%         KBCPProfileFilename = 'C1.00_CVSOC25_';
-%         KBCPProfileFilename = 'C1.00_CVSOC50_';
-%         KBCPProfileFilename = 'C1.00_CVSOC75_';
-%         KBCPProfileFilename = 'C1.00_CVSOC90_';
-% 
-%         KBCPProfileFilename = 'C2.00_CVSOC10_';
-%         KBCPProfileFilename = 'C2.00_CVSOC25_';
-%         KBCPProfileFilename = 'C2.00_CVSOC50_';
-%         KBCPProfileFilename = 'C2.00_CVSOC75_';
-%         KBCPProfileFilename = 'C2.00_CVSOC90_';
-
-        KBCPProfileFilename = '1C_CCCVCCTest_SOC50_';
 
 % Initial SOC
     %         KBSOC = 81.93;
-            KBSOC = 0; 
+            KBSOC = 10; 
 
 
 % ---- MOO Controller ----
     MOO = 0;
         ControllerName = '';
-
-
-% ---- Simulink ----
-    slink = 0;
-        SimulinkTestName = 'TestSemiExplicit';
 
 
 % ---- Manual Current Profile ----
@@ -216,8 +157,7 @@ end
 
 
 %% Create Simulation Files
-%%
-% ---- Polarization ----
+%% ---- Polarization ----
 for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge 
     if C_rates(i) < 0
         CorD = 'C';
@@ -265,8 +205,7 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
 end
 
 
-%%
-% ---- Harmonic Perturbation ----
+%% ---- Harmonic Perturbation ----
 for i = 1:length(EIS_SIN_freq)
     for j = 1:length(EIS_SOC)
         filename = [ battery_name , '_EIS_SIN_w' , num2str(EIS_SIN_freq(i)) , '_SOC' , num2str(EIS_SOC(j)), '.mat' ];
@@ -299,8 +238,7 @@ for i = 1:length(EIS_SIN_freq)
 end
 
 
-%%
-% ---- State Space EIS ----
+%% ---- State Space EIS ----
 for i = 1:length(SS_SOC)
     filename = [ battery_name , '_SS_EIS_SOC' , num2str(SS_SOC(i)), '.mat' ];
     if isfile([save_file_path filesep filename])
@@ -331,8 +269,7 @@ for i = 1:length(SS_SOC)
 end
 
 
-%%
-% ---- Known BC Profile ----
+%% ---- Known BC Profile ----
 if KBCP    
     % Check if controller profile already exist
     profile_filename = [current_file_path filesep 'KnownProfiles' filesep KBCPProfileFilename '.mat'];
@@ -398,43 +335,7 @@ if MOO
 end
 
 
-%% ---- Simulink ----
-if slink
-    filename = [ battery_name , '_Simulink_' , SimulinkTestName , '.mat'];
-    % Check if sim already exist
-    if isfile([save_file_path filesep filename])
-        if FLAG_local.sim_overwrite
-            disp('Deleting previous sim')% delete old file
-            delete([save_file_path filesep filename])
-        else
-            disp('Simulation already exists')
-        end        
-    end
-    
-    % Create sim if it doesn't exist
-    if ~isfile([save_file_path filesep filename])
-        disp('Making sim')
-        SIM.results_filename = filename;
-        SIM.SimMode = 6;
-                
-        % Call Inputs
-        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
-        
-        % Call Init
-        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
-        
-        % Save Simulation File
-        postProcessComplete = 0;
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
-        
-        % Clear Variables
-        clear AN CA SEP EL SIM CONS P N FLAG PROPS
-    end
-end
-
-
-%%
-% ---- Manual Current Profile ----
+%% ---- Manual Current Profile ----
 if ManCurrProfile
     % Select naming convention
     if MCP.plating_refine

@@ -22,8 +22,6 @@ clc
 
 %%% Mode 5 ---- MOO Controller ----
 
-%%% Mode 6 ---- Simulink ----
-
 %%% Mode 7 ---- Manual Profile ----
 
 
@@ -60,15 +58,22 @@ postProcessing(filename)
 
 %% Plot Single Results
 clc; 
-% close all;
+clear all;
+close all;
 
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelax_LowCrateSOC50.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepChargeSOC50.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepCharge_ext5SOC25.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepDischarge_ext5SOC25.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingLinearLC\TestingLinearLC_KPCont_SingleStepForLinStepCompSOC0.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_SS_EIS_SOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingLinearLC\TestingLinearLC_KPCont_SingleStepForLinStepCompSOC0.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_SS_EIS_SOC50.mat';
+
+% Presentation Results
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_Polar_1.00C_C.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_KPCont_CCCV_1.5CSOC10.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_KPCont_CCCV_2CSOC10.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_ManCurrProf_100steps_1000Iter_0.01tol.mat';
 
 plotfcn(filename)
 
@@ -77,7 +82,7 @@ clear all
 close all
 clc
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_KPCont_SingleStepTo50SOCSOC0.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_Polar_5.00C_C.mat';
 
 load(filename)
 %% Create a SS representation from a SV during a simulation

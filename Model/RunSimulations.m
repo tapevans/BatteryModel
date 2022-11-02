@@ -7,15 +7,9 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
-% Project_Folder{i} = 'TestingLinearLC';   i = i+1;
+Project_Folder{i} = 'SeminarPres_Nov2022';   i = i+1;
 % Project_Folder{i} = 'TestingForTyrone';   i = i+1;
-Project_Folder{i} = 'TestingSimulink';   i = i+1;
-% Project_Folder{i} = 'Semi_Explicit_Test';   i = i+1;
-% Project_Folder{i} = 'MassIdentity_Test';   i = i+1;
-% Project_Folder{i} = 'KBCP_Mode_Test';   i = i+1;
-% Project_Folder{i} = 'Half_Cell_Test';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
-% Project_Folder{i} = 'Change_Mode_Number_Test';   i = i+1;
 
 %%
 num_Proj = length(Project_Folder);
@@ -253,9 +247,6 @@ for i = 1:num_sim_files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- MOO Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 5
             
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Simulink ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        elseif SIM.SimMode == 6
-            
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Manual Current Profile ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 7 
             % Simulation Parameters
@@ -319,6 +310,7 @@ for i = 1:num_sim_files
             % Maybe don't need else
             disp('Not a recognized simulation mode')
         end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         SIM.tSimEnd = toc(tSimStart);
         
         
@@ -372,50 +364,3 @@ for i = 1:num_sim_files
     clearvars -except sim_filenames i k num_sim_files
 end
 disp('Finished all simulations')
-
-
-%% OLD CODE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This is from CV HOLD
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                         % First iteration is not using ODExtend
-%                         % Setup variables to track i_user history
-%                         N_history = ceil(SIM.ZeroTime / SIM.DiscreteTimeStep);
-% %                         SIM.i_user_history = ones(N_history,1);
-%                         SIM.i_user_history = zeros(N_history,1);
-%                         % Calc i_user from controller
-%                             SV = SV_IC;
-%                             SV = SV1Dto2D(SV , N , P , FLAG);
-%                             i_user = SIM.ControllerHandle(SV, P , SIM);
-%                             % Update history
-%                             SIM.i_user_history = [SIM.i_user_history(2:end); i_user];
-%                             
-%                         % Call ode solver
-%                             SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan_vec(1:2),SV_IC,options_CV);
-%                             i_user_soln_int = i_user*ones(length(SOLN.x),1);
-%                         for j = 3:length(tspan_vec)
-%                             % Calc i_user
-%                                 SV_temp = SOLN.y';
-%                                 SV = SV_temp(end,:);
-%                                 SV = SV1Dto2D(SV , N , P , FLAG);
-%                                 i_user = SIM.ControllerHandle(SV, P , SIM);
-%                                 % Update history
-%                                 SIM.i_user_history = [SIM.i_user_history(2:end); i_user];
-%                             % Call ODE solver %%%%% Will this change i_user for the GovEqn or do I need to add the fnc handle for GovEqn
-%                                 SOLN = odextend(SOLN,@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan_vec(j));
-%                             % add something to account for C/20 and Delta SV
-%                                 
-%                             % Update i_user variables
-%                                 old_size = length(i_user_soln_int);
-%                                 new_size = length(SOLN.x);
-%                                 
-%                                 i_user_int_int  = i_user*ones((new_size - old_size),1);
-%                                 i_user_soln_int = [i_user_soln_int ; i_user_int_int];
-%                                 
-%                             % Break out of the for loop if time_zero has been reached
-%                                 if sum(SIM.i_user_history) == 0
-%                                     break
-%                                 end
-%                         end
-%                         t_soln_int  = SOLN.x';
-%                         SV_soln_int = SOLN.y';

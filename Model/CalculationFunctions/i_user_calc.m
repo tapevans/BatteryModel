@@ -23,9 +23,6 @@ for j = 1:length(t_in)
         else
             i_user(j) = 0;
         end
-    elseif SIM.SimMode == 8
-        i_user(j) = interp1(SIM.ZOHtime,SIM.ZOHcurrent,t);
-%         i_user(j) = zoh(SIM.ZOHtime,SIM.ZOHcurrent,t);
     else
         i_user(j) = SIM.Amp;
     end

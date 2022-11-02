@@ -335,13 +335,13 @@ j = 0;
 % MO_File(j).C_rate_sat = 2;
 
 %% CC to CV
-% Constant Current Charge 1C
+% Constant Current Charge 
 j = j + 1;
 MO_File(j).MO        = 1;
 MO_File(j).CorD      = 'C';
-MO_File(j).C_rate    = 1;
+MO_File(j).C_rate    = 2;
 MO_File(j).Volt_ref  = [];
-MO_File(j).Volt_lim  = 3.749054804993171;
+MO_File(j).Volt_lim  = 4.2;%3.749054804993171;
 MO_File(j).Time_lim  = 3600*1;
 MO_File(j).delta_tol = [];
 
@@ -350,19 +350,19 @@ j = j + 1;
 MO_File(j).MO         = 2;
 MO_File(j).CorD       = [];
 MO_File(j).C_rate     = [];
-MO_File(j).Volt_ref   = 3.749054804993171;  % [V]
+MO_File(j).Volt_ref   = 4.2;%3.749054804993171;  % [V]
 MO_File(j).Volt_lim   = [];   % [V]
 MO_File(j).Time_lim   = 2000; % [s]
 MO_File(j).delta_tol  = 1e-10;
 MO_File(j).C_rate_sat = 2;
 
-% Constant Current Charge 1C
-j = j + 1;
-MO_File(j).MO        = 1;
-MO_File(j).CorD      = 'D';
-MO_File(j).C_rate    = 1;
-MO_File(j).Volt_ref  = [];
-MO_File(j).Volt_lim  = 3.44;
-MO_File(j).Time_lim  = 3600*1;
-MO_File(j).delta_tol = [];
+% % Constant Current Charge 1C
+% j = j + 1;
+% MO_File(j).MO        = 1;
+% MO_File(j).CorD      = 'D';
+% MO_File(j).C_rate    = 1;
+% MO_File(j).Volt_ref  = [];
+% MO_File(j).Volt_lim  = 3.44;
+% MO_File(j).Time_lim  = 3600*1;
+% MO_File(j).delta_tol = [];
 end

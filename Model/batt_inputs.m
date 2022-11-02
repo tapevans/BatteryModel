@@ -30,6 +30,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
 
 % 0) Files that are used strictly for data and not to run a simulation
 
+
 %% Flags
 FLAG.AN_LI_FOIL = 0; % 1 if the anode   is a Li foil
 FLAG.CA_LI_FOIL = 0; % 1 if the cathode is a Li foil %%%%%Not IMplemented
@@ -96,9 +97,10 @@ FLAG.SaveSystemForEst = 0; % 1, if save the system to be used in the estimator O
 
 FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
     FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
-FLAG.Plot             = 1;   % 1 if the results plot immediately
+FLAG.Plot             = 0;   % 1 if the results plot immediately
 
 FLAG.PRBS_predefinded = 0; % 1 if using a PRBS current that is predefined
+
 
 %% Numerical Parameters
 N.N_CV_AN   = 10;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
@@ -113,12 +115,14 @@ N.N_R_CA    = 10;  % Number of r-direction cathode   control volumes (CV) %%%No 
 % N.N_R_AN    = 3;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
 % N.N_R_CA    = 3;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
 
+
 %% fsolve options
 options = optimoptions('fsolve');
 options.FunctionTolerance = 1e-15;
 % options.Display = 'iter';
 options.Display = 'none';
 SIM.fsolve_options = options;
+
 
 %% Setting Simulation Parameters based on mode of operation
 %% ---- Polarization ----
@@ -131,6 +135,7 @@ if SIM.SimMode == 1
 %     SIM.SOC_start           = 50;    % [%], Initial state of charge of the cell 
 end
 
+
 %% ---- Harmonic Perturbation ----
 if SIM.SimMode == 2
     SIM.C_rate    = 1/5;	  % How many charges per hour, ABSOLUTE VALUE
@@ -141,6 +146,7 @@ if SIM.SimMode == 2
 %     SIM.SOC_start = 50;   % [%], Initial state of charge 
 end
 
+
 %% ---- State Space EIS ----
 if SIM.SimMode == 3
     SIM.C_rate    = 1/5;  % How many charges per hour, ABSOLUTE VALUE
@@ -150,6 +156,7 @@ if SIM.SimMode == 3
 %     SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
 %     SIM.SOC_start = 50;   % [%], Initial state of charge
 end
+
 
 %% ---- Known BC Profile Controller ----
 if SIM.SimMode == 4
@@ -167,6 +174,7 @@ if SIM.SimMode == 4
 
 end
 
+
 %% ---- MOO Controller ----
 if SIM.SimMode == 5
     SIM.SOC_start           = 81.93;    % [%], Initial state of charge of the cell 81.93 ~ 4.0V
@@ -179,17 +187,6 @@ if SIM.SimMode == 5
 
 end
 
-%% ---- Simulink ----
-if SIM.SimMode == 6
-%     SIM.SOC_start           = 81.93;    % [%], Initial state of charge of the cell 81.93 ~ 4.0V
-
-%%%% Input from controller
-%     SIM.C_rate              = 2;	% How many charges per hour, ABSOLUTE VALUE
-%     SIM.ChargeOrDischarge   = 1;   % -1 if Charge, 1 if Discharge 
-%     SIM.charge_frac         = 1.0;  % How deep do we want to charge/discharge? 
-%     SIM.t_ramp              = 0;    % [s], Ramp time for load current to go from 0 to i_user
-
-end
 
 %% ---- Manual Profile ----
 if SIM.SimMode == 7
@@ -199,20 +196,21 @@ if SIM.SimMode == 7
     
     SIM.increase_percent = 1.3; % If profile is being optimized for plating, this is measure for how much the profile increases
     SIM.decrease_percent = 2;   % If profile is being optimized for plating, this is measure for how much the profile decreases
-    SIM.SOC_start        = 25;   % [%], Initial state of charge of the cell 
+    SIM.SOC_start        = 10;   % [%], Initial state of charge of the cell 
     SIM.C_rate           = 1;  % How many charges per hour, ABSOLUTE VALUE, This is used for initialization of i_user_amp used as a reference current
     SIM.C_rate_min       = 1/20;
     SIM.ramp_time        = 1; % [s],
-    SIM.ChargeOrDischarge = -1;
+    SIM.ChargeOrDischarge = -1; % -1 if Charge, 1 if Discharge 
     
     SIM.t_ramp    = 0;
     
-%%%% Inputs loaded from makeCurrentProfile.m (SIM.profile_filepath)
+%%%% Inputs loaded from makeCurrentProfile.m (SIM.profile_filepath,SIM)
 % SIM.tol_Delta_phi
 % SIM.max_iterations
 % SIM.N_regions
 
 end
+
 
 %% Battery Chemistry (Cell Performance)
 	% ---- Anode ----
@@ -314,6 +312,7 @@ end
     EL.c_p          = 720;      % [J kg^-1 K^-1], Specific heat capacity of electrolyte
     EL.k            = 470;      % [W m^-1 K^-1],  Thermal conductivity of electrolyte
     
+
 %% Cell Geometry
 % c - coin
 % p - pouch
@@ -383,6 +382,7 @@ SIM.cell_geo = 'p';
     % ---- Electrolyte ----
     EL.gamma_brug   = 1.0;     % [-], Bruggeman pre-exponential multiplier
     EL.alpha_brug   = 1.5;     % [-], Bruggeman exponential factor
+
 
 %% Overall Simulation Parameters
 %%% Thermal 

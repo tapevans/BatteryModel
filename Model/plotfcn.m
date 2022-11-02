@@ -5,7 +5,7 @@ load(filename)
 %% Plot Flags
 % ---- Polarization ----
 FLAG.COE       = 0; % Conservation of Energy Check %%%%%%%%%%%%%These plots need to be fixed
-FLAG.COM       = 0; % Conservation of Mass Check
+FLAG.COM       = 1; % Conservation of Mass Check
 FLAG.COC       = 0; % Conservation of Charge Check
 
 FLAG.TEMP      = 0; % Cell Temperature Profile %%%%%%%%%%%%%These plots need to be fixed
@@ -17,7 +17,8 @@ FLAG.s_dot     = 0; % Li_ion production rate
 
 FLAG.phi_ed    = 0; % phi_ed
 FLAG.phi_el    = 0; % phi_el
-FLAG.del_phi   = 0; % Delta phi (phi_ed - phi_el)
+FLAG.del_phi   = 1; % Delta phi (phi_ed - phi_el)
+FLAG.del_phi_v_time   = 1; %@ AN/SEP
 FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
 FLAG.eta       = 0; % eta
 FLAG.i_o       = 0; % exchange current density
@@ -52,13 +53,14 @@ FLAG.MOOCONT_cellVoltage = 1;
 
 % ---- Manual Current Profile ----
 FLAG.MAN_del_phi               = 1; % Delta phi vs time
-FLAG.MAN_del_phi_overlap       = 1; % Delta phi for each region plotted ontop of each other
+FLAG.MAN_del_phi_overlap       = 0; % Delta phi for each region plotted ontop of each other
 FLAG.MAN_current_profile       = 0; % Current Profile vs time
 FLAG.MAN_full_current_profile  = 1; % Current Profile determined by refinement (include profile past the final time needed)
 FLAG.MAN_current_profile_norm  = 1; % Normalized Current Profile wrt C-rate vs time
 FLAG.MAN_voltage_profile       = 0; % Voltage Profile vs time
 FLAG.MAN_volt_and_curr_profile = 1; % Voltage Profile and |C-rate| vs time
 FLAG.MAN_refinement            = 1; % Refinement Rate vs number of iterations
+
 
 %% Inputs
 N_times = 6; % Number of times to plot
@@ -68,6 +70,7 @@ N_times = 6; % Number of times to plot
 %     CV_vec = [N.CV_Region_AN(3) , N.CV_Region_CA(3) ];
 % end
     
+
 %% Make Desired Times for Plotting
 if ~(SIM.SimMode == 3)
     time_des = linspace(0, t_soln(end), N_times);
@@ -78,6 +81,8 @@ if ~(SIM.SimMode == 3)
         [~,t_index(i)] = min(abs(time_des(i)-t_soln));
     end
 end
+
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- Polarization ----
@@ -91,6 +96,7 @@ if SIM.SimMode == 1
 %     ylabel('Error [kmol]')
     end
     
+
     %% Conservation of Mass Check
     if FLAG.COM
     figure
@@ -100,6 +106,7 @@ if SIM.SimMode == 1
     ylabel('Error [kmol]')
     end
     
+
     %% Conservation of Charge Check
     if FLAG.COC
     figure
@@ -109,6 +116,7 @@ if SIM.SimMode == 1
     ylabel('Error [A m^{-2}]')
     end
     
+
     %% Temperature
     if FLAG.TEMP
     figure
@@ -129,6 +137,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';
     end
     
+
     %% Mass/Species (Concentration): Li_ion
     % Plot concentrations for desired times
     if FLAG.C_Liion
@@ -150,6 +159,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';
     end
     
+
     %% Mass/Species (Concentration): Li_surf
     % Plot surface concentrations for desired times
     if FLAG.X_Li_surf
@@ -171,6 +181,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';
     end
     
+
     %% Radial Concentration Plots:
     if FLAG.X_Li_rad
         for j = 1:length(CV_vec)
@@ -202,6 +213,7 @@ if SIM.SimMode == 1
         end
     end
     
+
     %% s_dot_Li^+
     if FLAG.s_dot
     figure
@@ -221,6 +233,7 @@ if SIM.SimMode == 1
     xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
     xl_SC.LabelHorizontalAlignment = 'center';
     end
+
 
     %% Charge Plots: phi_ed
     if FLAG.phi_ed
@@ -242,6 +255,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';
     end
     
+
     %% Charge Plots: phi_el
     if FLAG.phi_el
     figure
@@ -262,6 +276,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';
     end
         
+
     %% Charge Plots: Delta phi
     if FLAG.del_phi
     figure
@@ -281,7 +296,19 @@ if SIM.SimMode == 1
     xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
     xl_SC.LabelHorizontalAlignment = 'center';
     end
+
+
+    %% Charge Plots: Delta phi @ AN/SEP for all time
+    if FLAG.del_phi_v_time
+    figure
+    plot(t_soln,del_phi(:,N.N_CV_AN),'-','LineWidth',2)
+    title('\Delta \phi at AN/SEP')
+    xlabel('Time (s)')
+    ylabel('Voltage (V)')
+%     xlim([1,1+1e-6])
+    end
     
+
     %% E^eq
     if FLAG.E_eq
     figure
@@ -302,6 +329,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';
     end
     
+
     %% Eta
     if FLAG.eta 
     figure
@@ -322,6 +350,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';    
     end
     
+
     %% i_o
     if FLAG.i_o
     figure
@@ -342,6 +371,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';     
     end
     
+
     %% i_Far
     if FLAG.i_Far
     figure
@@ -361,6 +391,7 @@ if SIM.SimMode == 1
     xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
     xl_SC.LabelHorizontalAlignment = 'center';     
     end    
+
 
     %% V_SEI
     if FLAG.plotV_SEI
@@ -382,6 +413,7 @@ if SIM.SimMode == 1
     xl_SC.LabelHorizontalAlignment = 'center';     
     end  
     
+
     %% Charge Plots: Cell Voltage
     if FLAG.cellVoltage
     figure
@@ -392,6 +424,7 @@ if SIM.SimMode == 1
     xlim([0,t_soln(end)])
     end
     
+
     %% Cell Potential vs Capacity
     if FLAG.voltage_vs_capacity
     figure
@@ -406,6 +439,7 @@ if SIM.SimMode == 1
     end
     end
     
+
     %% Cell Potential and Load Current vs Time
     if FLAG.V_and_A
     figure
@@ -420,6 +454,7 @@ if SIM.SimMode == 1
     xlabel('Time (s)')
     lgn = legend;
     end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- Harmonic Perturbation ----
@@ -439,6 +474,7 @@ elseif SIM.SimMode == 2
     lgn = legend;
     end
     
+
     %% Surface Concentration of Multiple CV
     if FLAG.X_Li_surf_EIS
     figure
@@ -469,6 +505,7 @@ elseif SIM.SimMode == 2
     ylabel('X_{Li,surf} (-)')
     end
     
+
     %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
 % ---- SS EIS ----
@@ -485,6 +522,7 @@ elseif SIM.SimMode == 3
     axis equal    
     end   
     
+
     %% Bode
     if FLAG.SS_BODE
     figure
@@ -500,6 +538,7 @@ elseif SIM.SimMode == 3
     xlabel('Frequency (rad s^{-1})')   
     end
     
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- Known BC Profile Controller ----
 elseif SIM.SimMode == 4
@@ -514,6 +553,7 @@ elseif SIM.SimMode == 4
 %     xlim([1,1+1e-6])
     end
     
+
     %% Current Plot
     if FLAG.KPCONT_i_user
     figure
@@ -524,6 +564,7 @@ elseif SIM.SimMode == 4
     xlim([0,t_soln(end)])
     end
     
+
     %% Voltage and Normalized C-rate Absolute Value
     if FLAG.KPCONT_V_and_A_norm_abs
     figure
@@ -539,6 +580,7 @@ elseif SIM.SimMode == 4
     ylabel('Absolute Value of C-rate')
     end
     
+
     %% Voltage and Normalized wrt 1C-rate
     if FLAG.KPCONT_V_and_A_norm
     figure
@@ -554,6 +596,7 @@ elseif SIM.SimMode == 4
     ylabel('C-rate')
     end
     
+
     %% SOC vs Cell Voltage (Think I need a SOC calc in postProcessing which requires saving i_user)
     if FLAG.KPCONT_VOLT_v_SOC
     figure
@@ -563,6 +606,7 @@ elseif SIM.SimMode == 4
     ylabel('Voltage')
     end
     
+
     %% Mass/Species (Concentration): Li_surf
     % Plot surface concentrations for desired times
     if FLAG.KPCONT_X_Li_surf
@@ -584,6 +628,7 @@ elseif SIM.SimMode == 4
     xl_SC.LabelHorizontalAlignment = 'center';
     end
     
+
     %% Mass/Species (Concentration): Li_surf @ AN/SEP wrt time
     if FLAG.KPCONT_X_Li_surf_v_time
     figure
@@ -594,6 +639,7 @@ elseif SIM.SimMode == 4
 %     xlim([1,1+1e-6])
     end
     
+
     %% Charge Plots: Delta phi
     if FLAG.KPCONT_del_phi_v_time
     figure
@@ -604,6 +650,7 @@ elseif SIM.SimMode == 4
 %     xlim([1,1+1e-6])
     end
     
+
     %% 
     if FLAG.KPCONT_i_Far_v_time
     figure
@@ -613,6 +660,8 @@ elseif SIM.SimMode == 4
     ylabel('i_{Far} (A/m^2)')
 %     xlim([1,1+1e-6])
     end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- MOO Controller ----
 elseif SIM.SimMode == 5
@@ -626,6 +675,7 @@ elseif SIM.SimMode == 5
     xlim([0,t_soln(end)])
     end
     
+
     %% Current Plot
     
     %% SOC vs Cell Voltage (Think I need a SOC calc in postProcessing which requires saving i_user)   
@@ -646,6 +696,7 @@ elseif SIM.SimMode == 7
         ylabel('Voltage (V)')
     end
     
+
     %% Overlaping delta phi
     if FLAG.MAN_del_phi_overlap
         % Determine region for each time value
@@ -703,6 +754,7 @@ elseif SIM.SimMode == 7
 
     end
     
+
     %% Current Profile
     if FLAG.MAN_current_profile
         figure
@@ -712,6 +764,7 @@ elseif SIM.SimMode == 7
         ylabel('Current (A)')
     end
     
+
     %% Full Current Profile from Refinement
     if FLAG.MAN_full_current_profile
         time_vec    = 0:1:SIM.tspan(2);
@@ -724,6 +777,7 @@ elseif SIM.SimMode == 7
         ylabel('Current (A m^{-2})')
     end
     
+
     %% Current Profile Normalized
     if FLAG.MAN_current_profile_norm
         figure
@@ -738,6 +792,7 @@ elseif SIM.SimMode == 7
         ylabel('C-rate')
     end
     
+
     %% Voltage Profile
     if FLAG.MAN_voltage_profile
         figure
@@ -747,6 +802,7 @@ elseif SIM.SimMode == 7
         ylabel('Voltage (V)')
     end
     
+
     %% Voltage and Current Profile
     if FLAG.MAN_volt_and_curr_profile
         figure
@@ -767,6 +823,7 @@ elseif SIM.SimMode == 7
             text(t_soln(end)/3, (max(abs(I_user_norm_Crate(idx:end)))-min(abs(I_user_norm_Crate(idx:end))))/2,['Equivalent to ' time_str 'C CC cycle'],'Color','blue','FontSize',14)
     end
     
+
     %% Refinement
     if FLAG.MAN_refinement
         figure
@@ -779,6 +836,7 @@ elseif SIM.SimMode == 7
         ylabel('Normal of Steps')
     end
     
+
 end % if SIM.SimMode statement
 
 
