@@ -86,3 +86,4 @@ end
 function [output] = get_output(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec)
     output = SIM.OutputMatrix*SV;
 end
+

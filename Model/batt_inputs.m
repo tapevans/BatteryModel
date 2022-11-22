@@ -149,7 +149,7 @@ end
 
 %% ---- State Space EIS ----
 if SIM.SimMode == 3
-    SIM.C_rate    = 1/5;  % How many charges per hour, ABSOLUTE VALUE
+    SIM.C_rate    = 1/20;  % How many charges per hour, ABSOLUTE VALUE
     SIM.t_ramp    = 0;
     
 %%%% Input from batch mode 

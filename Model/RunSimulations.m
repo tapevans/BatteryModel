@@ -7,7 +7,8 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
-Project_Folder{i} = 'SeminarPres_Nov2022';   i = i+1;
+Project_Folder{i} = 'ObservabilityTest';   i = i+1;
+% Project_Folder{i} = 'SeminarPres_Nov2022';   i = i+1;
 % Project_Folder{i} = 'TestingForTyrone';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
 
@@ -127,6 +128,7 @@ for i = 1:num_sim_files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- State Space EIS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 3 
             [A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
+            %,sys_imp,sys_exp,sys_exp_mod
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Known BC Profile Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 4 
@@ -320,7 +322,7 @@ for i = 1:num_sim_files
             % Just a data file, don't save
         elseif SIM.SimMode == 3  % ---- State Space EIS ----
             postProcessComplete = 1;
-            save(sim_filenames{i},'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','A','B','C','D','Z_results','postProcessComplete')
+            save(sim_filenames{i},'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','A','B','C','D','Z_results','postProcessComplete') %,'sys_imp','sys_exp','sys_exp_mod'
             if FLAG.SaveSystemForEst % Save System to be used in Estimator
                 multiple = -SIM.A_c^-1;
                 sys = multiple*ss(A,B,C,D,'E',SIM.M);

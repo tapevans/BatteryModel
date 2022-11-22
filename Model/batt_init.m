@@ -10,6 +10,7 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
         CONS.T = SIM.Temp_start;     % [K], Temperature
     end
 
+
 %% Control Volume Modification for Li Foil
 % Adjust Number of CV
     if FLAG.AN_LI_FOIL
@@ -23,6 +24,7 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
         N.N_R_CA  = 1; % Number of radial control volumes
     end
 
+
 %% Control Volume Modification for Distributed
 % If radial concentration gradients are not considered, then set the number
 % of radial control volumes equal to 1
@@ -34,6 +36,7 @@ if ~FLAG.R_CA
 end 
 
 N.N_R_max = max(N.N_R_AN,N.N_R_CA);
+
 
 %% Pointers for Tracked Variables
     i = 1;
@@ -114,6 +117,7 @@ if SIM.SimMode == 3
     N.N_Out = length(fieldnames(P.OM));
 end
 
+
 %% Region Indexing
 % Number of state variables in each CV
     N.N_SV_AN  = N.N_SV_nR + N.N_R_AN;
@@ -131,6 +135,7 @@ end
     N.CV_Region_AN  =                          1 : N.N_CV_AN; % AN CVs
     N.CV_Region_SEP = N.N_CV_AN              + 1 : N.N_CV_AN + N.N_CV_SEP; % SEP CVs
     N.CV_Region_CA  = N.N_CV_AN + N.N_CV_SEP + 1 : N.N_CV_tot; % CA CVs
+
 
 %% Numerical Discretization
 % Del-x of each region
@@ -163,6 +168,7 @@ end
     CA.del_r = CA.r_p/(N.N_R_CA);
     CA.r_vec = (CA.del_r/2):CA.del_r:CA.r_p-(CA.del_r/2);
     CA.r_half_vec = 0:CA.del_r:CA.r_p;
+
 
 %% Various Needed Calculations
 % Initialize PROPS
@@ -700,7 +706,7 @@ end
         i_user = i_user_calc(0,SIM); 
     end
 
-% Create phi vectpr    
+% Create phi vector    
 phi_temp = SV(P.del_phi:P.i_PS, :);
 phi_temp(end+1,: ) = zeros(1,N.N_CV_tot ); % Adding a row for the new constraint equation(i_dl)
 phi_temp(end,N.CV_Region_SEP) =   NaN(1,N.N_CV_SEP); % No SV in the SEP region for the new constraint

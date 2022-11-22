@@ -59,10 +59,14 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'TestingForTyrone';
 % battery_name = 'TestingForTyrone';
 
-folder_name  = 'SeminarPres_Nov2022';
-battery_name = 'SeminarPres_Nov2022';
+% folder_name  = 'SeminarPres_Nov2022';
+% battery_name = 'SeminarPres_Nov2022';
+
+folder_name  = 'ObservabilityTest';
+battery_name = 'ObservabilityTest';
 
 
+%% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
     C_rates      = []; 
@@ -83,24 +87,26 @@ battery_name = 'SeminarPres_Nov2022';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    SS_SOC = [];
+%     SS_SOC = [];
+    SS_SOC = 0:1:100;
 %     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
 %     SS_SOC = [80.46];
-%     SS_SOC = [50];
+%     SS_SOC = [25];
     
+    % Desired frequency for impedance results
 %         SS_freq = [];
         SS_freq = logspace(-1,11,101);
 %         SS_freq = (logspace(-2,6,75) *(2*pi));
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 1;
+    KBCP   = 0;
         KBCPProfileOverwrite = 1;
 %         KBCPProfileFilename = 'CCCV_1.5C';
         KBCPProfileFilename = 'CCCV_2C';
 %         KBCPProfileFilename = '5minImpulseLongResponse';
 %         KBCPProfileFilename = 'LongTau_wStep';
 
-% Initial SOC
+    % Initial SOC
     %         KBSOC = 81.93;
             KBSOC = 10; 
 
