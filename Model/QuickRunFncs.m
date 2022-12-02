@@ -82,9 +82,10 @@ clear all
 close all
 clc
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_Polar_5.00C_C.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_DTImpulseTs0.1SOC50.mat';
 
 load(filename)
+
 %% Create a SS representation from a SV during a simulation
 
 SV = SV_soln(end,:)';

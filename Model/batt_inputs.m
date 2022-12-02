@@ -90,8 +90,10 @@ if ( FLAG.CONSTANT_PROPS_FROM_HANDLES && FLAG.VARIABLE_PROPS_FROM_HANDLES)
     warning('Both FLAG.CONSTANT_PROPS_FROM_HANDLES and FLAG.VARIABLE_PROPS_FROM_HANDLES are 1.')
 end
 
-FLAG.SaveSolnDiscreteTime = 0; % 1 if evaluate the ode soln at a given sampling rate
-	SIM.SaveTimeStep = 1;      % [s], Sampling rate of the ode output
+FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
+    SIM.Ts           = 1.0;                    % [s], Sampling rate of the DT system
+	SIM.TsMultiple   = 5;                       % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
+    SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple;   % [s], Sampling rate of the ode output
 
 FLAG.SaveSystemForEst = 0; % 1, if save the system to be used in the estimator ONLY FOR SS EIS (SimMode 3)
 
@@ -160,7 +162,7 @@ end
 
 %% ---- Known BC Profile Controller ----
 if SIM.SimMode == 4
-    SIM.DiscreteTimeStep    = 0.001;
+    SIM.DiscreteTimeStep    = 0.001; %%%%%%%%%%% IDK if this is ever used
     SIM.ControllerHandle    = @Controller_CV; % Function handle of the controller to call
     SIM.ZeroTime            = 0.01; % [s], How long a CV has to be at min i_user before simulation calls it quits 
 

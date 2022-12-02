@@ -87,8 +87,8 @@ battery_name = 'ObservabilityTest';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-%     SS_SOC = [];
-    SS_SOC = 0:1:100;
+    SS_SOC = [];
+%     SS_SOC = 0:1:100;
 %     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
 %     SS_SOC = [80.46];
 %     SS_SOC = [25];
@@ -99,16 +99,17 @@ battery_name = 'ObservabilityTest';
 %         SS_freq = (logspace(-2,6,75) *(2*pi));
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 0;
+    KBCP   = 1;
         KBCPProfileOverwrite = 1;
-%         KBCPProfileFilename = 'CCCV_1.5C';
-        KBCPProfileFilename = 'CCCV_2C';
+        KBCPProfileFilename = 'DTImpulseTs1.0';        
+        %         KBCPProfileFilename = 'CCCV_1.5C';
+%         KBCPProfileFilename = 'CCCV_2C';
 %         KBCPProfileFilename = '5minImpulseLongResponse';
 %         KBCPProfileFilename = 'LongTau_wStep';
 
     % Initial SOC
     %         KBSOC = 81.93;
-            KBSOC = 10; 
+            KBSOC = 50; 
 
 
 % ---- MOO Controller ----

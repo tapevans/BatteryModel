@@ -24,6 +24,9 @@ else
     i_user = i_user_calc(t,SIM);
 end
 
+if abs(i_user) > 0
+    i_user;
+end
 %% Calculate All Fluxes
 [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , FLAG , i_user , props);
 
