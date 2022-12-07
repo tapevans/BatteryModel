@@ -32,7 +32,7 @@
         
         
 %%
-clear all; close all; clc;
+% clear all; close all; clc;
 
 
 %% Subdirecties to Include
@@ -101,7 +101,32 @@ battery_name = 'ObservabilityTest';
 % ---- Known BC Profile Controller ----
     KBCP   = 1;
         KBCPProfileOverwrite = 1;
-        KBCPProfileFilename = 'DTImpulseTs1.0';        
+%         KBCPProfileFilename = 'DTImpulseTs0.1';
+%         KBCPProfileFilename = 'DTImpulseTs0.121152765862859';
+%         KBCPProfileFilename = 'DTImpulseTs0.146779926762207';
+%         KBCPProfileFilename = 'DTImpulseTs0.177827941003892';
+%         KBCPProfileFilename = 'DTImpulseTs0.215443469003188';
+%         KBCPProfileFilename = 'DTImpulseTs0.261015721568254';
+%         KBCPProfileFilename = 'DTImpulseTs0.316227766016838';
+%         KBCPProfileFilename = 'DTImpulseTs0.383118684955729';
+%         KBCPProfileFilename = 'DTImpulseTs0.464158883361278';
+%         KBCPProfileFilename = 'DTImpulseTs0.562341325190349';
+%         KBCPProfileFilename = 'DTImpulseTs0.681292069057961';
+%         KBCPProfileFilename = 'DTImpulseTs0.825404185268018';
+%         KBCPProfileFilename = 'DTImpulseTs1.0';
+%         KBCPProfileFilename = 'DTImpulseTs1.21152765862859';
+%         KBCPProfileFilename = 'DTImpulseTs1.46779926762207';
+%         KBCPProfileFilename = 'DTImpulseTs1.77827941003892';
+%         KBCPProfileFilename = 'DTImpulseTs2.15443469003188';
+%         KBCPProfileFilename = 'DTImpulseTs2.61015721568254';
+%         KBCPProfileFilename = 'DTImpulseTs3.16227766016838';
+%         KBCPProfileFilename = 'DTImpulseTs3.83118684955729';
+%         KBCPProfileFilename = 'DTImpulseTs4.64158883361278';
+%         KBCPProfileFilename = 'DTImpulseTs5.62341325190349';
+%         KBCPProfileFilename = 'DTImpulseTs6.81292069057961';
+%         KBCPProfileFilename = 'DTImpulseTs8.25404185268018';
+        KBCPProfileFilename = 'DTImpulseTs10.0';      
+
         %         KBCPProfileFilename = 'CCCV_1.5C';
 %         KBCPProfileFilename = 'CCCV_2C';
 %         KBCPProfileFilename = '5minImpulseLongResponse';
@@ -109,7 +134,7 @@ battery_name = 'ObservabilityTest';
 
     % Initial SOC
     %         KBSOC = 81.93;
-            KBSOC = 50; 
+%             KBSOC = 100; 
 
 
 % ---- MOO Controller ----

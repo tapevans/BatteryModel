@@ -238,8 +238,8 @@ j = 0;
 
 %% Impulse Simulation
 initial_relax_samples = 2;
-Ts = 1.0;   % [s], discrete time sampling rate
-N_meas = 50; % Number of discrete values to measure
+Ts = 10.0;   % [s], discrete time sampling rate
+N_meas = 100; % Number of discrete values to measure
 
 % Relaxation
 j = j + 1;
