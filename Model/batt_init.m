@@ -291,7 +291,7 @@ end
     AN.Np_CV      = AN.Np_tot / N.N_CV_AN;     % Number of particles per control volume
     AN.A_surf     = 4*pi*AN.r_p^2;             % [m^2],        Surface area of a particle
     AN.A_surf     = AN.A_surf * AN.A_geo;      % [m^2],        Account for ecentricity of spherical particle
-    AN.A_surf_tot = AN.A_surf * AN.Np_tot;     % [m^2],        Total surface area om the electrode region
+    AN.A_surf_tot = AN.A_surf * AN.Np_tot;     % [m^2],        Total surface area in the electrode region
     AN.A_surf_CV  = AN.A_surf_tot / N.N_CV_AN; % [m^2 per CV], Surface area per control volume
     AN.A_s        = AN.A_surf_tot / AN.Vol;    % [m^2_surf / m^3_CV]  Particle surface area per control volume
     
