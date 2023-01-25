@@ -2,16 +2,26 @@
 %
 %
 %
-clear all; close all; clc;
+clear all; 
+close all; 
+clc;
 %% FLAGS
 % Simulations
     FLAG.ODE         = 1;
     FLAG.SS_CT       = 1;
     FLAG.SS_DT       = 1;
-    FLAG.SS_DT_Noise = 1;
-    FLAG.Estimator   = 1;
-        FLAG.RunAsymtotic = 1;
-        FLAG.RunVariable  = 1;
+    FLAG.SS_DT_Noise = 0;
+    FLAG.Estimator   = 0;
+        FLAG.RunAsymtotic = 0;
+        FLAG.RunVariable  = 0;
+    FLAG.SIMULINK         = 1;
+
+% Input Force
+    % 1) Step
+    % 2) Harmonic
+    FLAG.InputMode = 2;
+        SIM.F_in = 1; % Force Input (Amplitude)
+        SIM.fq = 1e-1; % [Hz]
 
 % Plots
     FLAG.PLOT.x1Compare = 1;
@@ -21,10 +31,18 @@ clear all; close all; clc;
     FLAG.PLOT.ODE         = 0;
     FLAG.PLOT.SS_CT       = 0;
     FLAG.PLOT.SS_DT       = 0;
-    FLAG.PLOT.SS_DT_Noise = 1;
-    FLAG.PLOT.Estimator   = 1;
-        FLAG.PLOT.RunAsymtotic = 1;
-        FLAG.PLOT.RunVariable  = 1;
+    FLAG.PLOT.SS_DT_Noise = 0;
+    FLAG.PLOT.Estimator   = 0;
+        FLAG.PLOT.RunAsymtotic = 0;
+        FLAG.PLOT.RunVariable  = 0;
+    FLAG.PLOT.SIMULINK.ODE         = 0;
+    FLAG.PLOT.SIMULINK.SS_CT       = 0;
+    FLAG.PLOT.SIMULINK.SS_DT       = 0;
+    FLAG.PLOT.SIMULINK.SS_CT_Noise = 0;
+    FLAG.PLOT.SIMULINK.Estimator   = 1;
+        FLAG.PLOT.SIMULINK.RunAsymtotic = 1;
+        FLAG.PLOT.SIMULINK.RunVariable  = 1;
+
 
 %% System Parameters
 SIM.k1 = .75;  % Spring
@@ -33,8 +51,14 @@ SIM.b  = 10;  % Damper
 SIM.m1 = 5; % Mass 1
 SIM.m2 = 5; % Mass 2
 
-SIM.F_in = 1; % Force Input
+% Noise
+    Q_0 = 1e-6; % Process Noise
+    R_0 = 1e-6; % Measurement Noise
 
+Ts = 1/SIM.fq/50; %[s]
+
+% t_final = 50;
+% t_final = 100;
 t_final = 200;
 
 %% Pointers
@@ -56,13 +80,15 @@ if FLAG.ODE
     [t_ODE,x_ODE] = ode45(@(t,x)myFun(t,x,SIM,P,FLAG,A_CT,B_CT),[0,t_final],x_0);
 end
 
+% plot(0:0.01:1,SIM.F_in*sin(2*pi*SIM.fq*(0:0.01:1)))
+
 
 %% Test Observability
 % Measure x1
-C = [1 0 0 0];
-Ob = obsv(A_CT,C);
-r = rank(Ob);
-disp(['Measuring x1, the rank is ' num2str(r)])
+% C = [1 0 0 0];
+% Ob = obsv(A_CT,C);
+% r = rank(Ob);
+% disp(['Measuring x1, the rank is ' num2str(r)])
 
 % % Measure v1
 % C = [0 1 0 0];
@@ -77,10 +103,10 @@ disp(['Measuring x1, the rank is ' num2str(r)])
 % disp(['Measuring x2, the rank is ' num2str(r)])
 
 % % Measure v2
-% C = [0 0 0 1];
-% Ob = obsv(A_CT,C);
-% r = rank(Ob);
-% disp(['Measuring v2, the rank is ' num2str(r)])
+C = [0 0 0 1];
+Ob = obsv(A_CT,C);
+r = rank(Ob);
+disp(['Measuring v2, the rank is ' num2str(r)])
 
 % C = eye(4);
 
@@ -102,7 +128,6 @@ end
 
 
 %% Make SS DT
-Ts = 1;
 % % Manually
 % A_DT = expm(A_CT*Ts);
 % B_DT = inv(A_CT)*(A_DT - eye(4))*B_CT; % This only works if A is invertable
@@ -361,6 +386,113 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
         disp(covar_asy-CPCT_calc)
 
 end
+%% Simulink
+if FLAG.SIMULINK
+    k1 = SIM.k1;  % Spring
+    k2 = SIM.k2;  % Spring
+    b  = SIM.b;  % Damper
+    m1 = SIM.m1; % Mass 1
+    m2 = SIM.m2; % Mass 2
+    F_in = SIM.F_in;
+    Q = Q_0*eye(N_inputs); % Process Noise
+    R = R_0*eye(N_meas);   % Measurement Noise
+    Iden = eye(N_states);
+    confidence = 0.5;
+    P_k_0 = confidence*eye(N_states);
+    x_0_est = [1;-1;2;5];
+
+%     N_samples_per_Ts_sample = 3;
+%     delta = Ts/N_samples_per_Ts_sample;
+%     trigger_t = 0:delta:t_final;
+%     idx = (1 + N_samples_per_Ts_sample):N_samples_per_Ts_sample:length(trigger_t);
+%     trigger_pulse = zeros(size(trigger_t));
+%     trigger_pulse(idx) = 1;
+%     TriggerSignal = [trigger_t' trigger_pulse'];
+
+    [P_infty  ,~,~] =  dare(A_DT', C', B_DT*Q*B_DT' ,R);
+    K_infty = P_infty*C'*inv(C*P_infty*C' + R);
+
+    mdl = 'MSD_Overall_Sine';
+    load_system(mdl)
+    in = Simulink.SimulationInput(mdl);
+    in = in.setModelParameter('StartTime','0','StopTime',num2str(t_final));
+    
+    mdlWks = get_param(in,'ModelWorkspace');
+    assignin(mdlWks,'fq'    ,SIM.fq)
+    assignin(mdlWks,'x0'   ,x_0)
+    assignin(mdlWks,'k1'   ,SIM.k1)
+    assignin(mdlWks,'k2'   ,SIM.k2)
+    assignin(mdlWks,'b'    ,SIM.b)
+    assignin(mdlWks,'m1'   ,SIM.m1)
+    assignin(mdlWks,'m2'   ,SIM.m2)
+    assignin(mdlWks,'F_in' ,SIM.F_in)
+    assignin(mdlWks,'A_CT' ,A_CT)
+    assignin(mdlWks,'B_CT' ,B_CT)
+    assignin(mdlWks,'C'    ,C)
+    assignin(mdlWks,'Ts'   ,Ts)
+    assignin(mdlWks,'Q'    ,Q)
+    assignin(mdlWks,'R'    ,R)
+    assignin(mdlWks,'Iden' ,Iden)
+    assignin(mdlWks,'P_k_0',P_k_0)
+    assignin(mdlWks,'x_0_est',x_0_est)
+%     assignin(mdlWks,'P_infty',P_infty)
+    assignin(mdlWks,'K_infty',K_infty)
+    
+    out = sim(in);
+
+%% Post Simulink
+x_ODE_Slink = out.x_ODE.signals.values;
+t_ODE_Slink = out.x_ODE.time;
+
+% for i = 1:length(out.x_CT_SS.time)
+%     x_SS_CT_Slink(i,:) = (out.x_CT_SS.signals.values(:,:,i))';
+% end
+x_SS_CT_Slink = out.x_CT_SS.signals.values;
+t_SS_CT_Slink = out.x_CT_SS.time;
+
+% for i = 1:length(out.x_DT_SS.time)
+%     x_SS_DT_Slink(i,:) = (out.x_DT_SS.signals.values(:,:,i))';
+% end
+x_SS_DT_Slink = out.x_DT_SS.signals.values;
+t_SS_DT_Slink = out.x_DT_SS.time;
+
+for i = 1:length(out.x_CT_SS_N.time)
+    x_SS_CT_N_Slink(i,:) = (out.x_CT_SS_N.signals.values(:,:,i))';
+end
+t_SS_CT_N_Slink = out.x_CT_SS_N.time;
+
+% Calculate mean and covar of noise
+w_k_Slink = reshape(out.w_k.signals.values,1,[]);
+[mu_x] = calcMean(w_k_Slink);
+[error_x] = calcError(w_k_Slink,mu_x);
+[Covar_xx] = calcPopCovar(error_x, error_x)
+Q_0
+
+v_k_Slink = reshape(out.v_k.signals.values,1,[]);
+[mu_x] = calcMean(v_k_Slink);
+[error_x] = calcError(v_k_Slink,mu_x);
+[Covar_xx] = calcPopCovar(error_x, error_x)
+R_0
+
+% P_infty
+    out.P_k_k1.signals.values(:,:,end)
+    P_infty
+
+    out.K_k.signals.values(:,:,end)
+    K_infty
+
+for i = 1:length(out.x_hat_insideEST.time)
+    x_hat_Slink(i,:) = (out.x_hat_insideEST.signals.values(:,:,i))';
+end
+t_hat_Slink = out.x_hat_insideEST.time;
+
+% Asymptotic
+% for i = 1:length(out.x_hat_insideEST_asy.time)
+%     x_hat_asy_Slink(i,:) = (out.x_hat_insideEST_asy.signals.values(:,:,i))';
+% end
+x_hat_asy_Slink = out.x_hat_insideEST_asy.signals.values;
+t_hat_asy_Slink = out.x_hat_insideEST_asy.time;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plotting
@@ -372,14 +504,26 @@ end
         xlabel('Time (s)')
         ylabel('Position')
     
+        if FLAG.PLOT.SIMULINK.ODE
+            plot(t_ODE_Slink,x_ODE_Slink(:,P.x1),'o','LineWidth',2,'DisplayName','ODE Slink')
+        end
         if FLAG.PLOT.ODE
             plot(t_ODE,x_ODE(:,P.x1),'LineWidth',2,'DisplayName','ODE')
+        end
+        if FLAG.PLOT.SIMULINK.SS_CT
+            plot(t_SS_CT_Slink,x_SS_CT_Slink(:,P.x1),'o','LineWidth',2,'DisplayName','SS CT Slink')
         end
         if FLAG.PLOT.SS_CT
             plot(t_SS_CT,x_SS_CT(:,P.x1),'LineWidth',2,'DisplayName','SS CT')
         end
         if FLAG.PLOT.SS_DT
             plot(t_SS_DT,x_SS_DT(:,P.x1),'o','LineWidth',5,'DisplayName','SS DT')
+        end
+        if FLAG.PLOT.SIMULINK.SS_DT
+            plot(t_SS_DT_Slink,x_SS_DT_Slink(:,P.x1),'o','LineWidth',2,'DisplayName','SS DT Slink')
+        end
+        if FLAG.PLOT.SIMULINK.SS_CT_Noise
+            plot(t_SS_CT_N_Slink,x_SS_CT_N_Slink(:,P.x1),'o','LineWidth',2,'DisplayName','SS CT Noise Slink')
         end
         if FLAG.PLOT.SS_DT_Noise
             plot(t_SS_DT_n,x_SS_DT_n(:,P.x1),'o','LineWidth',2,'DisplayName','DT with Noise')
@@ -392,6 +536,15 @@ end
                 plot(t_var,x_var(:,P.x1),'o','LineWidth',2,'DisplayName','Variable K_k')
             end
             plot(t_asy,x_EST_sys(:,P.x1),'LineWidth',2,'DisplayName','Plant')
+        end
+        if FLAG.PLOT.SIMULINK.Estimator
+            if FLAG.PLOT.SIMULINK.RunAsymtotic
+                plot(t_hat_asy_Slink,x_hat_asy_Slink(:,P.x1),'o','LineWidth',5,'DisplayName','Asymp Slink')
+            end
+            if FLAG.PLOT.SIMULINK.RunVariable
+                plot(t_hat_Slink,x_hat_Slink(:,P.x1),'o','LineWidth',2,'DisplayName','Variable k Slink')
+            end
+                plot(t_SS_CT_N_Slink,x_SS_CT_N_Slink(:,P.x1),'LineWidth',2,'DisplayName','Plant Slink')
         end
         lgn = legend;
         lgn.Location = 'southeast';
@@ -406,14 +559,26 @@ end
         xlabel('Time (s)')
         ylabel('Velocity')
     
+        if FLAG.PLOT.SIMULINK.ODE
+            plot(t_ODE_Slink,x_ODE_Slink(:,P.v1),'o','LineWidth',2,'DisplayName','ODE Slink')
+        end
         if FLAG.PLOT.ODE
             plot(t_ODE,x_ODE(:,P.v1),'LineWidth',2,'DisplayName','ODE')
+        end
+        if FLAG.PLOT.SIMULINK.SS_CT
+            plot(t_SS_CT_Slink,x_SS_CT_Slink(:,P.v1),'o','LineWidth',2,'DisplayName','SS CT Slink')
         end
         if FLAG.PLOT.SS_CT
             plot(t_SS_CT,x_SS_CT(:,P.v1),'LineWidth',2,'DisplayName','SS CT')
         end
         if FLAG.PLOT.SS_DT
             plot(t_SS_DT,x_SS_DT(:,P.v1),'o','LineWidth',5,'DisplayName','SS DT')
+        end
+        if FLAG.PLOT.SIMULINK.SS_DT
+            plot(t_SS_DT_Slink,x_SS_DT_Slink(:,P.v1),'o','LineWidth',2,'DisplayName','SS DT Slink')
+        end
+        if FLAG.PLOT.SIMULINK.SS_CT_Noise
+            plot(t_SS_CT_N_Slink,x_SS_CT_N_Slink(:,P.v1),'o','LineWidth',2,'DisplayName','SS CT Noise Slink')
         end
         if FLAG.PLOT.SS_DT_Noise
             plot(t_SS_DT_n,x_SS_DT_n(:,P.v1),'o','LineWidth',2,'DisplayName','DT with Noise')
@@ -427,6 +592,15 @@ end
             end
             plot(t_asy,x_EST_sys(:,P.v1),'LineWidth',2,'DisplayName','Plant')
         end
+        if FLAG.PLOT.SIMULINK.Estimator
+            if FLAG.PLOT.SIMULINK.RunAsymtotic
+                plot(t_hat_asy_Slink,x_hat_asy_Slink(:,P.v1),'o','LineWidth',5,'DisplayName','Asymp Slink')
+            end
+            if FLAG.PLOT.SIMULINK.RunVariable
+                plot(t_hat_Slink,x_hat_Slink(:,P.v1),'o','LineWidth',2,'DisplayName','Variable k Slink')
+            end
+                plot(t_SS_CT_N_Slink,x_SS_CT_N_Slink(:,P.v1),'LineWidth',2,'DisplayName','Plant Slink')
+        end
         lgn = legend;
         xlim([0,t_final])
     end
@@ -439,14 +613,26 @@ end
         xlabel('Time (s)')
         ylabel('Position')
     
+        if FLAG.PLOT.SIMULINK.ODE
+            plot(t_ODE_Slink,x_ODE_Slink(:,P.x2),'o','LineWidth',2,'DisplayName','ODE Slink')
+        end
         if FLAG.PLOT.ODE
             plot(t_ODE,x_ODE(:,P.x2),'LineWidth',2,'DisplayName','ODE')
+        end
+        if FLAG.PLOT.SIMULINK.SS_CT
+            plot(t_SS_CT_Slink,x_SS_CT_Slink(:,P.x2),'o','LineWidth',2,'DisplayName','SS CT Slink')
         end
         if FLAG.PLOT.SS_CT
             plot(t_SS_CT,x_SS_CT(:,P.x2),'LineWidth',2,'DisplayName','SS CT')
         end
         if FLAG.PLOT.SS_DT
             plot(t_SS_DT,x_SS_DT(:,P.x2),'o','LineWidth',5,'DisplayName','SS DT')
+        end
+        if FLAG.PLOT.SIMULINK.SS_DT
+            plot(t_SS_DT_Slink,x_SS_DT_Slink(:,P.x2),'o','LineWidth',2,'DisplayName','SS DT Slink')
+        end
+        if FLAG.PLOT.SIMULINK.SS_CT_Noise
+            plot(t_SS_CT_N_Slink,x_SS_CT_N_Slink(:,P.x2),'o','LineWidth',2,'DisplayName','SS CT Noise Slink')
         end
         if FLAG.PLOT.SS_DT_Noise
             plot(t_SS_DT_n,x_SS_DT_n(:,P.x2),'o','LineWidth',2,'DisplayName','DT with Noise')
@@ -459,6 +645,15 @@ end
                 plot(t_var,x_var(:,P.x2),'o','LineWidth',2,'DisplayName','Variable k')
             end
             plot(t_asy,x_EST_sys(:,P.x2),'LineWidth',2,'DisplayName','Plant')
+        end
+        if FLAG.PLOT.SIMULINK.Estimator
+            if FLAG.PLOT.SIMULINK.RunAsymtotic
+                plot(t_hat_asy_Slink,x_hat_asy_Slink(:,P.x2),'o','LineWidth',5,'DisplayName','Asymp Slink')
+            end
+            if FLAG.PLOT.SIMULINK.RunVariable
+                plot(t_hat_Slink,x_hat_Slink(:,P.x2),'o','LineWidth',2,'DisplayName','Variable k Slink')
+            end
+                plot(t_SS_CT_N_Slink,x_SS_CT_N_Slink(:,P.x2),'LineWidth',2,'DisplayName','Plant Slink')
         end
         lgn = legend;
         lgn.Location = 'southeast';
@@ -473,14 +668,26 @@ end
         xlabel('Time (s)')
         ylabel('Velocity')
     
+        if FLAG.PLOT.SIMULINK.ODE
+            plot(t_ODE_Slink,x_ODE_Slink(:,P.v2),'o','LineWidth',2,'DisplayName','ODE Slink')
+        end
         if FLAG.PLOT.ODE
             plot(t_ODE,x_ODE(:,P.v2),'LineWidth',2,'DisplayName','ODE')
+        end
+        if FLAG.PLOT.SIMULINK.SS_CT
+            plot(t_SS_CT_Slink,x_SS_CT_Slink(:,P.v2),'o','LineWidth',2,'DisplayName','SS CT Slink')
         end
         if FLAG.PLOT.SS_CT
             plot(t_SS_CT,x_SS_CT(:,P.v2),'LineWidth',2,'DisplayName','SS CT')
         end
         if FLAG.PLOT.SS_DT
             plot(t_SS_DT,x_SS_DT(:,P.v2),'o','LineWidth',5,'DisplayName','SS DT')
+        end
+        if FLAG.PLOT.SIMULINK.SS_DT
+            plot(t_SS_DT_Slink,x_SS_DT_Slink(:,P.v2),'o','LineWidth',2,'DisplayName','SS DT Slink')
+        end
+        if FLAG.PLOT.SIMULINK.SS_CT_Noise
+            plot(t_SS_CT_N_Slink,x_SS_CT_N_Slink(:,P.v2),'o','LineWidth',2,'DisplayName','SS CT Noise Slink')
         end
         if FLAG.PLOT.SS_DT_Noise
             plot(t_SS_DT_n,x_SS_DT_n(:,P.v2),'o','LineWidth',2,'DisplayName','DT with Noise')
@@ -493,6 +700,15 @@ end
                 plot(t_var,x_var(:,P.v2),'o','LineWidth',2,'DisplayName','Variable k')
             end
             plot(t_asy,x_EST_sys(:,P.v2),'LineWidth',2,'DisplayName','Plant')
+        end
+        if FLAG.PLOT.SIMULINK.Estimator
+            if FLAG.PLOT.SIMULINK.RunAsymtotic
+                plot(t_hat_asy_Slink,x_hat_asy_Slink(:,P.v2),'o','LineWidth',5,'DisplayName','Asymp Slink')
+            end
+            if FLAG.PLOT.SIMULINK.RunVariable
+                plot(t_hat_Slink,x_hat_Slink(:,P.v2),'o','LineWidth',2,'DisplayName','Variable k Slink')
+            end
+                plot(t_SS_CT_N_Slink,x_SS_CT_N_Slink(:,P.v2),'LineWidth',2,'DisplayName','Plant Slink')
         end
         lgn = legend;
         xlim([0,t_final])
@@ -530,7 +746,7 @@ function [x_dot] = myFun(t,x,SIM,P,FLAG,A,B)
 % end
 
 % Input Force
-u = SIM.F_in;
+u = SIM.F_in*sin(2*pi*SIM.fq*t);
 
 % Derivative 
 x_dot = A*x + B*u;
@@ -563,4 +779,21 @@ B = [0
 % D = [0
 %      0];
 
+end
+%%
+function [mu] = calcMean(x)
+    mu = mean(x);
+end
+%%
+function [error] = calcError(x,mu)
+% difference between x and the expected value (mu)
+    error = x-mu;
+end
+%%
+function [Covar] = calcPopCovar(error_x, error_y)
+    Covar = (error_x*error_y')/length(error_x);
+end
+%%
+function [Covar] = calcSampleCovar(error_x, error_y)
+    Covar = (error_x*error_y')/(length(error_x)-1);
 end

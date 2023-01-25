@@ -1,7 +1,7 @@
 %% Test Discrete Time in Simulink
 %
 %
-clear all; close all; clc;
+clearvars -except out; close all; clc;
 
 %% 
 % Input current will be a square wave
@@ -44,10 +44,10 @@ x_0 = zeros(N_states,1);
 
 [t_soln,y_soln] = ode45(@(t,x)odefun(t,x,A,B,u_t),t_vec_fine,x_0);
 
-% figure
-% hold on
-% plot(t_soln,y_soln)
-% plot(t_soln,interp1(u_t(:,1),u_t(:,2),t_soln))
+figure
+hold on
+plot(t_soln,y_soln(:,1))
+plot(t_soln,interp1(u_t(:,1),u_t(:,2),t_soln))
 
 %% DT
 SS_DT = c2d(sys_CT,Ts_sample);
@@ -64,12 +64,16 @@ w_k = (chol(Q,'lower')*randn(N_inputs,1e6))'; % N_steps*100000
 R = R_0*eye(N_meas);
 v_k = (chol(R,'lower')*randn(N_meas,1e6))'; % N_steps*100000
 
+Iden = eye(N_states);
+x_0_est = x_0;
 
     w_k = w_k';
     v_k = v_k';
 
 % [P_infty  ,~,~] =  dare(A_DT', C', B_DT*Q*B_DT' ,R);
 [P_infty,~,~] = idare(A_DT',C',B_DT*Q*B_DT',R,0,eye(2));
+
+N_steps = N_steps + 1;
 
 % Initialize Solution Variables
     x_EST_sys = zeros(N_states,N_steps);   % Real System (Plant) States
@@ -116,21 +120,52 @@ end
 %% Creating Trigger Signal
 % Want a pulse at every 1 second but I need two zeros before each pulse
 % So I need a sample at every 1/3 sec
-delta = 0.5;
-trigger_t = 0:delta:10;
-idx = 3:2:length(trigger_t);
-trigger_pulse = zeros(size(trigger_t));
-trigger_pulse(idx) = 1;
-TriggerSignal = [trigger_t' trigger_pulse'];
 
-
-% delta = 1/3;
-% trigger_t = 0:delta:10;
-% idx = 4:3:length(trigger_t);
+% delta = 0.5;
+% trigger_t = 0:delta:t_final;
+% idx = 3:2:length(trigger_t);
 % trigger_pulse = zeros(size(trigger_t));
 % trigger_pulse(idx) = 1;
 % TriggerSignal = [trigger_t' trigger_pulse'];
 
+
+N_samples_per_Ts_sample = 3;
+delta = Ts_sample/N_samples_per_Ts_sample;
+trigger_t = 0:delta:t_final;
+idx = (1 + N_samples_per_Ts_sample):N_samples_per_Ts_sample:length(trigger_t);
+trigger_pulse = zeros(size(trigger_t));
+trigger_pulse(idx) = 1;
+TriggerSignal = [trigger_t' trigger_pulse'];
+
+%% plot out CT vs EST
+out.x_hat_k_k.signals.values = reshape(out.x_hat_k_k.signals.values,2,[]);
+figure
+hold on
+plot(out.x_hat_k_k.time,out.x_hat_k_k.signals.values(1,:),'go','LineWidth',2,'DisplayName','\hat{x}_{k,k}')
+plot(out.x_CT.time     ,out.x_CT.signals.values(:,1),'k','LineWidth',2,'DisplayName','x_{CT}')
+lgn = legend;
+
+%% plot out x_EST vs x_var
+figure
+hold on
+plot(out.x_hat_k_k.time,out.x_hat_k_k.signals.values(1,:),'go','LineWidth',2,'DisplayName','\hat{x}_{k,k}')
+plot(t_vec_a,x_var(1,:),'or','LineWidth',2,'DisplayName','x_{var}')
+lgn = legend;
+
+%% plot 
+figure
+hold on
+plot(t_vec_a,x_var(1,:),'or','LineWidth',2,'DisplayName','x_{var}')
+plot(out.x_CT.time     ,out.x_CT.signals.values(:,1),'k','LineWidth',2,'DisplayName','x_{CT}')
+plot(t_soln     ,y_soln(:,1),'b-','LineWidth',2,'DisplayName','x_{CT,ode}')
+lgn = legend;
+
+%% plot x_kk vs ode
+figure
+hold on
+plot(out.x_hat_k_k.time,out.x_hat_k_k.signals.values(1,:),'go','LineWidth',2,'DisplayName','\hat{x}_{k,k}')
+plot(t_soln     ,y_soln(:,1),'b-','LineWidth',2,'DisplayName','x_{CT,ode}')
+lgn = legend;
 
 %%
 function [x_dot] = odefun(t,x,A,B,u)
