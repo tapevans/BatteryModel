@@ -52,8 +52,8 @@ SIM.m1 = 5; % Mass 1
 SIM.m2 = 5; % Mass 2
 
 % Noise
-    Q_0 = 1e-6; % Process Noise
-    R_0 = 1e-6; % Measurement Noise
+    Q_0 = 1e-4; % Process Noise
+    R_0 = 1e-4; % Measurement Noise
 
 Ts = 1/SIM.fq/50; %[s]
 
@@ -84,7 +84,7 @@ end
 
 
 %% Test Observability
-% Measure x1
+% % Measure x1
 % C = [1 0 0 0];
 % Ob = obsv(A_CT,C);
 % r = rank(Ob);
@@ -102,7 +102,7 @@ end
 % r = rank(Ob);
 % disp(['Measuring x2, the rank is ' num2str(r)])
 
-% % Measure v2
+% Measure v2
 C = [0 0 0 1];
 Ob = obsv(A_CT,C);
 r = rank(Ob);
@@ -465,13 +465,13 @@ t_SS_CT_N_Slink = out.x_CT_SS_N.time;
 w_k_Slink = reshape(out.w_k.signals.values,1,[]);
 [mu_x] = calcMean(w_k_Slink);
 [error_x] = calcError(w_k_Slink,mu_x);
-[Covar_xx] = calcPopCovar(error_x, error_x)
+[Covar_w_k] = calcPopCovar(error_x, error_x)
 Q_0
 
 v_k_Slink = reshape(out.v_k.signals.values,1,[]);
 [mu_x] = calcMean(v_k_Slink);
 [error_x] = calcError(v_k_Slink,mu_x);
-[Covar_xx] = calcPopCovar(error_x, error_x)
+[Covar_v_k] = calcPopCovar(error_x, error_x)
 R_0
 
 % P_infty
@@ -494,6 +494,25 @@ x_hat_asy_Slink = out.x_hat_insideEST_asy.signals.values;
 t_hat_asy_Slink = out.x_hat_insideEST_asy.time;
 end
 
+%% CPCT+R Calc
+idx = 901;
+% error = x_hat_Slink(idx+1:end,:) - x_SS_CT_N_Slink(idx:end-1,:); %(1e-4)
+% error = x_hat_Slink(idx:end-1,:) - x_SS_CT_N_Slink(idx+1:end,:); %(1e-3)
+error = x_hat_Slink(idx:end,:) - x_SS_CT_N_Slink(idx+1:end,:); %(1e-4)
+% [Covar_x1] = calcPopCovar(error(:,P.x1)', error(:,P.x1)');
+% [Covar_v1] = calcPopCovar(error(:,P.v1)', error(:,P.v1)');
+% [Covar_x2] = calcPopCovar(error(:,P.x2)', error(:,P.x2)');
+% [Covar_v2] = calcPopCovar(error(:,P.v2)', error(:,P.v2)');
+% P_calc = diag([Covar_x1,Covar_v1,Covar_x2,Covar_v2]) 
+
+for i = 1:N_states
+    for j = 1:N_states
+        P_calc(i,j) = calcPopCovar(error(:,i)', error(:,j)');
+    end
+end
+P_calc
+P_infty
+% P_infty.^(1/2)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plotting
 % Position 1

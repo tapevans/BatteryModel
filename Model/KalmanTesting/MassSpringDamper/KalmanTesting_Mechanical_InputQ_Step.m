@@ -470,9 +470,11 @@ R_0
 % P_infty
     out.P_k_k1.signals.values(:,:,end)
     P_infty
+    out.P_k_k.signals.values(:,:,end)
 
     out.K_k.signals.values(:,:,end)
     K_infty
+
 
 for i = 1:length(out.x_hat_insideEST.time)
     x_hat_Slink(i,:) = (out.x_hat_insideEST.signals.values(:,:,i))';
