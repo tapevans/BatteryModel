@@ -91,8 +91,8 @@ if ( FLAG.CONSTANT_PROPS_FROM_HANDLES && FLAG.VARIABLE_PROPS_FROM_HANDLES)
 end
 
 FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
-    SIM.Ts           = 10.0;                    % [s], Sampling rate of the DT system
-	SIM.TsMultiple   = 5;                       % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
+    SIM.Ts           = 1.0;                    % [s], Sampling rate of the DT system
+	SIM.TsMultiple   = 10;                     % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
     SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple;   % [s], Sampling rate of the ode output
 
 FLAG.SaveSystemForEst = 0; % 1, if save the system to be used in the estimator ONLY FOR SS EIS (SimMode 3)

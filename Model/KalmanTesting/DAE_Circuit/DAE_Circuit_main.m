@@ -49,7 +49,7 @@ clear all; close all; clc;
 % Estimator
 % Noise
     SIM.Q_0 = 1e-1;
-    SIM.R_0 = 1e-6;
+    SIM.R_0 = 1e-3;
 
 % Sampling Rate
     % Modes

@@ -1,4 +1,4 @@
-%% Post-Processing Function
+0%% Post-Processing Function
 % Take all the data and convert into easy to read vectors
 function postProcessing(filename)
 %% Load file to workspace

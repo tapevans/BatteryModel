@@ -62,14 +62,18 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'SeminarPres_Nov2022';
 % battery_name = 'SeminarPres_Nov2022';
 
-folder_name  = 'ObservabilityTest';
-battery_name = 'ObservabilityTest';
+% folder_name  = 'ObservabilityTest';
+% battery_name = 'ObservabilityTest';
+
+folder_name  = 'KalmanTest';
+battery_name = 'KalmanTest_JustPlant';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    C_rates      = []; 
+    C_rates      = [];
+%     C_rates      = [0.040843474405010]; % Results in 1A/m^2
 %     C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
 %     C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
 %     C_rates      = [1]; 
@@ -80,6 +84,7 @@ battery_name = 'ObservabilityTest';
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
     EIS_SIN_freq = [];
+%     EIS_SIN_freq = [2*pi*0.0666666666666667];
 %     EIS_SIN_freq = [1e2 1e-2];
     % EIS_SIN_freq = logspace(-2,1,31);
 
@@ -125,7 +130,11 @@ battery_name = 'ObservabilityTest';
 %         KBCPProfileFilename = 'DTImpulseTs5.62341325190349';
 %         KBCPProfileFilename = 'DTImpulseTs6.81292069057961';
 %         KBCPProfileFilename = 'DTImpulseTs8.25404185268018';
-        KBCPProfileFilename = 'DTImpulseTs10.0';      
+%         KBCPProfileFilename = 'DTImpulseTs10.0';      
+
+%         KBCPProfileFilename = 'KalmanTestDTImpulseTs1.0';
+%         KBCPProfileFilename = 'KalmanTestStep';
+        KBCPProfileFilename = 'KalmanTestStep_JustPlant_NoRelax';
 
         %         KBCPProfileFilename = 'CCCV_1.5C';
 %         KBCPProfileFilename = 'CCCV_2C';
@@ -134,7 +143,8 @@ battery_name = 'ObservabilityTest';
 
     % Initial SOC
     %         KBSOC = 81.93;
-%             KBSOC = 100; 
+    %         KBSOC = 100; 
+            KBSOC = 50; 
 
 
 % ---- MOO Controller ----

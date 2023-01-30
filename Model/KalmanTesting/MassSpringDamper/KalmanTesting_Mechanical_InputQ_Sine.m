@@ -53,7 +53,7 @@ SIM.m2 = 5; % Mass 2
 
 % Noise
     Q_0 = 1e-4; % Process Noise
-    R_0 = 1e-4; % Measurement Noise
+    R_0 = 1e-3; % Measurement Noise
 
 Ts = 1/SIM.fq/50; %[s]
 
@@ -84,11 +84,11 @@ end
 
 
 %% Test Observability
-% % Measure x1
-% C = [1 0 0 0];
-% Ob = obsv(A_CT,C);
-% r = rank(Ob);
-% disp(['Measuring x1, the rank is ' num2str(r)])
+% Measure x1
+C = [1 0 0 0];
+Ob = obsv(A_CT,C);
+r = rank(Ob);
+disp(['Measuring x1, the rank is ' num2str(r)])
 
 % % Measure v1
 % C = [0 1 0 0];
@@ -102,11 +102,11 @@ end
 % r = rank(Ob);
 % disp(['Measuring x2, the rank is ' num2str(r)])
 
-% Measure v2
-C = [0 0 0 1];
-Ob = obsv(A_CT,C);
-r = rank(Ob);
-disp(['Measuring v2, the rank is ' num2str(r)])
+% % Measure v2
+% C = [0 0 0 1];
+% Ob = obsv(A_CT,C);
+% r = rank(Ob);
+% disp(['Measuring v2, the rank is ' num2str(r)])
 
 % C = eye(4);
 

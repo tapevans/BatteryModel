@@ -11,9 +11,9 @@ clear all; close all; clc;
 % ode_filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_Polar_2.00C_C.mat';
 % ode_filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_Polar_5.00C_C.mat';
 
-ode_SIM = load(ode_filename);
-t_final = ode_SIM.t_soln(end);
-clear ode_SIM
+% ode_SIM = load(ode_filename);
+% t_final = ode_SIM.t_soln(end);
+% clear ode_SIM
 
 % Load Simulink Init files
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_SimulinkChargeCC_Polar_0.05C_C.mat';
@@ -23,7 +23,10 @@ clear ode_SIM
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_SimulinkChargeCC_Polar_2.00C_C.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_SimulinkChargeCC_Polar_5.00C_C.mat';
 
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanTesting\P2DSystem\TestingPlant\KalmanTest_JustPlant_Polar_0.04C_D.mat'; % Jan 28,2023
+
 load(filename)
+t_final = 50;
 
 %% Change Working Directory
     [current_file_path,~,~] = fileparts(mfilename('fullpath'));
@@ -69,7 +72,7 @@ SV_IC = SIM.SV_IC;
     i = 1;
     P.OM.cell_volt = i; i = i + 1;
     P.OM.del_phi   = i; i = i + 1;
-    P.OM.temp      = i; i = i + 1;
+%     P.OM.temp      = i; i = i + 1;
     P.OM.C_Liion   = i; i = i + 1;
     P.OM.X_surf    = i; i = i + 1;
     P.OM.i_Far     = i; i = i + 1;
@@ -103,9 +106,9 @@ SV_IC = SIM.SV_IC;
         % Delta Phi   @AN/SEP
             idx = index_offset + P.del_phi;
             OutputMatrix(P.OM.del_phi,idx) =  1;
-        % Temperature @AN/SEP
-            idx = index_offset + P.T;
-            OutputMatrix(P.OM.temp,idx) = 1;
+%         % Temperature @AN/SEP
+%             idx = index_offset + P.T;
+%             OutputMatrix(P.OM.temp,idx) = 1;
         % C_Liion     @AN/SEP
             idx = index_offset + P.C_Liion;
             OutputMatrix(P.OM.C_Liion,idx) = 1;
