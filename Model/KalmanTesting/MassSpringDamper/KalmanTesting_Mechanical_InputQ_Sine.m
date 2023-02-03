@@ -10,11 +10,11 @@ clc;
     FLAG.ODE         = 1;
     FLAG.SS_CT       = 1;
     FLAG.SS_DT       = 1;
-    FLAG.SS_DT_Noise = 0;
-    FLAG.Estimator   = 0;
-        FLAG.RunAsymtotic = 0;
-        FLAG.RunVariable  = 0;
-    FLAG.SIMULINK         = 1;
+    FLAG.SS_DT_Noise = 1;
+    FLAG.Estimator   = 1;
+        FLAG.RunAsymtotic = 1;
+        FLAG.RunVariable  = 1;
+    FLAG.SIMULINK         = 0;
 
 % Input Force
     % 1) Step
@@ -24,24 +24,24 @@ clc;
         SIM.fq = 1e-1; % [Hz]
 
 % Plots
-    FLAG.PLOT.x1Compare = 1;
-    FLAG.PLOT.v1Compare = 1;
-    FLAG.PLOT.x2Compare = 1;
-    FLAG.PLOT.v2Compare = 1;
+    FLAG.PLOT.x1Compare = 0;
+    FLAG.PLOT.v1Compare = 0;
+    FLAG.PLOT.x2Compare = 0;
+    FLAG.PLOT.v2Compare = 0;
     FLAG.PLOT.ODE         = 0;
     FLAG.PLOT.SS_CT       = 0;
     FLAG.PLOT.SS_DT       = 0;
     FLAG.PLOT.SS_DT_Noise = 0;
-    FLAG.PLOT.Estimator   = 0;
-        FLAG.PLOT.RunAsymtotic = 0;
-        FLAG.PLOT.RunVariable  = 0;
+    FLAG.PLOT.Estimator   = 1;
+        FLAG.PLOT.RunAsymtotic = 1;
+        FLAG.PLOT.RunVariable  = 1;
     FLAG.PLOT.SIMULINK.ODE         = 0;
     FLAG.PLOT.SIMULINK.SS_CT       = 0;
     FLAG.PLOT.SIMULINK.SS_DT       = 0;
     FLAG.PLOT.SIMULINK.SS_CT_Noise = 0;
-    FLAG.PLOT.SIMULINK.Estimator   = 1;
-        FLAG.PLOT.SIMULINK.RunAsymtotic = 1;
-        FLAG.PLOT.SIMULINK.RunVariable  = 1;
+    FLAG.PLOT.SIMULINK.Estimator   = 0;
+        FLAG.PLOT.SIMULINK.RunAsymtotic = 0;
+        FLAG.PLOT.SIMULINK.RunVariable  = 0;
 
 
 %% System Parameters
@@ -52,14 +52,15 @@ SIM.m1 = 5; % Mass 1
 SIM.m2 = 5; % Mass 2
 
 % Noise
-    Q_0 = 1e-4; % Process Noise
-    R_0 = 1e-3; % Measurement Noise
+    Q_0 = 1e-0; % Process Noise
+    R_0 = 1e-0; % Measurement Noise
 
-Ts = 1/SIM.fq/50; %[s]
+Ts = 1/SIM.fq/25; %[s]
+% Ts = 1/SIM.fq/50; %[s]
 
 % t_final = 50;
 % t_final = 100;
-t_final = 200;
+t_final = 500;
 
 %% Pointers
 i = 1;
@@ -84,11 +85,11 @@ end
 
 
 %% Test Observability
-% Measure x1
-C = [1 0 0 0];
-Ob = obsv(A_CT,C);
-r = rank(Ob);
-disp(['Measuring x1, the rank is ' num2str(r)])
+% % Measure x1
+% C = [1 0 0 0];
+% Ob = obsv(A_CT,C);
+% r = rank(Ob);
+% disp(['Measuring x1, the rank is ' num2str(r)])
 
 % % Measure v1
 % C = [0 1 0 0];
@@ -102,11 +103,11 @@ disp(['Measuring x1, the rank is ' num2str(r)])
 % r = rank(Ob);
 % disp(['Measuring x2, the rank is ' num2str(r)])
 
-% % Measure v2
-% C = [0 0 0 1];
-% Ob = obsv(A_CT,C);
-% r = rank(Ob);
-% disp(['Measuring v2, the rank is ' num2str(r)])
+% Measure v2
+C = [0 0 0 1];
+Ob = obsv(A_CT,C);
+r = rank(Ob);
+disp(['Measuring v2, the rank is ' num2str(r)])
 
 % C = eye(4);
 
@@ -157,7 +158,7 @@ if FLAG.SS_DT_Noise
         mu = 0;
 
         % Process Noise
-        Q = 1e-4*eye(N_inputs);
+        Q = Q_0*eye(N_inputs);
 %         Q = 1e-1*diag([1e-4 1e-6 1e-4 1e-6]);
 %         Q = zeros(4);
         w_k = (chol(Q,'lower')*randn(N_inputs,1e6))'; % N_steps*100000
@@ -171,7 +172,7 @@ if FLAG.SS_DT_Noise
 %         [(w_k(:,1))'*(w_k(:,1))    (w_k(:,2))'*(w_k(:,2))    (w_k(:,3))'*(w_k(:,3))    (w_k(:,4))'*(w_k(:,4))]
 
         % Measurement Noise
-        R = 1e-3*eye(N_meas);
+        R = R_0*eye(N_meas);
         v_k = (chol(R,'lower')*randn(N_meas,1e6))'; % N_steps*100000
 %         cov(v_k)
 %         [mean(v_k(:,1))] % mean(v_k(:,2)) mean(v_k(:,3)) mean(v_k(:,4))]
@@ -203,12 +204,13 @@ if FLAG.Estimator
 %         v_k = (chol(R,'lower')*randn(1,1e6))';
 %         v_k = v_k';
 
-    % Set input vector
-        u_k = SIM.F_in * ones(N_inputs,N_steps);
-
     % Set time vector
         t_asy = (0:Ts:t_final)';
         t_var = (0:Ts:t_final)';
+
+    % Set input vector
+        u_k = SIM.F_in * sin(SIM.fq*2*pi*t_var);
+        u_k = u_k';
 
     % Initialize Solution Variables
         x_EST_sys = zeros(N_states,N_steps);   % Real System (Plant) States
@@ -229,8 +231,8 @@ if FLAG.Estimator
         P_k_pre(:,:,1) = confidence*eye(N_states);
     
     % Set Initial Estimator State Estimates
-%         x_hat_0 = [0,0,0,0]';
-        x_hat_0 = [0.1,0.01,0.5,0.01]';
+        x_hat_0 = [0,0,0,0]';
+%         x_hat_0 = [0.1,0.01,0.5,0.01]';
         x_asy(:,1) = x_hat_0;
         x_var(:,1) = x_hat_0;
 
@@ -286,6 +288,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some Post Calcs
 if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
+    P_k_last = P_k(:,:,end);
+    P_k_pre_last = P_k_pre(:,:,end);
+
+
     disp('Real Time calculated P_k converged to ')
     disp(num2str(P_k_pre(:,:,end)))
     
@@ -310,55 +316,54 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
         norm_error_K_k(:,i) = norm(error_K_k(:,:,i));
     end
 
-    % Error for first 40 steps
-        figure
-        title('Convergence to Asymptotic')
-        yyaxis left
-        plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
-        ylabel('|Error P_k|')
-    
-        yyaxis right
-        plot(t_var,norm_error_K_k,'Linewidth',2)
-        ylabel('|Error K_k|')
-    
-        xlabel('Number of Discrete Steps')
-        xlim([1,40])
-        exportgraphics(gca,'PandKConverge.png','Resolution',1000)
-    
-    % Error for after 40 steps
-        figure
-        yyaxis left
-        plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
-        ylabel('|Error P_k|')
-    
-        yyaxis right
-        plot(t_var,norm_error_K_k,'Linewidth',2)
-        ylabel('|Error K_k|')
-        
-        xlabel('Number of Discrete Steps')
-        xlim([40,Inf])
+%     % Error for first NS steps
+%     NS = 500;
+%         figure
+%         title('Convergence to Asymptotic')
+%         yyaxis left
+%         plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
+%         ylabel('|Error P_k|')
+%     
+%         yyaxis right
+%         plot(t_var,norm_error_K_k,'Linewidth',2)
+%         ylabel('|Error K_k|')
+%     
+%         xlabel('Number of Discrete Steps')
+%         xlim([1,NS])
+% %         exportgraphics(gca,'PandKConverge.png','Resolution',1000)
+%     
+%     % Error for after 40 steps
+%         figure
+%         yyaxis left
+%         plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
+%         ylabel('|Error P_k|')
+%     
+%         yyaxis right
+%         plot(t_var,norm_error_K_k,'Linewidth',2)
+%         ylabel('|Error K_k|')
+%         
+%         xlabel('Number of Discrete Steps')
+%         xlim([NS,Inf])
 
     % Covariance
-        steady_state_step = 100;
-%         % Mean of the plant states
-%             x_plant_avg = mean(x_EST_sys(steady_state_step:end,:));
-% 
-%         % Error Calc (Deviation)
-%         for i = 1:N_states
-%             error_var(:,i) = x_var(steady_state_step:end,i) - x_plant_avg(i);
-%             error_asy(:,i) = x_asy(steady_state_step:end,i) - x_plant_avg(i);
-%         end
+        steady_state_step = 500;
 
         % Error Calc (Deviation)
         for i = 1:N_states
             error_var(:,i) = x_var(steady_state_step:end,i) - x_EST_sys(steady_state_step:end,i);
             error_asy(:,i) = x_asy(steady_state_step:end,i) - x_EST_sys(steady_state_step:end,i);
         end
-
+        error_var = error_var';
+        error_asy = error_asy';
+        
         % Covar calc
+        covar_var = nan(N_states);
+        covar_asy = nan(N_states);
         for i = 1:N_states
-            covar_var(:,i) = error_var(:,i)'*error_var(:,i);
-            covar_asy(:,i) = error_asy(:,i)'*error_asy(:,i);
+            for j = 1:N_states
+                [covar_var(i,j)] = calcPopCovar(error_var(i,:), error_var(j,:));
+                [covar_asy(i,j)] = calcPopCovar(error_asy(i,:), error_asy(j,:));
+            end
         end
 
         % Compare with CPC^T
@@ -371,21 +376,85 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
 
         disp(newline)
         disp('CPC^T calc is')
-        disp(CPCT_calc)
+        disp(num2str(CPCT_calc))
         
         disp(newline)
         disp('Cov(x_variable) calc is')
-        disp(covar_var)
+        disp(num2str(covar_var))
         disp('With difference of')
-        disp(covar_var-CPCT_calc)
+        disp(num2str(covar_var-P_infty))
+        disp('The ratio is')
+        disp(num2str(abs((covar_var-P_infty)./P_infty)))
 
-        disp(newline)
-        disp('Cov(x_asymptotic) calc is')
-        disp(covar_asy)
-        disp('With difference of')
-        disp(covar_asy-CPCT_calc)
+%         disp(newline)
+%         disp('Cov(x_asymptotic) calc is')
+%         disp(num2str(covar_asy))
+%         disp('With difference of')
+% %         disp(num2str(covar_asy-CPCT_calc))
+%         disp(num2str(covar_asy-P_infty))
+
+
+%% SVD Analysis
+% Observability Measurable
+%     obsv_r_meas = getObservability(A_DT,C_DT(1,:));
+    obsv_r_meas = obsv(A_DT,C_DT(1,:));
+    [~,S_Orm,~] = svd(obsv_r_meas);
+
+% C_tilde (This normally would be of the ROM)
+    C_r = eye(N_states);
+
+% Loop through C_tilde
+    sing_val = nan(1,N_states);
+    for mm = 1:N_states
+        C_tilde = C_r(mm,:);
+
+        % SVD of \tilde{C}
+        [~ , ~ , V_tilde] = svd(C_tilde);
+
+        % SVD of Augmented Observability
+        obsv_aug = obsv_r_meas*V_tilde(:,1); %!!!!!! Do I need to check that V_tilde is in the column space if it is only 1 row?
+        [~ , S_hat , ~] = svd(obsv_aug);
+
+        sing_val(mm) = S_hat(1,1);
+    end
+    sing_val_norm = sing_val / S_Orm(1,1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 %% Simulink
 if FLAG.SIMULINK
     k1 = SIM.k1;  % Spring
@@ -399,7 +468,9 @@ if FLAG.SIMULINK
     Iden = eye(N_states);
     confidence = 0.5;
     P_k_0 = confidence*eye(N_states);
-    x_0_est = [1;-1;2;5];
+    P_k_0 = P_infty;
+%     x_0_est = [1;-1;2;5];
+    x_0_est = [0;0;0;0];
 
 %     N_samples_per_Ts_sample = 3;
 %     delta = Ts/N_samples_per_Ts_sample;
@@ -439,7 +510,9 @@ if FLAG.SIMULINK
     assignin(mdlWks,'K_infty',K_infty)
     
     out = sim(in);
-
+    save_system
+    close_system
+    
 %% Post Simulink
 x_ODE_Slink = out.x_ODE.signals.values;
 t_ODE_Slink = out.x_ODE.time;
@@ -465,21 +538,21 @@ t_SS_CT_N_Slink = out.x_CT_SS_N.time;
 w_k_Slink = reshape(out.w_k.signals.values,1,[]);
 [mu_x] = calcMean(w_k_Slink);
 [error_x] = calcError(w_k_Slink,mu_x);
-[Covar_w_k] = calcPopCovar(error_x, error_x)
-Q_0
+[Covar_w_k] = calcPopCovar(error_x, error_x);
+Q_0;
 
 v_k_Slink = reshape(out.v_k.signals.values,1,[]);
 [mu_x] = calcMean(v_k_Slink);
 [error_x] = calcError(v_k_Slink,mu_x);
-[Covar_v_k] = calcPopCovar(error_x, error_x)
-R_0
+[Covar_v_k] = calcPopCovar(error_x, error_x);
+R_0;
 
 % P_infty
-    out.P_k_k1.signals.values(:,:,end)
-    P_infty
+    out.P_k_k1.signals.values(:,:,end);
+    P_infty;
 
-    out.K_k.signals.values(:,:,end)
-    K_infty
+    out.K_k.signals.values(:,:,end);
+    K_infty;
 
 for i = 1:length(out.x_hat_insideEST.time)
     x_hat_Slink(i,:) = (out.x_hat_insideEST.signals.values(:,:,i))';
@@ -492,27 +565,42 @@ t_hat_Slink = out.x_hat_insideEST.time;
 % end
 x_hat_asy_Slink = out.x_hat_insideEST_asy.signals.values;
 t_hat_asy_Slink = out.x_hat_insideEST_asy.time;
-end
+
 
 %% CPCT+R Calc
-idx = 901;
-% error = x_hat_Slink(idx+1:end,:) - x_SS_CT_N_Slink(idx:end-1,:); %(1e-4)
-% error = x_hat_Slink(idx:end-1,:) - x_SS_CT_N_Slink(idx+1:end,:); %(1e-3)
-error = x_hat_Slink(idx:end,:) - x_SS_CT_N_Slink(idx+1:end,:); %(1e-4)
-% [Covar_x1] = calcPopCovar(error(:,P.x1)', error(:,P.x1)');
-% [Covar_v1] = calcPopCovar(error(:,P.v1)', error(:,P.v1)');
-% [Covar_x2] = calcPopCovar(error(:,P.x2)', error(:,P.x2)');
-% [Covar_v2] = calcPopCovar(error(:,P.v2)', error(:,P.v2)');
-% P_calc = diag([Covar_x1,Covar_v1,Covar_x2,Covar_v2]) 
+time = 400;
+idx_hat   = find(t_hat_Slink == time);
+idx_plant = find(t_SS_CT_N_Slink == time);
+% error = x_hat_Slink(idx_hat+1:end,:) - x_SS_CT_N_Slink(idx_plant:end-1,:);
+error = x_hat_Slink(idx_hat:end,:) - x_SS_CT_N_Slink(idx_plant:end,:);
+error = error';
 
+covar_var_Slink = nan(N_states);
 for i = 1:N_states
     for j = 1:N_states
-        P_calc(i,j) = calcPopCovar(error(:,i)', error(:,j)');
+        [covar_var_Slink(i,j)] = calcPopCovar(error(i,:), error(j,:));
+%         [covar_asy(i,j)] = calcPopCovar(error_asy(i,:), error_asy(j,:));
     end
 end
-P_calc
-P_infty
-% P_infty.^(1/2)
+
+disp('Compare simulink results')
+disp('P_calc')
+disp( num2str(covar_var_Slink) )
+
+disp(newline)
+disp('P_infty')
+disp( num2str(P_infty) )
+
+disp(newline)
+disp('Error between them')
+disp( num2str(covar_var_Slink-P_infty) )
+
+disp(newline)
+disp('Ratio of error')
+disp( num2str(abs((covar_var_Slink-P_infty)/P_infty) ))
+
+
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plotting
 % Position 1
@@ -734,10 +822,11 @@ P_infty
     end
 
 %% Arrange Figures
-FigArrange = 1;
-fig = gcf;
-NumFig = fig.Number;
+FigArrange = 0;
 if FigArrange == 1
+    fig = gcf;
+    NumFig = fig.Number;
+    
     Ncol = 3;
     
     for i = 1:NumFig

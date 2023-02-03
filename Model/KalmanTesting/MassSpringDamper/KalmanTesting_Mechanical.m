@@ -22,9 +22,9 @@ clear all; close all; clc;
     FLAG.PLOT.SS_CT       = 0;
     FLAG.PLOT.SS_DT       = 0;
     FLAG.PLOT.SS_DT_Noise = 0;
-    FLAG.PLOT.Estimator   = 1;
-        FLAG.PLOT.RunAsymtotic = 1;
-        FLAG.PLOT.RunVariable  = 1;
+    FLAG.PLOT.Estimator   = 0;
+        FLAG.PLOT.RunAsymtotic = 0;
+        FLAG.PLOT.RunVariable  = 0;
 
 %% System Parameters
 SIM.k1 = .75;  % Spring
@@ -34,6 +34,12 @@ SIM.m1 = 5; % Mass 1
 SIM.m2 = 5; % Mass 2
 
 SIM.F_in = 1; % Force Input
+
+% Noise
+    Q_0 = 1e1; % Process Noise
+    R_0 = 1e1; % Measurement Noise
+
+Ts = .1; %[s]
 
 t_final = 200;
 
@@ -58,11 +64,11 @@ end
 
 
 %% Test Observability
-% % Measure x1
-% C = [1 0 0 0];
-% Ob = obsv(A_CT,C);
-% r = rank(Ob);
-% disp(['Measuring x1, the rank is ' num2str(r)])
+% Measure x1
+C = [1 0 0 0];
+Ob = obsv(A_CT,C);
+r = rank(Ob);
+disp(['Measuring x1, the rank is ' num2str(r)])
 
 % % Measure v1
 % C = [0 1 0 0];
@@ -82,8 +88,10 @@ end
 % r = rank(Ob);
 % disp(['Measuring v2, the rank is ' num2str(r)])
 
-C = [1 1 1 1];
+% C = eye(4);
 
+[N_meas , N_states]  = size(C);
+N_inputs = 1;
 
 %% Make SS CT
 if FLAG.SS_CT
@@ -100,16 +108,16 @@ end
 
 
 %% Make SS DT
-Ts = 1;
 % % Manually
 % A_DT = expm(A_CT*Ts);
-% B_DT = inv(A_CT)*(A_DT - eye(4))*B_CT; % This only works if A is invertable
+% B_DT = inv(A_CT)*(A_DT - eye(N_states))*B_CT; % This only works if A is invertable
 
 % Using c2d
 if FLAG.SS_DT
     SS_DT = c2d(SS_CT,Ts);
     A_DT = SS_DT.A;
     B_DT = SS_DT.B;
+    C_DT = SS_DT.C;
 end
 
 
@@ -129,21 +137,23 @@ if FLAG.SS_DT_Noise
         mu = 0;
 
         % Process Noise
-        Q = 1e-1*diag([1e-4 1e-6 1e-4 1e-6]);
-%         Q = zeros(4);
-        w_k = (chol(Q,'lower')*randn(4,1e6))'; % N_steps*100000
+%         Q = 1e-1*diag([1e-4 1e-6 1e-4 1e-6]);
+        Q = Q_0*eye(N_states);
+%         Q = zeros(N_states);
+        w_k = (chol(Q,'lower')*randn(N_states,1e6))'; % N_steps*100000
 %         cov(w_k)
-%         [mean(w_k(:,1)) mean(w_k(:,2)) mean(w_k(:,3)) mean(w_k(:,4))]
-%         [(w_k(:,1))'*(w_k(:,1))    (w_k(:,2))'*(w_k(:,2))    (w_k(:,3))'*(w_k(:,3))    (w_k(:,4))'*(w_k(:,4))]
+%         [mean(w_k(:,1)) mean(w_k(:,2)) mean(w_k(:,3)) mean(w_k(:,N_states))]
+%         [(w_k(:,1))'*(w_k(:,1))    (w_k(:,2))'*(w_k(:,2))    (w_k(:,3))'*(w_k(:,3))    (w_k(:,N_states))'*(w_k(:,N_states))]
 
-%         w_k = (sqrt(Q) * randn(4,1e6))'; % N_steps*100000
+%         w_k = (sqrt(Q) * randn(N_states,1e6))'; % N_steps*100000
 %         cov(w_k)
-%         [mean(w_k(:,1)) mean(w_k(:,2)) mean(w_k(:,3)) mean(w_k(:,4))]
-%         [(w_k(:,1))'*(w_k(:,1))    (w_k(:,2))'*(w_k(:,2))    (w_k(:,3))'*(w_k(:,3))    (w_k(:,4))'*(w_k(:,4))]
+%         [mean(w_k(:,1)) mean(w_k(:,2)) mean(w_k(:,3)) mean(w_k(:,N_states))]
+%         [(w_k(:,1))'*(w_k(:,1))    (w_k(:,2))'*(w_k(:,2))    (w_k(:,3))'*(w_k(:,3))    (w_k(:,N_states))'*(w_k(:,N_states))]
 
         % Measurement Noise
-        R = 1e-3;
-        v_k = (chol(R,'lower')*randn(1,1e6))'; % N_steps*100000
+%         R = 1e-3;
+        R = R_0*eye(N_meas);
+        v_k = (chol(R,'lower')*randn(N_meas,1e6))'; % N_steps*100000
 %         cov(v_k)
 %         [mean(v_k(:,1))] % mean(v_k(:,2)) mean(v_k(:,3)) mean(v_k(:,4))]
 %         [(v_k(:,1))'*(v_k(:,1))]%    (v_k(:,2))'*(v_k(:,2))    (v_k(:,3))'*(w_k(:,3))    (w_k(:,4))'*(w_k(:,4))]
@@ -152,7 +162,7 @@ if FLAG.SS_DT_Noise
     w_k = w_k';
     v_k = v_k';
     t_SS_DT_n = (0:Ts:t_final)';
-    x_SS_DT_n = zeros(4,N_steps);
+    x_SS_DT_n = zeros(N_states,N_steps);
 
     for i = 1:N_steps-1
         x_SS_DT_n(:,i+1) = A_DT*x_SS_DT_n(:,i) + B_DT*u_k(i) + w_k(:,i);
@@ -165,12 +175,14 @@ end
 %%
 if FLAG.Estimator
     % Set Noise
-        Q = 1e-1*diag([1e-4 1e-6 1e-4 1e-6]);
-        w_k = (chol(Q,'lower')*randn(4,1e6))';
+        Q = Q_0*eye(N_states);
+%         Q = 1e-1*diag([1e-4 1e-6 1e-4 1e-6]);
+        w_k = (chol(Q,'lower')*randn(N_states,1e6))';
         w_k = w_k';
 
-        R = 1e-5;
-        v_k = (chol(R,'lower')*randn(1,1e6))';
+%         R = 1e-5;
+        R = R_0*eye(N_meas);
+        v_k = (chol(R,'lower')*randn(N_meas,1e6))';
         v_k = v_k';
 
     % Set input vector
@@ -181,25 +193,25 @@ if FLAG.Estimator
         t_var = (0:Ts:t_final)';
 
     % Initialize Solution Variables
-        x_EST_sys = zeros(4,N_steps);   % Real System States
-        x_asy     = zeros(4,N_steps);   % Estimator States
-        x_asy_pre = zeros(4,N_steps);   % Estimator States predict phase
-        x_var     = zeros(4,N_steps);   % Estimator States
-        x_var_pre = zeros(4,N_steps);   % Estimator States predict phase
-        z_k       = zeros(1,N_steps);   % Measurement from Real System
-        y_tilde_k = zeros(1,N_steps);   % Estimation Error
-        S_k       = zeros(1,1,N_steps); % Error Covariance
-        K_k       = zeros(4,1,N_steps); % Kalman Gains
-        P_k       = zeros(4,4,N_steps); % Error Covariance
-        P_k_pre   = zeros(4,4,N_steps); % Error Covariance predict phase
+        x_EST_sys = zeros(N_states,N_steps);   % Real System States
+        x_asy     = zeros(N_states,N_steps);   % Estimator States
+        x_asy_pre = zeros(N_states,N_steps);   % Estimator States predict phase
+        x_var     = zeros(N_states,N_steps);   % Estimator States
+        x_var_pre = zeros(N_states,N_steps);   % Estimator States predict phase
+        z_k       = zeros(N_meas,N_steps);   % Measurement from Real System
+        y_tilde_k = zeros(N_meas,N_steps);   % Estimation Error
+        S_k       = zeros(N_meas,N_meas,N_steps); % Error Covariance
+        K_k       = zeros(N_states,N_meas,N_steps); % Kalman Gains
+        P_k       = zeros(N_states,N_states,N_steps); % Error Covariance
+        P_k_pre   = zeros(N_states,N_states,N_steps); % Error Covariance predict phase
                 
     % Set Initial Error Covariance (I if confident in model, 0 if not)
         confidence = 1.0; % Range from [0,1]
-        P_k(:,:,1) = confidence*eye(4);
+        P_k(:,:,1) = confidence*eye(N_states);
     
     % Set Initial Estimator State Estimates
-        % x_hat_0 = [0,0,0,0]';
-        x_hat_0 = [0.1,0.01,0.5,0.01]';
+        x_hat_0 = [0,0,0,0]';
+%         x_hat_0 = [0.1,0.01,0.5,0.01]';
         x_asy(:,1) = x_hat_0;
         x_var(:,1) = x_hat_0;
 
@@ -219,16 +231,18 @@ if FLAG.Estimator
                 S_k(:,:,i) = C * P_k_pre(:,:,i) * C' + R;
                 K_k(:,:,i) = P_k_pre(:,:,i) * C' * inv(S_k(:,:,i));
                 x_var(:,i) = x_var_pre(:,i) + K_k(:,:,i) * y_tilde_k(:,i);
-                P_k(:,:,i) = (eye(4) - K_k(:,:,i) * C) * P_k_pre(:,:,i);
+                P_k(:,:,i) = (eye(N_states) - K_k(:,:,i) * C) * P_k_pre(:,:,i);
         end
     end
     x_var = x_var';
+    P_k_last = P_k(:,:,end);
+    P_k_pre_last = P_k_pre(:,:,end);
     
     % Run Asymptotic Estimator
     if FLAG.RunAsymtotic
             % Calculate K_infty and P_infty
-        %         [P_infty_idare ,~,~] = idare(A_DT , C , Q,R,0,eye(4));
-        %         [P_infty_idaret,~,~] = idare(A_DT', C', Q,R,0,eye(4));
+        %         [P_infty_idare ,~,~] = idare(A_DT , C , Q,R,0,eye(N_states));
+        %         [P_infty_idaret,~,~] = idare(A_DT', C', Q,R,0,eye(N_states));
                 [P_infty  ,~,~] =  dare(A_DT', C', Q,R);
                 K_infty = P_infty*C'*inv(C*P_infty*C' + R);
 
@@ -247,7 +261,163 @@ if FLAG.Estimator
     end
     x_asy = x_asy';
     x_EST_sys = x_EST_sys';
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Some Post Calcs
+if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
+    P_k_last = P_k(:,:,end);
+    P_k_pre_last = P_k_pre(:,:,end);
+
+
+    disp('Real Time calculated P_k converged to ')
+    disp(num2str(P_k_pre(:,:,end)))
     
+    disp(newline)
+    disp('P_\infty is calculated to be ')
+    disp(num2str(P_infty(:,:)) )
+    
+    error_P_k = P_k_pre - P_infty;
+    for i = 1:N_steps
+        norm_error_P_k(:,i) = norm(error_P_k(:,:,i));
+    end
+
+    disp(newline)
+    disp('Real Time Kalman gain K_k converged to ')
+    disp( num2str(K_k(:,:,end)) )
+    disp(newline)
+    disp('Asymptotic Kalman gain is calculated to be ')
+    disp(num2str(K_infty(:,:)))
+
+    error_K_k = K_k - K_infty;
+    for i = 1:N_steps
+        norm_error_K_k(:,i) = norm(error_K_k(:,:,i));
+    end
+
+    % Error for first NS steps
+    NS = 500;
+        figure
+        title('Convergence to Asymptotic')
+        yyaxis left
+        plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
+        ylabel('|Error P_k|')
+    
+        yyaxis right
+        plot(t_var,norm_error_K_k,'Linewidth',2)
+        ylabel('|Error K_k|')
+    
+        xlabel('Number of Discrete Steps')
+        xlim([1,NS])
+%         exportgraphics(gca,'PandKConverge.png','Resolution',1000)
+    
+    % Error for after 40 steps
+        figure
+        yyaxis left
+        plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
+        ylabel('|Error P_k|')
+    
+        yyaxis right
+        plot(t_var,norm_error_K_k,'Linewidth',2)
+        ylabel('|Error K_k|')
+        
+        xlabel('Number of Discrete Steps')
+        xlim([NS,Inf])
+
+    % Covariance
+        steady_state_step = 500;
+
+        % Error Calc (Deviation)
+        for i = 1:N_states
+            error_var(:,i) = x_var(steady_state_step:end,i) - x_EST_sys(steady_state_step:end,i);
+            error_asy(:,i) = x_asy(steady_state_step:end,i) - x_EST_sys(steady_state_step:end,i);
+        end
+        error_var = error_var';
+        error_asy = error_asy';
+        
+        % Covar calc
+        covar_var = nan(N_states);
+        covar_asy = nan(N_states);
+        for i = 1:N_states
+            for j = 1:N_states
+                [covar_var(i,j)] = calcPopCovar(error_var(i,:), error_var(j,:));
+                [covar_asy(i,j)] = calcPopCovar(error_asy(i,:), error_asy(j,:));
+            end
+        end
+
+        % Compare with CPC^T
+        C_tilde = eye(N_states);
+
+        for i = 1:N_states
+            CPCT_calc(:,i) = C_tilde(i,:) * P_infty * C_tilde(i,:)' ;%+ R(i,i);
+        end
+        %CPCT_calc_var(:,i)
+
+        disp(newline)
+        disp('CPC^T calc is')
+        disp(num2str(CPCT_calc))
+        
+        disp(newline)
+        disp('Cov(x_variable) calc is')
+        disp(num2str(covar_var))
+        disp('With difference of')
+%         covar_var-CPCT_calc
+        disp(num2str(covar_var-P_infty))
+        disp('Ratio of error')
+        disp(num2str(abs((covar_var-P_infty)./P_infty)))
+
+
+        disp(newline)
+        disp('Cov(x_asymptotic) calc is')
+        disp(num2str(covar_asy))
+        disp('With difference of')
+%         covar_asy-CPCT_calc))
+        disp(num2str(covar_asy-P_infty))
+        disp('Ratio of error')
+        disp(num2str(abs((covar_asy-P_infty)./P_infty)))
+
+
+%% SVD Analysis
+% Observability Measurable
+%     obsv_r_meas = getObservability(A_DT,C_DT(1,:));
+    obsv_r_meas = obsv(A_DT,C_DT(1,:));
+    [~,S_Orm,~] = svd(obsv_r_meas);
+
+% C_tilde (This normally would be of the ROM)
+    C_r = eye(N_states);
+
+% Loop through C_tilde
+    sing_val = nan(1,N_states);
+    for mm = 1:N_states
+        C_tilde = C_r(mm,:);
+
+        % SVD of \tilde{C}
+        [~ , ~ , V_tilde] = svd(C_tilde);
+
+        % SVD of Augmented Observability
+        obsv_aug = obsv_r_meas*V_tilde(:,1); %!!!!!! Do I need to check that V_tilde is in the column space if it is only 1 row?
+        [~ , S_hat , ~] = svd(obsv_aug);
+
+        sing_val(mm) = S_hat(1,1);
+    end
+    sing_val_norm = sing_val / S_Orm(1,1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 end
 
 
@@ -389,9 +559,10 @@ end
 
 %% Arrange Figures
 FigArrange = 1;
-fig = gcf;
-NumFig = fig.Number;
 if FigArrange == 1
+    fig = gcf;
+    NumFig = fig.Number;
+    
     Ncol = 3;
     
     for i = 1:NumFig
@@ -453,3 +624,17 @@ B = [0
 %      0];
 
 end
+function [mu] = calcMean(x)
+    mu = mean(x);
+end
+function [error] = calcError(x,mu)
+% difference between x and the expected value (mu)
+    error = x-mu;
+end
+function [Covar] = calcPopCovar(error_x, error_y)
+    Covar = (error_x*error_y')/length(error_x);
+end
+function [Covar] = calcSampleCovar(error_x, error_y)
+    Covar = (error_x*error_y')/(length(error_x)-1);
+end
+
