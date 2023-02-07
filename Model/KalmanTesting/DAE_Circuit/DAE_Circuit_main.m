@@ -474,9 +474,10 @@ title('Comparison Voltage 3')
 
 %% Arrange Figures
 FigArrange = 1;
-fig = gcf;
-NumFig = fig.Number;
 if FigArrange == 1
+    fig = gcf;
+    NumFig = fig.Number;
+
     Ncol = 3;
     
     for i = 1:NumFig

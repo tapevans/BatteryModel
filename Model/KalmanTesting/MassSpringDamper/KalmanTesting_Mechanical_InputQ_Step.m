@@ -343,7 +343,7 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
 %         xlim([NS,Inf])
 
     % Covariance
-        steady_state_step = 200;
+        steady_state_step = 1000;
 
         % Error Calc (Deviation)
         for i = 1:N_states

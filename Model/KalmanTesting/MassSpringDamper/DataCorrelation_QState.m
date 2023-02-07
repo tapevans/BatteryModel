@@ -4,10 +4,11 @@ clear all; close all; clc;
 
 %% FLAGS
 FLAG.READ_IN_DATA = 0;
-FLAG.ALLDATA = 0;
-FLAG.NOISE = 0;
-FLAG.Ts = 0;
-FLAG.C_Meas = 1;
+
+FLAG.ALLDATA      = 0;
+FLAG.NOISE        = 1;
+FLAG.Ts           = 0;
+FLAG.C_Meas       = 0;
 
 %% Read in data
 if FLAG.READ_IN_DATA
@@ -157,7 +158,7 @@ if FLAG.NOISE
             [Covar] = calcPopCovar(error_x, error_y);
 
             figure
-            scatter(svd_n_data , log10(cpct_data),'fill','k')
+            scatter(svd_n_data , log10(cpct_data),'filled','r','MarkerEdgeColor','k')
             title(['Q = ' num2str(Q_0) '  R = ' num2str(R_0) '  Covariance: ' num2str(Covar) ])
             xlabel('Normalized Singular Values (Of SV)')
             ylabel('log10(Error Covariance)')
