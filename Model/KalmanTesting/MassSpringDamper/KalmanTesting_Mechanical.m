@@ -14,10 +14,10 @@ clear all; close all; clc;
         FLAG.RunVariable  = 1;
 
 % Plots
-    FLAG.PLOT.x1Compare = 1;
-    FLAG.PLOT.v1Compare = 1;
-    FLAG.PLOT.x2Compare = 1;
-    FLAG.PLOT.v2Compare = 1;
+    FLAG.PLOT.x1Compare = 0;
+    FLAG.PLOT.v1Compare = 0;
+    FLAG.PLOT.x2Compare = 0;
+    FLAG.PLOT.v2Compare = 0;
     FLAG.PLOT.ODE         = 0;
     FLAG.PLOT.SS_CT       = 0;
     FLAG.PLOT.SS_DT       = 0;
@@ -37,11 +37,11 @@ SIM.F_in = 1; % Force Input
 
 % Noise
     Q_0 = 1e1; % Process Noise
-    R_0 = 1e1; % Measurement Noise
+    R_0 = 1e-4; % Measurement Noise
 
-Ts = .1; %[s]
+Ts = 10; %[s]
 
-t_final = 200;
+t_final = 300;
 
 %% Pointers
 i = 1;
@@ -64,11 +64,11 @@ end
 
 
 %% Test Observability
-% Measure x1
-C = [1 0 0 0];
-Ob = obsv(A_CT,C);
-r = rank(Ob);
-disp(['Measuring x1, the rank is ' num2str(r)])
+% % Measure x1
+% C = [1 0 0 0];
+% Ob = obsv(A_CT,C);
+% r = rank(Ob);
+% disp(['Measuring x1, the rank is ' num2str(r)])
 
 % % Measure v1
 % C = [0 1 0 0];
@@ -82,11 +82,11 @@ disp(['Measuring x1, the rank is ' num2str(r)])
 % r = rank(Ob);
 % disp(['Measuring x2, the rank is ' num2str(r)])
 
-% % Measure v2
-% C = [0 0 0 1];
-% Ob = obsv(A_CT,C);
-% r = rank(Ob);
-% disp(['Measuring v2, the rank is ' num2str(r)])
+% Measure v2
+C = [0 0 0 1];
+Ob = obsv(A_CT,C);
+r = rank(Ob);
+disp(['Measuring v2, the rank is ' num2str(r)])
 
 % C = eye(4);
 
@@ -293,34 +293,34 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
         norm_error_K_k(:,i) = norm(error_K_k(:,:,i));
     end
 
-    % Error for first NS steps
-    NS = 500;
-        figure
-        title('Convergence to Asymptotic')
-        yyaxis left
-        plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
-        ylabel('|Error P_k|')
-    
-        yyaxis right
-        plot(t_var,norm_error_K_k,'Linewidth',2)
-        ylabel('|Error K_k|')
-    
-        xlabel('Number of Discrete Steps')
-        xlim([1,NS])
-%         exportgraphics(gca,'PandKConverge.png','Resolution',1000)
-    
-    % Error for after 40 steps
-        figure
-        yyaxis left
-        plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
-        ylabel('|Error P_k|')
-    
-        yyaxis right
-        plot(t_var,norm_error_K_k,'Linewidth',2)
-        ylabel('|Error K_k|')
-        
-        xlabel('Number of Discrete Steps')
-        xlim([NS,Inf])
+%     % Error for first NS steps
+%     NS = 500;
+%         figure
+%         title('Convergence to Asymptotic')
+%         yyaxis left
+%         plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
+%         ylabel('|Error P_k|')
+%     
+%         yyaxis right
+%         plot(t_var,norm_error_K_k,'Linewidth',2)
+%         ylabel('|Error K_k|')
+%     
+%         xlabel('Number of Discrete Steps')
+%         xlim([1,NS])
+% %         exportgraphics(gca,'PandKConverge.png','Resolution',1000)
+%     
+%     % Error for after 40 steps
+%         figure
+%         yyaxis left
+%         plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
+%         ylabel('|Error P_k|')
+%     
+%         yyaxis right
+%         plot(t_var,norm_error_K_k,'Linewidth',2)
+%         ylabel('|Error K_k|')
+%         
+%         xlabel('Number of Discrete Steps')
+%         xlim([NS,Inf])
 
     % Covariance
         steady_state_step = 500;
@@ -379,7 +379,7 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
 % Observability Measurable
 %     obsv_r_meas = getObservability(A_DT,C_DT(1,:));
     obsv_r_meas = obsv(A_DT,C_DT(1,:));
-    [~,S_Orm,~] = svd(obsv_r_meas);
+    [U_Orm,S_Orm,V_Orm] = svd(obsv_r_meas);
 
 % C_tilde (This normally would be of the ROM)
     C_r = eye(N_states);
@@ -394,12 +394,24 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
 
         % SVD of Augmented Observability
         obsv_aug = obsv_r_meas*V_tilde(:,1); %!!!!!! Do I need to check that V_tilde is in the column space if it is only 1 row?
-        [~ , S_hat , ~] = svd(obsv_aug);
+        [~ , S_hat , V_hat] = svd(obsv_aug);
 
         sing_val(mm) = S_hat(1,1);
+
     end
     sing_val_norm = sing_val / S_Orm(1,1);
 
+    matrixOFdot = zeros(4);
+    matrixOFdot_deg = zeros(4);
+    for i = 1:4
+        for j = 1:4
+            matrixOFdot(i,j) = dot(  C_r(i,:)/norm(C_r(i,:))  ,  V_Orm(:,j)  );
+            matrixOFdot_deg(i,j) = acosd(dot(  C_r(i,:)/norm(C_r(i,:))  ,  V_Orm(:,j)  ));
+            if matrixOFdot_deg(i,j) > 90
+                matrixOFdot_deg(i,j) = 180 - matrixOFdot_deg(i,j) ;
+            end
+        end
+    end
 
 
 
@@ -558,7 +570,7 @@ end
     end
 
 %% Arrange Figures
-FigArrange = 1;
+FigArrange = 0;
 if FigArrange == 1
     fig = gcf;
     NumFig = fig.Number;

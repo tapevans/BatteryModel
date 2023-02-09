@@ -2,7 +2,7 @@
 %
 %
 %
-clear all; close all; clc;
+clear all; %close all; clc;
 %% FLAGS
 % Simulations
     FLAG.ODE         = 1;
@@ -54,13 +54,14 @@ SIM.m2 = 5; % Mass 2
 
 % Noise
     Q_0 = 1e-5; % Process Noise
-    R_0 = 1e-5; % Measurement Noise
+    R_0 = 1e1; % Measurement Noise
 
-Ts = .1; %[s]
+Ts = 5; %[s]
 
 % t_final = 50;
 % t_final = 100;
-t_final = 200;
+t_final = 300;
+
 
 %% Pointers
 i = 1;
@@ -111,6 +112,7 @@ disp(['Measuring x1, the rank is ' num2str(r)])
 
 [N_meas , N_states]  = size(C);
 N_inputs = 1;
+
 
 %% Make SS CT
 if FLAG.SS_CT
@@ -259,7 +261,8 @@ if FLAG.Estimator
             % Calculate K_infty and P_infty
         %         [P_infty_idare ,~,~] = idare(A_DT , C , Q,R,0,eye(4));
         %         [P_infty_idaret,~,~] = idare(A_DT', C', Q,R,0,eye(4));
-                [P_infty  ,~,~] =  dare(A_DT', C', B_DT*Q*B_DT' ,R);
+%                 [P_infty  ,~,~] =  dare(A_DT', C', B_DT*Q*B_DT' ,R);
+                [P_infty  ,~,~] =  idare(A_DT', C', B_DT*Q*B_DT' ,R);
                 K_infty = P_infty*C'*inv(C*P_infty*C' + R);
 
         for i = 2:N_steps
@@ -343,7 +346,7 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
 %         xlim([NS,Inf])
 
     % Covariance
-        steady_state_step = 1000;
+        steady_state_step = 250;
 
         % Error Calc (Deviation)
         for i = 1:N_states
@@ -401,7 +404,7 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
 % Observability Measurable
 %     obsv_r_meas = getObservability(A_DT,C_DT(1,:));
     obsv_r_meas = obsv(A_DT,C_DT(1,:));
-    [~,S_Orm,~] = svd(obsv_r_meas);
+    [U_Orm,S_Orm,V_Orm] = svd(obsv_r_meas);
 
 % C_tilde (This normally would be of the ROM)
     C_r = eye(N_states);

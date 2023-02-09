@@ -42,7 +42,8 @@ SIM.F_in = 1; % Force Input
     R_0_vec = [1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0 1e1]; % Measurement Noise
 
 % Ts_vec = [.01 ]; %[s]
-Ts_vec = [.01 .05 .1 .5 1 5]; %[s]
+% Ts_vec = [.01 .05 .1 .5 1 5]; %[s]
+Ts_vec = [10 25 40 50]; %[s]
 
 % C_vec = [1];
 C_vec = [1 2 3 4];
