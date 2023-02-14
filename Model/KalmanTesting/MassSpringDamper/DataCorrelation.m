@@ -7,14 +7,16 @@ clear all; close all; clc;
     FLAG.READ_IN_DATA = 0;
     
     FLAG.ALLDATA      = 0;
-    FLAG.ALLDATA_spec = 0;
+    FLAG.ALLDATA_spec = 1;
     FLAG.NOISE        = 0;
     FLAG.NOISE_Cm     = 0; % plots for each Cm
     FLAG.ALLNOISE     = 0;
     FLAG.Ts           = 0;
-    FLAG.C_Meas       = 1;
+    FLAG.C_Meas       = 0;
+    FLAG.AngleComp    = 0;
     
-    FLAG.UseNormCPC   = 1;
+    FLAG.UseNormCPC      = 0;
+    FLAG.UseMAXNormCPC   = 1;
     
     FLAG.exportFigs   = 0;
         FLAG.FigAllData = 0;
@@ -47,6 +49,9 @@ if FLAG.READ_IN_DATA
             MyData(i).C   = sim.C_idx;
             MyData(i).SVD = sim.sing_val_norm;
             MyData(i).CPC = sim.CPCT_calc;
+            MyData(i).deg       = sim.matrixOFdot_deg;
+            MyData(i).S_Orm     = sim.S_Orm;
+            MyData(i).sing_val  = sim.sing_val;
         end
 
     % Save struct
@@ -106,6 +111,7 @@ combined_highLevel = Q_idx & R_idx & C_idx & T_idx;
     
     for i = 1:N_sims
         MyData(i).CPC_normalized = MyData(i).CPC / MyData(i).CPC(MyData(i).C);
+        MyData(i).CPC_normMAX    = MyData(i).CPC / max(MyData(i).CPC);
     end
 
 %% Add Marker Style data
@@ -184,9 +190,9 @@ end
 
 %% Make an ALL DATA Vector For specific Parameters
 if FLAG.ALLDATA_spec
-    Q_0_vec_spec = [1e-6 1e-5 ]; % Process Noise
-    R_0_vec_spec = [             1e-3 1e-2 1e-1 1e0 1e1]; % Measurement Noise
-    Ts_vec_spec  = [1 5 10 25 40 50]; %[s]
+    Q_0_vec_spec = [1e-6  ]; % Process Noise, 1e-5
+    R_0_vec_spec = [              1e0]; % Measurement Noise
+    Ts_vec_spec  = [1 ]; %[s], 5 10 25 40 50
     C_vec_spec   = [1 2 3 4];
 
     Q_idx = zeros(N_sims,1);
@@ -635,6 +641,12 @@ if FLAG.C_Meas
 
         covar_out_C_meas(end+1,1) = Covar;
     end
+end
+
+
+%% Angle Comparison
+if FLAG.AngleComp
+    makeAngleComparison(MyData,FLAG)
 end
 
 %% Arrange Figures

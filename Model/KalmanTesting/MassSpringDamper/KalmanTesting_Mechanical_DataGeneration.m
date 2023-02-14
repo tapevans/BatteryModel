@@ -43,7 +43,8 @@ SIM.F_in = 1; % Force Input
 
 % Ts_vec = [.01 ]; %[s]
 % Ts_vec = [.01 .05 .1 .5 1 5]; %[s]
-Ts_vec = [10 25 40 50]; %[s]
+Ts_vec = [.01 .05 .1 .5 1 5 10 25 40 50]; %[s]
+% Ts_vec = [10 25 40 50]; %[s]
 
 % C_vec = [1];
 C_vec = [1 2 3 4];
@@ -422,10 +423,12 @@ for QQ = Q_0_vec
                     % Observability Measurable
                     %     obsv_r_meas = getObservability(A_DT,C_DT(1,:));
                     obsv_r_meas = obsv(A_DT,C_DT(1,:));
-                    [~,S_Orm,~] = svd(obsv_r_meas);
+                    [~,S_Orm,V_Orm] = svd(obsv_r_meas);
 
                     % C_tilde (This normally would be of the ROM)
-                    C_r = eye(N_states);
+                    C_r = eye(N_states);    
+
+                    [N_outputs,N_states] = size(C_r);
 
                     % Loop through C_tilde
                     sing_val = nan(1,N_states);
@@ -446,7 +449,17 @@ for QQ = Q_0_vec
 
 
 
-
+%     matrixOFdot = zeros(N_outputs,N_states);
+    matrixOFdot_deg = zeros(N_outputs,N_states);
+    for i = 1:N_outputs
+        for j = 1:N_states
+%             matrixOFdot(i,j) = dot(  C_r(i,:)/norm(C_r(i,:))  ,  V_Orm(:,j)  );
+            matrixOFdot_deg(i,j) = acosd(dot(  C_r(i,:)/norm(C_r(i,:))  ,  V_Orm(:,j)  ));
+            if matrixOFdot_deg(i,j) > 90
+                matrixOFdot_deg(i,j) = 180 - matrixOFdot_deg(i,j) ;
+            end
+        end
+    end
 
 
 
@@ -462,7 +475,7 @@ for QQ = Q_0_vec
 
                 
                 end
-                save(save_filename, 'Q_0', 'R_0' , 'Ts', 'C_idx', 'sing_val_norm', 'CPCT_calc')
+                save(save_filename, 'Q_0', 'R_0' , 'Ts', 'C_idx', 'sing_val_norm', 'CPCT_calc','matrixOFdot_deg',"S_Orm","sing_val")
             end
         end
     end

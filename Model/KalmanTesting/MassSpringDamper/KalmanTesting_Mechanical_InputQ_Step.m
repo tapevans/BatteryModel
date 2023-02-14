@@ -53,10 +53,10 @@ SIM.m1 = 5; % Mass 1
 SIM.m2 = 5; % Mass 2
 
 % Noise
-    Q_0 = 1e-5; % Process Noise
-    R_0 = 1e1; % Measurement Noise
+    Q_0 = 1e-6; % Process Noise
+    R_0 = 1e0; % Measurement Noise
 
-Ts = 5; %[s]
+Ts = 1; %[s]
 
 % t_final = 50;
 % t_final = 100;
@@ -403,7 +403,9 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
 %% SVD Analysis
 % Observability Measurable
 %     obsv_r_meas = getObservability(A_DT,C_DT(1,:));
-    obsv_r_meas = obsv(A_DT,C_DT(1,:));
+%     obsv_r_meas = obsv(A_DT,C_DT(1,:));
+    N_multiple = 1;
+    obsv_r_meas = getObservability(A_DT,C_DT(1,:),N_multiple);
     [U_Orm,S_Orm,V_Orm] = svd(obsv_r_meas);
 
 % C_tilde (This normally would be of the ROM)
@@ -425,7 +427,17 @@ if FLAG.Estimator && FLAG.RunAsymtotic && FLAG.RunVariable
     end
     sing_val_norm = sing_val / S_Orm(1,1);
 
-
+    matrixOFdot = zeros(4);
+    matrixOFdot_deg = zeros(4);
+    for i = 1:4
+        for j = 1:4
+            matrixOFdot(i,j) = dot(  C_r(i,:)/norm(C_r(i,:))  ,  V_Orm(:,j)  );
+            matrixOFdot_deg(i,j) = acosd(dot(  C_r(i,:)/norm(C_r(i,:))  ,  V_Orm(:,j)  ));
+            if matrixOFdot_deg(i,j) > 90
+                matrixOFdot_deg(i,j) = 180 - matrixOFdot_deg(i,j) ;
+            end
+        end
+    end
 
 
 

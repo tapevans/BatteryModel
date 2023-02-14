@@ -8,11 +8,5 @@ function [SIM,FLAG] = inputs(SIM,FLAG)
     SIM.R_2 = 2;
     SIM.R_3 = 2;
     SIM.R_4 = 2;
-    
-
-%% Noise Properties
-    SIM.tc  = 1e-7; % [s],Correlation Time (Noise Sampling Rate)
-    SIM.Q_0 = 1e-6; % Process Noise
-    SIM.R_0 = 1e-6; % Measurement Noise
 
 end

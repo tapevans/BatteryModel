@@ -1,8 +1,21 @@
 %% V_inCalc
 function [V_in] = V_inCalc(t_vec,SIM,FLAG)
 
-switch FLAG.InputType
-    case 1 % Ramp Step
+switch FLAG.InputMode
+    case 1 % Step
+        V_in = SIM.V_step*ones(size(t_vec));
+
+    case 2 % Sine
+        for i = 1:length(t_vec)
+            t = t_vec(i);
+            if t <= SIM.time_rest
+                V_in(i) = SIM.V_init;
+            else
+                V_in(i) = SIM.V_s*sin(SIM.omega*t);
+            end
+        end
+        
+    case 3 % Ramp Step
         for i = 1:length(t_vec)
             t = t_vec(i);
             if t <= SIM.time_rest
@@ -14,11 +27,6 @@ switch FLAG.InputType
             end
 
         end
-
-    case 2 % Sine
-
-    case 3 % Step
-        V_in = SIM.V_step*ones(size(t_vec));
 end
 
 end

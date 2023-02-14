@@ -1,5 +1,5 @@
 %% Initialization File
-function [SIM,N,P,FLAG] = init(SIM,FLAG)
+function [SIM,N,P,FLAG,RESULTS] = init(SIM,FLAG)
 %% Pointers
     i = 1;
     P.V_1   = i; i = i+1;
@@ -10,12 +10,6 @@ function [SIM,N,P,FLAG] = init(SIM,FLAG)
 
 
 %% N Variables
-%     if FLAG.NStates == 3
-%         [~,C_m]=getSS_C3(SIM,P,FLAG);
-%     else
-%         [~,C_m]=getSS_C5(SIM,P,FLAG);
-%     end
-%     [N.measur , ~]  = size(C_m);
 switch FLAG.C_mode
     case 1
         N.measur = 1;
@@ -61,10 +55,12 @@ end
     
 %     SIM.time_rest = 8*SIM.tc+SIM.Ts;
     SIM.time_rest = 0;
-    SIM.time_ramp = 2*SIM.tc;
+    SIM.time_ramp = 2*SIM.tc/10;
     
     SIM.t_final_sim = SIM.t_final + 2*SIM.Ts;
     SIM.t_vec = 0:SIM.tc:SIM.t_final_sim;
+
+    SIM.omega = 2*pi*SIM.fq;
 
 
 %% Initial Conditions
@@ -79,29 +75,37 @@ end
     delV_3= V_2        - V_3;
     delV_4= V_3        - 0;
 
-% Initial Step
-    V_eff = SIM.V_step - delV_1 -delV_4;
-    R_eff = SIM.R_2 + SIM.R_3;
-    i_eff = V_eff/R_eff;
-    delV_2_eff = i_eff*SIM.R_2;
+    switch FLAG.InputMode
+        case 1 % Step
+            % Initial Step
+            V_eff = SIM.V_step - delV_1 -delV_4;
+            R_eff = SIM.R_2 + SIM.R_3;
+            i_eff = V_eff/R_eff;
+            delV_2_eff = i_eff*SIM.R_2;
 
-% 3 State System
-    SIM.x_0_3        = zeros(P.V_3,1);
-    SIM.x_0_3(P.V_1) = SIM.V_step - delV_1;
-    SIM.x_0_3(P.V_3) = delV_4;
-    SIM.x_0_3(P.V_2) = (SIM.V_step - delV_1) - delV_2_eff ;
+            % 3 State System
+            SIM.x_0_3        = zeros(P.V_3,1);
+            SIM.x_0_3(P.V_1) = SIM.V_step - delV_1;
+            SIM.x_0_3(P.V_3) = delV_4;
+            SIM.x_0_3(P.V_2) = (SIM.V_step - delV_1) - delV_2_eff ;
 
-% 5 State System
-    SIM.x_0_5 = zeros(5,1);
-    
-    SIM.x_0_5(P.V_s)  = SIM.V_init;
-    SIM.x_0_5(P.i_PS) = i_PS;
-    SIM.x_0_5(P.V_1)  = V_1;
-    SIM.x_0_5(P.V_2)  = V_2;
-    SIM.x_0_5(P.V_3)  = V_3;
+            % 5 State System
+            SIM.x_0_5 = zeros(5,1);
 
+            SIM.x_0_5(P.V_s)  = SIM.V_init;
+            SIM.x_0_5(P.i_PS) = i_PS;
+            SIM.x_0_5(P.V_1)  = V_1;
+            SIM.x_0_5(P.V_2)  = V_2;
+            SIM.x_0_5(P.V_3)  = V_3;
+        case 2 %%%%%%%%%%%%%%%%%%%%%%%%%%Add more for inital DC and DC offset
+            % 3 State System
+            SIM.x_0_3 = zeros(P.V_3,1);
+            % 5 State System
+            SIM.x_0_5 = zeros(5,1);
+    end
 
 %% Calculate Noise Power
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Probably Fix this some
     SIM.Q3i = SIM.Q_0 * eye(N.inputs);
     SIM.Q5i = SIM.Q_0 * eye(N.inputs);
     
@@ -119,4 +123,7 @@ end
     SIM.pow_Q5s = SIM.tc * SIM.Q5s;
     SIM.pow_R   = SIM.tc * SIM.R;
 
+
+%% Initialize results struct
+RESULTS = struct();
 end
