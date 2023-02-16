@@ -8,9 +8,9 @@ FLAG.PLOT.NoNoiseCompare = 0;
     FLAG.PLOT.SS_CT3     = 1;
     FLAG.PLOT.SS_DT3     = 0;
     FLAG.PLOT.ROM_Mlab3  = 0;
-    FLAG.PLOT.ROM_HoKal  = 0;
+    FLAG.PLOT.ROM_HoKal  = 1;
 
-FLAG.PLOT.NoisyPlant     = 0;
+FLAG.PLOT.NoisyPlant     = 1;
 
 FLAG.PLOT.EstimatorX        = 0;
     FLAG.PLOT.ASYX          = 1;
@@ -19,7 +19,7 @@ FLAG.PLOT.EstimatorX        = 0;
     FLAG.PLOT.ROMAllComparX = 1; % This is the ROM used in estimator but with a noisy input
     FLAG.PLOT.SlinkAllComparX = 0; % This is all 3 states
 
-FLAG.PLOT.EstimatorZ       = 0;
+FLAG.PLOT.EstimatorZ       = 1;
     FLAG.PLOT.ASYZ         = 1;
     FLAG.PLOT.VARZ         = 0;
     FLAG.PLOT.PlantComparZ = 1;
@@ -36,6 +36,9 @@ if FLAG.PLOT.NoNoiseCompare
     figure
     hold on
     if FLAG.PLOT.ROM_HoKal && isfield(RESULTS,'ROM_HoKal')
+        plot(RESULTS.ROM_HoKal.t_soln,RESULTS.ROM_HoKal.z_soln(:,P.V_1),'o','LineWidth',2,'DisplayName','V_1 ROM Ho-Kal')
+        plot(RESULTS.ROM_HoKal.t_soln,RESULTS.ROM_HoKal.z_soln(:,P.V_2),'o','LineWidth',2,'DisplayName','V_2 ROM Ho-Kal')
+        plot(RESULTS.ROM_HoKal.t_soln,RESULTS.ROM_HoKal.z_soln(:,P.V_3),'o','LineWidth',2,'DisplayName','V_3 ROM Ho-Kal')
     end
     if FLAG.PLOT.ROM_Mlab3 && isfield(RESULTS,'ROM_Mlab3')
         plot(RESULTS.ROM_Mlab3.t_soln,RESULTS.ROM_Mlab3.z_soln(:,P.V_1),'o','LineWidth',2,'DisplayName','V_1 ROM Mlab3')

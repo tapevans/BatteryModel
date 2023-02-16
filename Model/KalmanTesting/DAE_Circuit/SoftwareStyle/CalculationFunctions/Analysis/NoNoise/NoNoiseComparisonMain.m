@@ -64,7 +64,18 @@ if FLAG.Analysis.ROM_Mlab3 && ~SIM.AnalysisComplete.NoNoiseCompare.ROM_Mlab3
 end
 %% 
 if FLAG.Analysis.ROM_HoKal && ~SIM.AnalysisComplete.NoNoiseCompare.ROM_HoKal
-    %%%%%%%%%%%%%%%%%%%%
+    [sys_HK] = getHoKalmanROM(SIM,N,P,FLAG);
+
+    % IC
+    y_0 = SIM.x_0_5(1:3,1);
+    x_red = sys_HK.C\y_0;
+
+    % u_k
+    FLAG.InputType = 1; % 1) Step 2) Sine 3) Ramp
+    [InputSignal] = getInputSignal(SIM,N,P,FLAG);
+
+    % Simulate
+    [RESULTS.ROM_HoKal.z_soln,RESULTS.ROM_HoKal.t_soln,RESULTS.ROM_HoKal.x_soln] = lsim(sys_HK,InputSignal(:,2),InputSignal(:,1),x_red);
     SIM.AnalysisComplete.NoNoiseCompare.ROM_HoKal = 1;
 end
 %% 

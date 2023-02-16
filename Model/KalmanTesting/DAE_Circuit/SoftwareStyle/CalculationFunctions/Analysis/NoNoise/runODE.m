@@ -1,8 +1,8 @@
 %% runODE
 function [t_soln, x_soln, z_soln] = runODE(SIM,N,P,FLAG)
 %% InputSignalMode
-%  1) From code
-%  2) From function input
+%  1) From code (From V_inCalc)
+%  2) From function input (For Simulink)
     FLAG.InputSignalMode = 1;
 
     switch FLAG.StateMode
@@ -16,7 +16,11 @@ function [t_soln, x_soln, z_soln] = runODE(SIM,N,P,FLAG)
             [A,B,C_m,~] = getAll_SS5(SIM,N,P,FLAG);
     end
 
-    tspan = [0,SIM.t_final_sim];
+    if FLAG.InputMode == 4
+        tspan = SIM.t_vec_imp;
+    else
+        tspan = [0,SIM.t_final_sim];
+    end
     Tol.Rel = 1e-4;
     Tol.Abs = 1e-7;
     options_DAE = odeset('RelTol' ,Tol.Rel,      ...

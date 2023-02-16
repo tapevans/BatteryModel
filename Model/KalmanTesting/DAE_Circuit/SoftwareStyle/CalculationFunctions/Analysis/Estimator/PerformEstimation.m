@@ -26,7 +26,7 @@ z = Plant.Plant_Data.zN.z_soln;
             [~ , ~ , ~ , sys_DT5] = getSS_System(SIM,N,P,FLAG);
             est_sys = sys_DT5;
         case 3
-            % Get Ho-Kalman ROM
+            [est_sys] = getHoKalmanROM(SIM,N,P,FLAG);
     end
     FLAG.C_mode = old_C_mode;
     C_des_ROM = est_sys.C;

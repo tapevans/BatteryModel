@@ -60,8 +60,9 @@ end
     SIM.t_final_sim = SIM.t_final + 2*SIM.Ts;
     SIM.t_vec = 0:SIM.tc:SIM.t_final_sim;
 
-    SIM.omega = 2*pi*SIM.fq;
-
+    if FLAG.InputMode == 2
+        SIM.omega = 2*pi*SIM.fq;
+    end
 
 %% Initial Conditions
 % Initial Steady State

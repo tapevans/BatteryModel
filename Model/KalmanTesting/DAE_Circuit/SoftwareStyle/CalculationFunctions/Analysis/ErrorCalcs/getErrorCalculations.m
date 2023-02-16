@@ -39,36 +39,43 @@ function [ERROR_CALC,RESULTS] = getErrorCalculations(SIM,FLAG,N,P,RESULTS,ESTIMA
     P_calc = covar_states;
     P_exp = ESTIMATOR.P_infty;
 
-%     disp(newline)
-%     disp('Cov(states) calc is')
-%     disp(num2str(covar_states))
-%     disp('P_\infty is ')
-%     disp(num2str(P_exp))
-%     disp('With difference of')
-%     disp(num2str(P_calc-P_exp))
-%     disp('Ratio of error')
-%     disp(num2str(abs((P_calc-P_exp)./P_exp)))
+    if FLAG.Analysis.dispResults
+%         disp(newline)
+%         disp('Cov(states) calc is')
+%         disp(num2str(covar_states))
+%         disp('P_\infty is ')
+%         disp(num2str(P_exp))
+%         disp('With difference of')
+%         disp(num2str(P_calc-P_exp))
+%         disp('Ratio of error')
+%         disp(num2str(abs((P_calc-P_exp)./P_exp)))
+    end
 
     CPCT_calc = covar_outputs;
     CPCT_exp = ESTIMATOR.C_des_ROM * ESTIMATOR.P_infty * ESTIMATOR.C_des_ROM';
 
-%     disp(newline)
-%     disp('Cov(outputs) calc is')
-%     disp(num2str(covar_outputs))
-%     disp("CP_\inftyC' is ")
-%     disp(num2str(CPCT_exp))
-%     disp('With difference of')
-%     disp(num2str(CPCT_calc-CPCT_exp))
-%     disp('Ratio of error')
-%     disp(num2str(abs((CPCT_calc-CPCT_exp)./CPCT_exp)))
+    if FLAG.Analysis.dispResults
+        disp(newline)
+        disp('Cov(outputs) calc is')
+        disp(num2str(covar_outputs))
+        disp("CP_\inftyC' is ")
+        disp(num2str(CPCT_exp))
+        disp('With difference of')
+        disp(num2str(CPCT_calc-CPCT_exp))
+        disp('Ratio of error')
+        disp(num2str(abs((CPCT_calc-CPCT_exp)./CPCT_exp)))
+    end
 
 
     for i = 1:3
         CPCT_exp_diag(i) = ESTIMATOR.C_des_ROM(i,:) * ESTIMATOR.P_infty * ESTIMATOR.C_des_ROM(i,:)';
     end
-%     disp(newline)
-%     disp(newline)
-%     disp(num2str(CPCT_exp_diag))
+
+    if FLAG.Analysis.dispResults
+        disp(newline)
+        disp(newline)
+        disp(num2str(CPCT_exp_diag))
+    end
 
     ERROR_CALC.P_calc = P_calc;
     ERROR_CALC.P_infty = P_exp;
