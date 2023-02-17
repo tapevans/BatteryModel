@@ -86,8 +86,9 @@ clear all
 close all
 clc
 
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_DTImpulseTs0.1SOC50.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_DTImpulseTs0.146779926762207SOC16.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_SS_EIS_SOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_DTImpulseTs1.0SOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_Relax_StepSOC50.mat';
 
 load(filename)
 

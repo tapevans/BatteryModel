@@ -7,8 +7,8 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
-Project_Folder{i} = 'KalmanTest';   i = i+1;
-% Project_Folder{i} = 'ObservabilityTest';   i = i+1;
+% Project_Folder{i} = 'KalmanTest';   i = i+1;
+Project_Folder{i} = 'ObservabilityTest';   i = i+1;
 % Project_Folder{i} = 'SeminarPres_Nov2022';   i = i+1;
 % Project_Folder{i} = 'TestingForTyrone';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;
@@ -332,7 +332,7 @@ for i = 1:num_sim_files
                 save(filename,'sys','OutputAtEquil')
             end
         elseif SIM.SimMode == 4
-            save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','mode_soln','step_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+            save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','mode_soln','step_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','SOLN')
         elseif SIM.SimMode == 5
             save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         else
