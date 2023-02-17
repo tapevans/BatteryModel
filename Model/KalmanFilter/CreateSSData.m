@@ -12,8 +12,8 @@ Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
 % Split up like this for Github pushing
 % SOC_vec = 0:1:25; 
 % SOC_vec = 26:1:49;
-SOC_vec = 51:1:75;
-% SOC_vec = 76:1:100;
+% SOC_vec = 51:1:75;
+SOC_vec = 76:1:100;
 
 % SOC_vec = 50;
 
