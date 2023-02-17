@@ -62,12 +62,16 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'SeminarPres_Nov2022';
 % battery_name = 'SeminarPres_Nov2022';
 
-% folder_name  = 'ObservabilityTest';
-% battery_name = 'ObservabilityTest';
+folder_name  = 'ObservabilityTest';
+battery_name = 'ObservabilityTest';
 
-folder_name  = 'KalmanTest';
-battery_name = 'KalmanTest_JustPlant';
+% folder_name  = 'KalmanTest';
+% battery_name = 'KalmanTest_JustPlant';
 
+% KBSOC_vec = 0:1:90;
+KBSOC_vec = 91:1:100; %Change Step to discharge
+% KBSOC_vec  = 50;
+for SSS = 1:length(KBSOC_vec)
 
 %% Simulations
 % ---- Polarization ----
@@ -134,7 +138,8 @@ battery_name = 'KalmanTest_JustPlant';
 
 %         KBCPProfileFilename = 'KalmanTestDTImpulseTs1.0';
 %         KBCPProfileFilename = 'KalmanTestStep';
-        KBCPProfileFilename = 'KalmanTestStep_JustPlant_NoRelax';
+%         KBCPProfileFilename = 'KalmanTestStep_JustPlant_NoRelax';
+        KBCPProfileFilename = 'Relax_Step';
 
         %         KBCPProfileFilename = 'CCCV_1.5C';
 %         KBCPProfileFilename = 'CCCV_2C';
@@ -144,7 +149,8 @@ battery_name = 'KalmanTest_JustPlant';
     % Initial SOC
     %         KBSOC = 81.93;
     %         KBSOC = 100; 
-            KBSOC = 50; 
+    %         KBSOC = 50; 
+            KBSOC = KBSOC_vec(SSS); 
 
 
 % ---- MOO Controller ----
@@ -436,3 +442,4 @@ if ManCurrProfile
     end
 end
 
+end
