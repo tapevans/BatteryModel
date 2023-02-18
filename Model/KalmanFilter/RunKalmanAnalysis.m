@@ -3,7 +3,7 @@ clear all; close all; clc
 
 
 %% Analysis to Perform
-    FLAG.Analysis.NoNoiseCompare        = 0;
+    FLAG.Analysis.NoNoiseCompare        = 1;
         FLAG.Analysis.ode           = 1;
         FLAG.Analysis.SS_CT         = 0;
         FLAG.Analysis.SS_DT         = 0;
@@ -49,6 +49,10 @@ N.N_samples = 600;
     %  3) Ramp ~ subset of step
     %  4) Impulse ~ Not to be used as a simulation
     FLAG.InputMode = 1;
+
+
+%% Call Analysis Main
+
 
 
 
