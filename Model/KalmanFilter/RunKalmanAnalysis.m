@@ -21,11 +21,11 @@ clear all; close all; clc
         FLAG.Analysis.SS_DT         = 1;
         FLAG.Analysis.ROM_HoKal     = 1;
             FLAG.Analysis.PlotImp = 0;
-    FLAG.Analysis.NoisyPlant            = 1;
+    FLAG.Analysis.NoisyPlant            = 0;
     FLAG.Analysis.Estimator             = 0;
     FLAG.Analysis.Est_Error_calc        = 0;
         FLAG.Analysis.dispResults = 1;
-    FLAG.Analysis.GenComparData         = 0;
+    FLAG.Analysis.GenComparData         = 1;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
         % FLAG.CompareQMode
         %  1) Input Q
@@ -36,7 +36,7 @@ clear all; close all; clc
     
     FLAG.OverwriteData.All   = 1; %% If you try to run the same sim with different Analysis, it loads old flags and won't do new analysis
     FLAG.OverwriteData.Slink = 0; %% If changing t_final, need to rerun Slink
-    FLAG.OverwriteData.GenData = 0;
+    FLAG.OverwriteData.GenData = 1;
     
     FLAG.PLOT.PlotResults = 0;
     
@@ -83,10 +83,10 @@ clear all; close all; clc
         T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
         T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
         Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-        Ts_vec  = [1];
+%         Ts_vec  = [1];
 
-%     SOC_vec = 0:1:100;    
-    SOC_vec = [50];
+    SOC_vec = 0:1:100;    
+%     SOC_vec = [50];
 
     FLAG.N_samples = 600;
 

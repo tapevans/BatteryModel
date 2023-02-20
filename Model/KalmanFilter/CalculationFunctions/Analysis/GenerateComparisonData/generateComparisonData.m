@@ -95,7 +95,7 @@ if RUNSIM
     %         path_str = [pwd filesep 'Results' filesep 'ComparisonData' filesep 'StateQ'];
     %     end
     %     save_filename = [path_str filesep filename];
-    save(save_filename, 'Q_0', 'R_0' , 'Ts', 'SOC', 'sing_val_norm', 'CPCT','matrixOFdot_deg','matrixOFdot',"S_Orm","sing_val",'C_des')
+    save(save_filename, 'Q_0', 'R_0' , 'Ts', 'SOC', 'sing_val_norm', 'CPCT','matrixOFdot_deg','matrixOFdot',"S_Orm","sing_val",'C_des','P')
 end
 
 
