@@ -7,3 +7,4 @@ Model/slprj
 Model/Simulink/slprj
 *.slxc
 Model/KalmanFilter/SimulinkFiles/slprj
+*.autosave

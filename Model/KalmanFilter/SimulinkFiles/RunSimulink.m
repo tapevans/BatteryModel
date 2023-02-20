@@ -19,7 +19,7 @@ function [RESULTS] = RunSimulink(SIM,N,P,FLAG,RESULTS)
 %% Run Simulation
 if RUNSIM
 %% Add Battery Model to path
-addpath(genpath('F:\TylerFiles\GitHubRepos\BatteryModel\Model'))
+    addpath(genpath('F:\TylerFiles\GitHubRepos\BatteryModel\Model'))
 
 
 %% Change Working Directory
@@ -68,8 +68,8 @@ addpath(genpath('F:\TylerFiles\GitHubRepos\BatteryModel\Model'))
 
 
 %% Get sim Structs
-filename = getImpulseFilename(FLAG);
-simsys = load(filename);
+    filename = getImpulseFilename(FLAG);
+    simsys = load(filename);
 
 
 %% Function Handle Conversion
@@ -92,6 +92,9 @@ simsys = load(filename);
     simsys.SIM = rmfield(simsys.SIM,'ControllerHandle');
     simsys.SIM = rmfield(simsys.SIM,'Controller_MO_File');
 
+
+%% Get Simulink Noise
+    
 
 %% Run Simulink
     load_system(mdl)
