@@ -4,3 +4,6 @@ Model/Results/
 Model/EXTRA_CODE_THAT_IS_IN_LIMBO.txt
 Model/FunctionalityTests/
 Model/slprj
+Model/Simulink/slprj
+*.slxc
+Model/KalmanFilter/SimulinkFiles/slprj
