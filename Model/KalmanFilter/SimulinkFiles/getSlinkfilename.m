@@ -19,7 +19,7 @@ function [overall_filename] = getSlinkfilename(FLAG,SIM)
 %         otherwise
 %             C_str = num2str(FLAG.C_mode);
 %     end
-    SOC_str = FLAG.SOC;
+    SOC_str = num2str(FLAG.SOC);
     
     
     Folder = [pwd filesep 'Results' filesep 'PlantData'];

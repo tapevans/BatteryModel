@@ -184,16 +184,6 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     SIM.InputSignal = [SIM.t_vec_Relax_Step' input_load'];
 
 
-
-
-%     SIM.time_rest = 2*SIM.Ts;
-%     SIM.time_ramp = SIM.tc/10;
-%     
-%     SIM.t_final_sim = SIM.t_final + SIM.time_rest + SIM.time_ramp;
-%     SIM.t_vec = 0:SIM.tc:SIM.t_final_sim;
-
-
-
 end
 
 
@@ -234,3 +224,12 @@ end
     
 %% Initialize results struct
 %     RESULTS = struct();
+
+
+
+
+%     SIM.time_rest = 2*SIM.Ts;
+%     SIM.time_ramp = SIM.tc/10;
+%     
+%     SIM.t_final_sim = SIM.t_final + SIM.time_rest + SIM.time_ramp;
+%     SIM.t_vec = 0:SIM.tc:SIM.t_final_sim;

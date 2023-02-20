@@ -18,58 +18,38 @@ end
 if FLAG.Analysis.NoisyPlant
     [RESULTS] = RunSimulink(SIM,N,P,FLAG,RESULTS);
 
-%     SIM.AnalysisComplete.NoisyPlant = 1;
-%     
-%     % Save Overall
-%         save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS")
-% 
-    % Save Just Plant Data
+    % Save Data from Simulink
         Plant_Data = RESULTS.Slink_plant;
         [Slink_filename] = getSlinkfilename(FLAG,SIM);
         save(Slink_filename,"FLAG","P","N","SIM","Plant_Data")
 end
 
 
-% Estimator
-if FLAG.Analysis.Estimator && ~SIM.AnalysisComplete.Estimator
+%% Estimator
+if FLAG.Analysis.Estimator 
     [plant_filename] = getSlinkfilename(FLAG,SIM);
     [ESTIMATOR,RESULTS] = PerformEstimation(plant_filename,SIM,FLAG,N,P,RESULTS);
-
-%     SIM.AnalysisComplete.Estimator = 1;
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR")
 end
 
 
 %% Error Calculations
-if FLAG.Analysis.Est_Error_calc %&& ~ SIM.AnalysisComplete.Est_Error_calc
+if FLAG.Analysis.Est_Error_calc
     if ~exist(ESTIMATOR)
         ESTIMATOR = struct();
     end
     [ERROR_CALC,RESULTS] = getErrorCalculations(SIM,FLAG,N,P,RESULTS,ESTIMATOR);
-    
-%     SIM.AnalysisComplete.Est_Error_calc = 1;
-
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")
 end
 
 
 %% Generate Comparison Data
-if FLAG.Analysis.GenComparData %&& ~SIM.AnalysisComplete.GenComparData
+if FLAG.Analysis.GenComparData 
     generateComparisonData(SIM,FLAG,N,P,RESULTS) % ,ESTIMATOR,ERROR_CALC
-
-%     SIM.AnalysisComplete.GenComparData = 1;
-
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")
 end
 
 
 %% Compare SVD to P_infty
-if FLAG.Analysis.ComparSVD2Pinf %&& ~SIM.AnalysisComplete.ComparSVD2Pinf
+if FLAG.Analysis.ComparSVD2Pinf 
     CompareData(FLAG);
-%     
-% %     SIM.AnalysisComplete.ComparSVD2Pinf = 1;
-% 
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")
 end
 
 
@@ -113,3 +93,45 @@ end
 
 %%
  %&& ~SIM.AnalysisComplete.NoisyPlant
+
+
+%     SIM.AnalysisComplete.NoisyPlant = 1;
+%     
+%     % Save Overall
+%         save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS")
+% 
+    % Save Just Plant Data
+
+%% Estimator
+%&&  ~SIM.AnalysisComplete.Estimator
+
+
+%     SIM.AnalysisComplete.Estimator = 1;
+%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR")
+
+%% Error Calculations
+ %&& ~ SIM.AnalysisComplete.Est_Error_calc
+
+
+    
+%     SIM.AnalysisComplete.Est_Error_calc = 1;
+
+%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")
+
+%% Generate Comparison Data
+%&& ~SIM.AnalysisComplete.GenComparData
+
+
+%     SIM.AnalysisComplete.GenComparData = 1;
+
+%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")
+
+
+%% Compare SVD to P_infty
+%&& ~SIM.AnalysisComplete.ComparSVD2Pinf
+
+
+%     
+% %     SIM.AnalysisComplete.ComparSVD2Pinf = 1;
+% 
+%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")

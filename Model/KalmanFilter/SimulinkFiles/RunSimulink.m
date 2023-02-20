@@ -94,6 +94,7 @@ if RUNSIM
 
 
 %% Get Simulink Noise
+    [InputSig_w , InputSig_v] = getSlinkNoise(SIM,N,P,FLAG);
     
 
 %% Run Simulink
@@ -126,16 +127,18 @@ if RUNSIM
     assignin(mdlWks,'U_NV_NT'     ,U_NV_NT)
     assignin(mdlWks,'K'           ,K_plant)
     assignin(mdlWks,'SV_IC'       ,SV_IC)
-    assignin(mdlWks,'pow_Qi'      ,pow_Q)
-    assignin(mdlWks,'pow_R'       ,SIM.pow_R)
     assignin(mdlWks,'Ts'          ,SIM.Ts)
-    assignin(mdlWks,'tc'          ,SIM.tc)
+    assignin(mdlWks,'InputSig_w'  ,InputSig_w)
+    assignin(mdlWks,'InputSig_v'  ,InputSig_v)
+%     assignin(mdlWks,'pow_Qi'      ,pow_Q)
+%     assignin(mdlWks,'pow_R'       ,SIM.pow_R)
+%     assignin(mdlWks,'tc'          ,SIM.tc)
 
     tic
     out = sim(in);
     toc
-%     save_system
-%     close_system
+    save_system
+    close_system
 
     
 %% Save Simulink Variables
