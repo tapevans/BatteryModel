@@ -25,7 +25,7 @@ P_k_pre   = zeros(N_states,N_states,N_steps); % Error Covariance predict phase
 % confidence = 0.5; % Range from [0,1]
 % P_k_pre(:,:,1) = confidence*eye(N_states);
 % P_k(:,:,1) = confidence*eye(N_states);
-P_k(:,:,1) = P_infty;
+P_k(:,:,1)     = P_infty;
 P_k_pre(:,:,1) = P_infty;
 
 K_k(:,:,1) = K_infty;
@@ -45,6 +45,8 @@ end
 R = SIM.R_0 * eye(N_measur);
 % SIM.R = (diag(R))';
 
+z_init = SIM.y_0_FOM;
+
 %% Run Estimation
 switch FLAG.QMode
     case 1 % Input Q
@@ -58,7 +60,7 @@ switch FLAG.QMode
     %         z_k(:,i) = C * x_EST_sys(:,i)  +  v_k(:,i);
     
         % Update (Correction) Phase
-            y_tilde_k(:,i) = z_k(:,i) - C_DT * x_var_pre(:,i);
+            y_tilde_k(:,i) = z_k(:,i) - (C_DT * x_var_pre(:,i) + z_init);
             S_k(:,:,i) = C_DT * P_k_pre(:,:,i) * C_DT' + R;
             K_k(:,:,i) = P_k_pre(:,:,i) * C_DT' * inv(S_k(:,:,i));
             x_var(:,i) = x_var_pre(:,i) + K_k(:,:,i) * y_tilde_k(:,i);

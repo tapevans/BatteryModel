@@ -24,6 +24,8 @@ C_DT = sys.C;
 
 x_asy(:,1) = x_hat_0;
 
+z_init = SIM.y_0_FOM;
+
 
 %% Run Estimation
 for i = 2:N_steps
@@ -35,7 +37,7 @@ for i = 2:N_steps
 %         z_k(:,i) = C * x_EST_sys(:,i)  +  v_k(:,i);
 
     % Update (Correction) Phase
-        y_tilde_k(:,i) = z_k(:,i) - C_DT * x_asy_pre(:,i);
+        y_tilde_k(:,i) = z_k(:,i) - ( C_DT * x_asy_pre(:,i) + z_init);
         x_asy(:,i) = x_asy_pre(:,i) + K_infty * y_tilde_k(:,i);
 end
 

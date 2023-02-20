@@ -25,7 +25,7 @@ clear all; close all; clc
     FLAG.Analysis.Estimator             = 0;
     FLAG.Analysis.Est_Error_calc        = 0;
         FLAG.Analysis.dispResults = 1;
-    FLAG.Analysis.GenComparData         = 1;
+    FLAG.Analysis.GenComparData         = 0;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
         % FLAG.CompareQMode
         %  1) Input Q
@@ -35,8 +35,8 @@ clear all; close all; clc
 
     
     FLAG.OverwriteData.All   = 1; %% If you try to run the same sim with different Analysis, it loads old flags and won't do new analysis
-    FLAG.OverwriteData.Slink = 0; %% If changing t_final, need to rerun Slink
-    FLAG.OverwriteData.GenData = 1;
+    FLAG.OverwriteData.Slink = 1; %% If changing t_final, need to rerun Slink
+    FLAG.OverwriteData.GenData = 0;
     
     FLAG.PLOT.PlotResults = 0;
     
@@ -82,11 +82,11 @@ clear all; close all; clc
         N_t_s   = 25;   % **Keep this fix for now
         T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
         T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
-        Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-%         Ts_vec  = [1];
+%         Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
+        Ts_vec  = [1];
 
-    SOC_vec = 0:1:100;    
-%     SOC_vec = [50];
+%     SOC_vec = 0:1:100;    
+    SOC_vec = [50];
 
     FLAG.N_samples = 600;
 
@@ -101,12 +101,43 @@ clear all; close all; clc
 
 
 %% Call Analysis Main
-    for QQ = Q_0_vec
-        for RR = R_0_vec
+%     for QQ = Q_0_vec
+%         for RR = R_0_vec
+%             for TT = Ts_vec
+%                 for SS = SOC_vec
+%                     FLAG.Q_0 = QQ; % Process Noise
+%                     FLAG.R_0 = RR; % Measurement Noise
+%                     FLAG.Ts = TT;  % Sampling Rate (When to save outputs)
+%                     FLAG.SOC = SS; % State of Charge
+% 
+%                     AnalysisMain(FLAG)
+%                 end
+%             end
+%         end
+%     end
+
+
+%% Generate Comparison Data Call Main
+%     Q_0 = 1e-6; R_0 = 1e-6; % TL % Completed
+%     Q_0 = 1e-6; R_0 = 1e1;  % BL
+%     Q_0 = 1e1;  R_0 = 1e1;  % BR
+%     Q_0 = 1e1;  R_0 = 1e-6; % TR
+%     Q_0 = 1e-3; R_0 = 1e-3; % Middle
+
+    FLAG.Analysis.NoisyPlant            = 0;
+    FLAG.Analysis.GenComparData         = 1;
+    
+    Q_vec = [1e-6 1e1 1e1 1e-3];
+    R_vec = [1e1 1e1 1e-6 1e-3];
+    Noise_Vec = [Q_vec;R_vec];
+    Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
+    SOC_vec = 0:1:100; 
+
+        for i = 1:length(Noise_Vec)
             for TT = Ts_vec
                 for SS = SOC_vec
-                    FLAG.Q_0 = QQ; % Process Noise
-                    FLAG.R_0 = RR; % Measurement Noise
+                    FLAG.Q_0 = Noise_Vec(1,i); % Process Noise
+                    FLAG.R_0 = Noise_Vec(2,i); % Measurement Noise
                     FLAG.Ts = TT;  % Sampling Rate (When to save outputs)
                     FLAG.SOC = SS; % State of Charge
 
@@ -114,13 +145,32 @@ clear all; close all; clc
                 end
             end
         end
-    end
 
 
 
+%% Generate Slink Data Call Main
+    FLAG.Analysis.NoisyPlant            = 1;
+    FLAG.Analysis.GenComparData         = 0;
+    
+    Q_vec = [1e-6 1e1 1e1 1e-3];
+    R_vec = [1e1 1e1 1e-6 1e-3];
+    Noise_Vec = [Q_vec;R_vec];
+    Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
+    Ts_vec = Ts_vec([13]); % [1,7,13, 20,25]
+    SOC_vec = [25 50 75]; 
 
+        for i = 1:length(Noise_Vec)
+            for TT = Ts_vec
+                for SS = SOC_vec
+                    FLAG.Q_0 = Noise_Vec(1,i); % Process Noise
+                    FLAG.R_0 = Noise_Vec(2,i); % Measurement Noise
+                    FLAG.Ts = TT;  % Sampling Rate (When to save outputs)
+                    FLAG.SOC = SS; % State of Charge
 
-
+                    AnalysisMain(FLAG)
+                end
+            end
+        end
 
 
 

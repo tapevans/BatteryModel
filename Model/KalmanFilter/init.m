@@ -173,16 +173,24 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
 
     SIM.t_final_Relax_Step = (FLAG.N_samples+2)*SIM.Ts;
     SIM.t_vec_Relax_Step = 0:SIM.Ts:SIM.t_final_Relax_Step;
+    
+
+    % Add a time right after the step
+    SIM.t_vec_Relax_Step = [SIM.t_vec_Relax_Step(1:3) , SIM.t_vec_Relax_Step(3)+SIM.Ts/10 , SIM.t_vec_Relax_Step(4:end)];
+    
+
     input_load = ones(size(SIM.t_vec_Relax_Step));
     input_load(1) = 0;
     input_load(2) = 0;
-    
+    input_load(3) = 0;
+
     if FLAG.SOC < 91
         input_load = -1*input_load;
     end
     
     SIM.InputSignal = [SIM.t_vec_Relax_Step' input_load'];
-
+    
+%     plot(SIM.InputSignal(:,1),SIM.InputSignal(:,2))
 
 end
 
