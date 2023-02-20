@@ -142,7 +142,8 @@ for SS = 1:length(SOC_vec)
 %         load([filepath filesep filename])
         %% Load Impulse Data
         % Load Simulation
-        simsys = load([filepath filesep filename],'t_soln','i_user','SIM','N','cell_voltage','del_phi','C_Liion','C_Li','C_Li_surf','i_Far','TemperatureC');
+        simsys = load([filepath filesep filename]);
+%         simsys = load([filepath filesep filename],'t_soln','i_user','SIM','N','cell_voltage','del_phi','C_Liion','C_Li','C_Li_surf','i_Far','TemperatureC');
 
         % Extract g_k
         idx_vec = 1:simsys.SIM.TsMultiple:length(simsys.t_soln);
