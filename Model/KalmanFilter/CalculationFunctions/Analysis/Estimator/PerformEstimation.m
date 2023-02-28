@@ -8,6 +8,7 @@ Plant = load(plant_filename);
 u = Plant.Plant_Data.i_user.i_user_soln;
 z = Plant.Plant_Data.zN.z_soln;
 
+z_init = SIM.y_0_FOM;
 
 %% Get Estimator Model
 %  1) Matlab SS_DT
@@ -53,9 +54,9 @@ z = Plant.Plant_Data.zN.z_soln;
 
 
 %% Do Asymptotic Estimation
-[x_hat_asy]   = AsyEstimator(est_sys,FLAG,SIM,x_hat_0,u,z);
-y_hat_asy     = est_sys.C * x_hat_asy;
-y_hat_asy_ALL = C_des_ROM * x_hat_asy;
+[x_hat_asy]   = AsyEstimator(est_sys,FLAG,SIM,P,x_hat_0,u,z);
+y_hat_asy     = est_sys.C * x_hat_asy + z_init(P.cell_voltage,1);
+y_hat_asy_ALL = C_des_ROM * x_hat_asy + z_init;
 
 RESULTS.EST.ASY.t_soln      = Plant.Plant_Data.i_user.t_soln;
 RESULTS.EST.ASY.x_soln      = x_hat_asy;
@@ -64,9 +65,9 @@ RESULTS.EST.ASY.z_soln_ALL  = y_hat_asy_ALL;
 
 
 %% Do Variable Estimation
-[x_hat_var, ESTIMATOR.K_k, ESTIMATOR.P_k_pre] = VarEstimator(est_sys,FLAG,SIM,x_hat_0,u,z);
-y_hat_var     = est_sys.C * x_hat_var;
-y_hat_var_ALL = C_des_ROM * x_hat_var;
+[x_hat_var, ESTIMATOR.K_k, ESTIMATOR.P_k_pre] = VarEstimator(est_sys,FLAG,SIM,P,x_hat_0,u,z);
+y_hat_var     = est_sys.C * x_hat_var + z_init(P.cell_voltage,1);
+y_hat_var_ALL = C_des_ROM * x_hat_var + z_init;
 
 RESULTS.EST.VAR.t_soln      = Plant.Plant_Data.i_user.t_soln;
 RESULTS.EST.VAR.x_soln      = x_hat_var;
@@ -85,6 +86,7 @@ x_plant_ROM = C_des_cross * Plant.Plant_Data.zNA.z_soln;
 RESULTS.EST.PLANT.t_soln = Plant.Plant_Data.i_user.t_soln;
 RESULTS.EST.PLANT.x_soln = x_plant_ROM;
 RESULTS.EST.PLANT.z_soln = Plant.Plant_Data.zN.z_soln;
+RESULTS.EST.PLANT.z_soln_ALL = Plant.Plant_Data.zNA.z_soln;
 
 
 end

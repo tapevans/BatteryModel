@@ -34,7 +34,7 @@ end
 
 %% Error Calculations
 if FLAG.Analysis.Est_Error_calc
-    if ~exist(ESTIMATOR)
+    if ~exist('ESTIMATOR')
         ESTIMATOR = struct();
     end
     [ERROR_CALC,RESULTS] = getErrorCalculations(SIM,FLAG,N,P,RESULTS,ESTIMATOR);
@@ -55,83 +55,9 @@ end
 
 %% Plot Results
 if FLAG.PLOT.PlotResults
-    Kalman_plotFnc(RESULTS,N)
+    Kalman_plotFnc(RESULTS,N,SIM)
 end
 
 
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%% OOOOOOOOOOOLD %%%%%%%%%%%%%%%%%%%%%%%%%% 
-% %% Check if File Exists
-% if isfile(SIM.save_filename)
-%     if SIM.Analysis.OverwriteData
-%         disp('Simulation already exists, deleting data')
-%         delete(SIM.save_filename)
-%     else
-%         disp('Simulation already exists, loading data')
-%         load(SIM.save_filename)
-%     end
-% end
 
-
-%% Initialization
-% if ~ SIM.AnalysisComplete.Initialization
-%     [SIM,FLAG] = inputs(SIM,FLAG);
-
-% %     save(SIM.save_filename,"FLAG","P","N","SIM")
-%     
-% %     SIM.AnalysisComplete.Initialization = 1;
-% end
-
-%% No Noise Comparison
-%     old_C_mode = FLAG.C_mode;
-%     FLAG.C_mode = 5;
-
-    
-%     FLAG.C_mode = old_C_mode;
-    
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS")
-
-%%
- %&& ~SIM.AnalysisComplete.NoisyPlant
-
-
-%     SIM.AnalysisComplete.NoisyPlant = 1;
-%     
-%     % Save Overall
-%         save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS")
-% 
-    % Save Just Plant Data
-
-%% Estimator
-%&&  ~SIM.AnalysisComplete.Estimator
-
-
-%     SIM.AnalysisComplete.Estimator = 1;
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR")
-
-%% Error Calculations
- %&& ~ SIM.AnalysisComplete.Est_Error_calc
-
-
-    
-%     SIM.AnalysisComplete.Est_Error_calc = 1;
-
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")
-
-%% Generate Comparison Data
-%&& ~SIM.AnalysisComplete.GenComparData
-
-
-%     SIM.AnalysisComplete.GenComparData = 1;
-
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")
-
-
-%% Compare SVD to P_infty
-%&& ~SIM.AnalysisComplete.ComparSVD2Pinf
-
-
-%     
-% %     SIM.AnalysisComplete.ComparSVD2Pinf = 1;
-% 
-%     save(SIM.save_filename,"FLAG","P","N","SIM","RESULTS","ESTIMATOR","ERROR_CALC")

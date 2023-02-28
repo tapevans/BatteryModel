@@ -43,8 +43,8 @@ function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
     N_in = 1; %%% !!! Hardcoded but always true for batteries
     
     [U,S,V] = svd(H);
-    r = rank(S,1e-8);
-%     r = 5;
+    r = rank(S,1.15e-7);
+%     r = 18;
     
     U_colm = U(:,1:r);
     S_colm = S(1:r,1:r);

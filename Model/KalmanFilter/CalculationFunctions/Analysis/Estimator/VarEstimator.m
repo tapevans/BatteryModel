@@ -2,7 +2,7 @@
 %
 %
 %%
-function [x_hat,K_k,P_k_pre] = VarEstimator(sys,FLAG,SIM,x_hat_0,u,z)
+function [x_hat,K_k,P_k_pre] = VarEstimator(sys,FLAG,SIM,P,x_hat_0,u,z)
 %% Perform Pre-Calcs
 [K_infty, P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys);
 
@@ -45,7 +45,7 @@ end
 R = SIM.R_0 * eye(N_measur);
 % SIM.R = (diag(R))';
 
-z_init = SIM.y_0_FOM;
+z_init = SIM.y_0_FOM(P.cell_voltage,1);
 
 %% Run Estimation
 switch FLAG.QMode

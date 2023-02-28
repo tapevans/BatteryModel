@@ -2,7 +2,7 @@
 %
 %
 %%
-function [x_hat] = AsyEstimator(sys,FLAG,SIM,x_hat_0,u,z)
+function [x_hat] = AsyEstimator(sys,FLAG,SIM,P,x_hat_0,u,z)
 %% Perform Pre-Calcs
 [K_infty, ~] = AsymptoticPreCalcs(FLAG,SIM,sys);
 
@@ -24,7 +24,7 @@ C_DT = sys.C;
 
 x_asy(:,1) = x_hat_0;
 
-z_init = SIM.y_0_FOM;
+z_init = SIM.y_0_FOM(P.cell_voltage,1);
 
 
 %% Run Estimation

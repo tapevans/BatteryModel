@@ -178,6 +178,7 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     % Add a time right after the step
     SIM.t_vec_Relax_Step = [SIM.t_vec_Relax_Step(1:3) , SIM.t_vec_Relax_Step(3)+SIM.Ts/10 , SIM.t_vec_Relax_Step(4:end)];
     
+    
 
     input_load = ones(size(SIM.t_vec_Relax_Step));
     input_load(1) = 0;

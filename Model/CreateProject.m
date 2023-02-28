@@ -62,15 +62,21 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'SeminarPres_Nov2022';
 % battery_name = 'SeminarPres_Nov2022';
 
-folder_name  = 'ObservabilityTest';
-battery_name = 'ObservabilityTest';
+% % folder_name  = 'ObservabilityTest';
+% % battery_name = 'ObservabilityTest';
 
 % folder_name  = 'KalmanTest';
 % battery_name = 'KalmanTest_JustPlant';
 
+folder_name  = 'SlinkTol';
+battery_name = 'SlinkTol';
+
+folder_name  = 'DeleteAfter';
+battery_name = 'ObservabilityTest';
+
 % KBSOC_vec = 0:1:90;
-KBSOC_vec = 91:1:100; %Change Step to discharge
-% KBSOC_vec  = 50;
+% KBSOC_vec = 91:1:100; %Change Step to discharge
+KBSOC_vec  = 50;
 for SSS = 1:length(KBSOC_vec)
 
 %% Simulations
@@ -122,7 +128,7 @@ for SSS = 1:length(KBSOC_vec)
 %         KBCPProfileFilename = 'DTImpulseTs0.562341325190349';
 %         KBCPProfileFilename = 'DTImpulseTs0.681292069057961';
 %         KBCPProfileFilename = 'DTImpulseTs0.825404185268018';
-%         KBCPProfileFilename = 'DTImpulseTs1.0';
+        KBCPProfileFilename = 'DTImpulseTs1.0';
 %         KBCPProfileFilename = 'DTImpulseTs1.21152765862859';
 %         KBCPProfileFilename = 'DTImpulseTs1.46779926762207';
 %         KBCPProfileFilename = 'DTImpulseTs1.77827941003892';
@@ -139,7 +145,7 @@ for SSS = 1:length(KBSOC_vec)
 %         KBCPProfileFilename = 'KalmanTestDTImpulseTs1.0';
 %         KBCPProfileFilename = 'KalmanTestStep';
 %         KBCPProfileFilename = 'KalmanTestStep_JustPlant_NoRelax';
-        KBCPProfileFilename = 'Relax_Step';
+%         KBCPProfileFilename = 'Relax_Step';
 
         %         KBCPProfileFilename = 'CCCV_1.5C';
 %         KBCPProfileFilename = 'CCCV_2C';
