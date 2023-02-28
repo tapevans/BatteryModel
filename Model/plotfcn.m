@@ -10,7 +10,7 @@ FLAG.COC       = 0; % Conservation of Charge Check
 
 FLAG.TEMP      = 0; % Cell Temperature Profile %%%%%%%%%%%%%These plots need to be fixed
 
-FLAG.C_Liion   = 0; % Mass/Species (Concentration Normalized): Li_ion
+FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
 FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
 FLAG.X_Li_rad  = 0; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
 FLAG.s_dot     = 0; % Li_ion production rate
@@ -20,9 +20,9 @@ FLAG.phi_el    = 0; % phi_el
 FLAG.del_phi   = 1; % Delta phi (phi_ed - phi_el)
 FLAG.del_phi_v_time   = 1; %@ AN/SEP
 FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
-FLAG.eta       = 0; % eta
+FLAG.eta       = 1; % eta
 FLAG.i_o       = 0; % exchange current density
-FLAG.i_Far     = 0; % charge-transfer current density
+FLAG.i_Far     = 1; % charge-transfer current density
 FLAG.plotV_SEI = 0; % Voltage across the SEI
 
 FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
@@ -86,7 +86,7 @@ end
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- Polarization ----
-if SIM.SimMode == 1
+if SIM.SimMode == 1 || SIM.SimMode == 8
     %% Conservation of Energy Check
     if FLAG.COE
 %     figure

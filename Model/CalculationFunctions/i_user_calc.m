@@ -17,12 +17,14 @@ for j = 1:length(t_in)
         else
             i_user(j) = SIM.i_user_amp*sin(SIM.freq*(t-SIM.initial_offset)); % [A m^-2], 
         end
-    elseif SIM.SimMode == 7
+    elseif SIM.SimMode == 7 % Manual Current Profile
         if isfield(SIM,'profile_time')
             i_user(j) = interp1(SIM.profile_time , SIM.profile_current , t);
         else
             i_user(j) = 0;
         end
+    elseif SIM.SimMode == 8 % PRBS
+        i_user(j) = interp1(SIM.profile_time , SIM.profile_current , t);
     else
         i_user(j) = SIM.Amp;
     end

@@ -28,6 +28,9 @@
             % 'battery_name'_ManCurrProf_ 'MCP.N_regions' steps_ 'MCP.max_iterations' Iter_ 'MCP.tol_Delta_phi' tol 
         % For other
             % 'battery_name'_ManCurrProf_'ManualProfName'
+    
+    % ---- PRBS ----
+        % 'battery_name'_PRBS_Amp'PRBS_Amp'_SOC'PRBS_SOC'_SwitchingTime'PRBS_Tswitch'
             
         
         
@@ -51,7 +54,7 @@ FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
 % if folder_overwrite and folder_add are 0, then a new name should be used
 % for the folder
 
-FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
+FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one is created
 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
@@ -68,16 +71,9 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % folder_name  = 'KalmanTest';
 % battery_name = 'KalmanTest_JustPlant';
 
-folder_name  = 'SlinkTol';
-battery_name = 'SlinkTol';
+folder_name  = 'PRBS_Sims';
+battery_name = 'PRBS_Sims';
 
-folder_name  = 'DeleteAfter';
-battery_name = 'ObservabilityTest';
-
-% KBSOC_vec = 0:1:90;
-% KBSOC_vec = 91:1:100; %Change Step to discharge
-KBSOC_vec  = 50;
-for SSS = 1:length(KBSOC_vec)
 
 %% Simulations
 % ---- Polarization ----
@@ -114,7 +110,7 @@ for SSS = 1:length(KBSOC_vec)
 %         SS_freq = (logspace(-2,6,75) *(2*pi));
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 1;
+    KBCP   = 0;
         KBCPProfileOverwrite = 1;
 %         KBCPProfileFilename = 'DTImpulseTs0.1';
 %         KBCPProfileFilename = 'DTImpulseTs0.121152765862859';
@@ -128,7 +124,7 @@ for SSS = 1:length(KBSOC_vec)
 %         KBCPProfileFilename = 'DTImpulseTs0.562341325190349';
 %         KBCPProfileFilename = 'DTImpulseTs0.681292069057961';
 %         KBCPProfileFilename = 'DTImpulseTs0.825404185268018';
-        KBCPProfileFilename = 'DTImpulseTs1.0';
+%         KBCPProfileFilename = 'DTImpulseTs1.0';
 %         KBCPProfileFilename = 'DTImpulseTs1.21152765862859';
 %         KBCPProfileFilename = 'DTImpulseTs1.46779926762207';
 %         KBCPProfileFilename = 'DTImpulseTs1.77827941003892';
@@ -155,8 +151,7 @@ for SSS = 1:length(KBSOC_vec)
     % Initial SOC
     %         KBSOC = 81.93;
     %         KBSOC = 100; 
-    %         KBSOC = 50; 
-            KBSOC = KBSOC_vec(SSS); 
+            KBSOC = 50;
 
 
 % ---- MOO Controller ----
@@ -175,7 +170,13 @@ for SSS = 1:length(KBSOC_vec)
             MCP.Existing_Profile_filepath = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_ManCurrProf_100steps_1000Iter_0.03tol_CurrentProfile_Output.mat';
         MCP.ManProfileName = ''; % Use this if MCP.plating_refine = 0;
         
-        
+
+% ---- PRBS ---- 
+    doPRBS = 1;
+        PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
+        PRBS_SOC     = 25; % [%],     State of Charge
+        PRBS_Tswitch = .1;  % [s],     Switching Time
+
         
 %% Create Folder    
 % Make Folder Path
@@ -448,4 +449,49 @@ if ManCurrProfile
     end
 end
 
+
+%% ---- PRBS ----
+if doPRBS
+    filename = [ battery_name , '_PRBS' , '_Amp' , num2str(PRBS_Amp) , '_SOC' , num2str(PRBS_SOC) , '_SwitchingTime' , num2str(PRBS_Tswitch) , '.mat'];
+    
+    % Check if sim already exist
+    if isfile([save_file_path filesep filename])
+        if FLAG_local.sim_overwrite
+            disp('Deleting previous sim')% delete old file
+            delete([save_file_path filesep filename])
+        else
+            disp('Simulation already exists')
+        end        
+    end
+    
+    % Create sim if it doesn't exist
+    if ~isfile([save_file_path filesep filename])
+        disp('Making sim')
+        SIM.results_filename = filename;
+        SIM.SimMode   = 8;
+        SIM.SOC_start = PRBS_SOC;
+        SIM.Tswitch   = PRBS_Tswitch;
+        SIM.PRBSAmp   = PRBS_Amp;
+        
+        % Call Inputs
+        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+        
+        % Call Init
+        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+        
+        % Save Simulation File
+        postProcessComplete = 0;
+        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+        
+        % Clear Variables
+        clear AN CA SEP EL SIM CONS P N FLAG PROPS
+    end
+
 end
+
+% KBSOC_vec = 0:1:90;
+% KBSOC_vec = 91:1:100; %Change Step to discharge
+% KBSOC_vec  = 50;
+% for SSS = 1:length(KBSOC_vec)
+
+% end

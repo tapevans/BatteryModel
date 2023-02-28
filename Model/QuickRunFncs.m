@@ -24,6 +24,9 @@ clc
 
 %%% Mode 7 ---- Manual Profile ----
 
+%%% Mode 8 ---- PRBS ----
+
+
 
 %%%
 [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
@@ -61,24 +64,8 @@ clc;
 clear all;
 close all;
 
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelaxSOC50.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_Profile_CC_Test_3Step_wRelax_LowCrateSOC50.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepChargeSOC50.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepCharge_ext5SOC25.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingForTyrone\TestingForTyrone_KPCont_FourStep_StepDischarge_ext5SOC25.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingLinearLC\TestingLinearLC_KPCont_SingleStepForLinStepCompSOC0.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestingSimulink\TestingSimulink_SS_EIS_SOC50.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\PRBSTest\PRBSTest_PRBS_Amp1_SOC50_SwitchingTime1.mat';
 
-% Presentation Results
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_Polar_1.00C_C.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_KPCont_CCCV_1.5CSOC10.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_KPCont_CCCV_2CSOC10.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\SeminarPres_Nov2022\SeminarPres_Nov2022_ManCurrProf_100steps_1000Iter_0.01tol.mat';
-
-
-%
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_DTImpulseTs0.1SOC50.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_DTImpulseTs1.0SOC50.mat';
 plotfcn(filename)
 
 %% Load Results

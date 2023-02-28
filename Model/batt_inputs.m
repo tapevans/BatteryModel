@@ -27,6 +27,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
 % 5) MOO Controller (MOO: Multi-Objective Optimization)
 % 6) Simulink
 % 7) Manual Current Profile
+% 8) PRBS
 
 % 0) Files that are used strictly for data and not to run a simulation
 
@@ -90,7 +91,7 @@ if ( FLAG.CONSTANT_PROPS_FROM_HANDLES && FLAG.VARIABLE_PROPS_FROM_HANDLES)
     warning('Both FLAG.CONSTANT_PROPS_FROM_HANDLES and FLAG.VARIABLE_PROPS_FROM_HANDLES are 1.')
 end
 
-FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
+FLAG.SaveSolnDiscreteTime = 0; % 1 if evaluate the ode soln at a given sampling rate
     SIM.Ts           = 1.0;                    % [s], Sampling rate of the DT system
 	SIM.TsMultiple   = 5;                     % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
     SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple;   % [s], Sampling rate of the ode output
@@ -100,8 +101,6 @@ FLAG.SaveSystemForEst = 0; % 1, if save the system to be used in the estimator O
 FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
     FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
 FLAG.Plot             = 0;   % 1 if the results plot immediately
-
-FLAG.PRBS_predefinded = 0; % 1 if using a PRBS current that is predefined
 
 
 %% Numerical Parameters
@@ -211,6 +210,18 @@ if SIM.SimMode == 7
 % SIM.max_iterations
 % SIM.N_regions
 
+end
+
+
+%% ---- PRBS ----
+if SIM.SimMode == 8
+    SIM.PRBSLength     = 100;
+    SIM.t_ramp_ratio   = 1/20;        % Fraction of the switching time that is used as ramp interpolation
+    SIM.initial_offset = SIM.Tswitch; % Initial zero offset
+%%%% Input from batch mode 
+%     SIM.SOC_start = 50;   % [%], Initial state of charge 
+%     SIM.PRBSAmp
+%     SIM.Tswitch
 end
 
 
@@ -399,7 +410,9 @@ if FLAG.T_BC_CA == 2 % Known heat flux
 end
 
 % Simulation run time
-SIM.initial_offset = 0;          % [s], How long there is an initial zero current
+if SIM.SimMode ~= 8
+    SIM.initial_offset = 0;          % [s], How long there is an initial zero current
+end
 
 % Properties for SOC calcualtion
 %%% Wiley

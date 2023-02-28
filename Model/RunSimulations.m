@@ -7,8 +7,7 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
-% Project_Folder{i} = 'SlinkTol';   i = i+1;
-Project_Folder{i} = 'DeleteAfter';   i = i+1;
+Project_Folder{i} = 'PRBS_Sims';   i = i+1;
 % Project_Folder{i} = 'KalmanTest';   i = i+1;
 % Project_Folder{i} = 'ObservabilityTest';   i = i+1;
 % Project_Folder{i} = 'SeminarPres_Nov2022';   i = i+1;
@@ -35,6 +34,7 @@ for i = 1:num_Proj
     cd(oldFolder);
 end
 num_sim_files = length(sim_filenames);
+
 
 %% Run all the simulations
 for i = 1:num_sim_files
@@ -100,6 +100,7 @@ for i = 1:num_sim_files
                     SV_soln = [SV_soln; SV_soln_int];
                 end
             end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Harmonic Perturbation ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 2 
             % Simulation Parameters
@@ -307,6 +308,32 @@ for i = 1:num_sim_files
                 end
                 
             end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- PRBS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        elseif SIM.SimMode == 8
+            % Simulation Parameters
+            Tol.Abs = 1E-7;
+            Tol.Rel = 1E-7;
+
+            events = @(t,SV) batt_events(t,SV,SIM,P,N,FLAG);
+
+            options = odeset('RelTol' ,Tol.Rel,      ...
+                             'AbsTol' ,Tol.Abs,      ...
+                             'Mass'   ,SIM.M,        ...
+                             'Events' ,events);%,       ...
+                            %'MaxStep',1e2);
+            
+            i_user = 0;
+            SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
+
+            if FLAG.SaveSolnDiscreteTime
+                new_tfinal = SOLN.x(end);
+                save_time = (0:SIM.SaveTimeStep:new_tfinal)';
+                t_soln = save_time;
+                SV_soln = (deval(SOLN,save_time))';
+            else
+                t_soln  = SOLN.x';
+                SV_soln = SOLN.y';
+            end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Data Files ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 0 
@@ -333,10 +360,16 @@ for i = 1:num_sim_files
                 filename = [num2str(SIM.SOC_start) 'SOC'];
                 save(filename,'sys','OutputAtEquil')
             end
-        elseif SIM.SimMode == 4
+        elseif SIM.SimMode == 4 % ---- Known BC Profile Controller ----
             save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','mode_soln','step_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','SOLN')
-        elseif SIM.SimMode == 5
+        elseif SIM.SimMode == 5 % ---- MOO Controller ----
             save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+        elseif SIM.SimMode == 8 % ---- PRBS ----
+            if SIZE_SV_soln.bytes > 1e9 % 1 GB = 1e9 bytes
+                save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','SOLN','-v7.3')
+            else
+                save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','SOLN')
+            end
         else
             if SIZE_SV_soln.bytes > 1e9 % 1 GB = 1e9 bytes
                 save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','-v7.3')
@@ -346,7 +379,7 @@ for i = 1:num_sim_files
         end
         
         %% Perform post-processing (Also re-saves data)
-        if SIM.SimMode == 0
+        if SIM.SimMode == 0 % ---- Data Files ----
             %Don't do anything to the data file
         else
             if SIM.SimMode ~= 3 % ---- State Space EIS ----

@@ -6,12 +6,14 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 SV = SV1Dto2D(SV , N , P , FLAG);
 SV = addPhiEl2SV(SV,P,N);
 
+
 %% Obtain Property Values
 if FLAG.VARIABLE_PROPS_FROM_HANDLES
     props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
 else
     props = PROPS;
 end
+
 
 %% Calculate i_user
 if SIM.SimMode == 3 % State Space EIS
@@ -24,9 +26,11 @@ else
     i_user = i_user_calc(t,SIM);
 end
 
-if abs(i_user) > 0
-    i_user;
-end
+% if abs(i_user) > 0 % Troubleshooting Breakpoint
+%     i_user;
+% end
+
+
 %% Calculate All Fluxes
 [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , FLAG , i_user , props);
 

@@ -28,14 +28,14 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
 %% Control Volume Modification for Distributed
 % If radial concentration gradients are not considered, then set the number
 % of radial control volumes equal to 1
-if ~FLAG.R_AN
-    N.N_R_AN  = 1;
-end
-if ~FLAG.R_CA
-    N.N_R_CA  = 1;
-end 
-
-N.N_R_max = max(N.N_R_AN,N.N_R_CA);
+    if ~FLAG.R_AN
+        N.N_R_AN  = 1;
+    end
+    if ~FLAG.R_CA
+        N.N_R_CA  = 1;
+    end 
+    
+    N.N_R_max = max(N.N_R_AN,N.N_R_CA);
 
 
 %% Pointers for Tracked Variables
@@ -104,18 +104,17 @@ end
     N.N_prop = P.D_o + N.N_R_max - 1;
 
 % Pointers for Output Matrix
-if SIM.SimMode == 3
     i = 1;
-    P.OM.cell_volt = i; i = i + 1;
-    P.OM.del_phi   = i; i = i + 1;
-    P.OM.temp      = i; i = i + 1;
-    P.OM.C_Liion   = i; i = i + 1;
-    P.OM.X_surf    = i; i = i + 1;
-    P.OM.i_Far     = i; i = i + 1;
-    P.OM.eta       = i; i = i + 1;
+    P.OM.cell_volt  = i; i = i + 1;
+    P.OM.delta_phi  = i; i = i + 1;
+    P.OM.i_Far      = i; i = i + 1;
+    P.OM.eta        = i; i = i + 1;
+    P.OM.C_Liion    = i; i = i + 1;
+    P.OM.C_Li       = i; i = i + 1;
+    P.OM.delta_C_Li = i; i = i + 1;
+    P.OM.T          = i; i = i + 1;
     
     N.N_Out = length(fieldnames(P.OM));
-end
 
 
 %% Region Indexing
@@ -244,6 +243,8 @@ end
         % Apply Brug to PROPS
         PROPS = PROPS .* CONS.BRUG;
     end
+
+
 %% Geometry Calcs
 % Control Volume - Volume
     % A_c  ~ cross-sectional area in the x-direction
@@ -340,6 +341,7 @@ end
         CA.dVol_r(i) = (4*pi/3)*(CA.r_half_vec(i+1)^3 - CA.r_half_vec(i)^3); % dV of each control volume
     end
     
+
 %% Capactiy Calculations 
 % Max Concentration
     if ~FLAG.preDefined_C_max
@@ -364,6 +366,7 @@ end
 
 % Capacity Ratio
     z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
+
 
 %% Mole Fraction Calculation
 %     % x and y are the anode and cathode mole fractions respectively
@@ -475,7 +478,7 @@ end
 %     ylabel('Cathode')
     
     
-%% Load current
+%% User current
 % ---- Polarization ----
 if SIM.SimMode == 1
     SIM.A_c        = min( AN.A_c, CA.A_c );
@@ -511,6 +514,49 @@ elseif SIM.SimMode == 7
     SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap*SIM.ChargeOrDischarge;
     SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
     SIM.i_user_OG  = SIM.i_user_amp;
+elseif SIM.SimMode == 8
+    SIM.A_c        = min( AN.A_c, CA.A_c );
+    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+    N_PRBS  = 255;                      % Length of the input           [-]
+    TYPE    = 'PRBS';                   % Create a PRBS signal          [-]
+    BAND    = [0 1];                    % Freq. band                    [s]
+    LEVELS  = [-1 1];                   % PRBS limits                   [-]
+    PRBS_gen= idinput(N_PRBS,TYPE,BAND,LEVELS);         % PRBS Demand   [A/m^2]
+    t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
+    C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
+    
+    % Append a no-current entry
+    if SIM.initial_offset > 0
+        t_Demand = [0; t_Demand+SIM.initial_offset]; % PRBS & entry [s]
+        C_Demand = [0; C_Demand];                    % PRBS & entry [A/m^2]
+    end
+
+    % Add Ramp Times
+    SIM.profile_time    = t_Demand(1);
+    SIM.profile_current = C_Demand(1);
+
+    for i = 2:length(t_Demand)
+        % @ k
+        SIM.profile_time(end+1,1)    = t_Demand(i);
+        SIM.profile_current(end+1,1) = C_Demand(i-1);
+
+        % After k
+        SIM.profile_time(end+1,1)    = t_Demand(i) + SIM.Tswitch * SIM.t_ramp_ratio;
+        SIM.profile_current(end+1,1) = C_Demand(i);
+    end
+    SIM.profile_time    = SIM.profile_time(1:end-1);
+    SIM.profile_current = SIM.profile_current(1:end-1);
+
+
+%     % Test Plot
+%     i_user = i_user_calc(0:0.1:SIM.profile_time(end),SIM);
+%     figure
+%     hold on
+%     %plot(SIM.profile_time           ,SIM.profile_current,'ro')
+%     plot(0:0.1:SIM.profile_time(end),i_user             ,'ro')
+%     plot(t_Demand                   ,C_Demand           ,'-k')
+
+%     t_vec_Report{i} = 0:t_Report(i):t_Demand{i}(end);
 end
 
 %% Determine Simulation Time Vector
@@ -555,21 +601,27 @@ elseif SIM.SimMode == 5
 elseif SIM.SimMode == 7 % Manual Current Profile
     % Determine inside RunSimulation from MO_List
 
+% ---- PRBS ----
+elseif SIM.SimMode == 8 
+    SIM.tspan = [0, SIM.profile_time(end)];
 end
 
-%% Determine the Output Matrix ( Only Mode 3)
+
+%% Determine the Output Matrix 
 %!!!!!!!!!!!!!! Add isfield to handle logic of turning off pointers
-if SIM.SimMode == 3
+
     N.N_In  = 1;
-        % I_user
+        % i_user
+        
     % Outputs
         % Cell Voltage
         % Delta Phi   @AN/SEP
-        % Temperature @AN/SEP
-        % C_Liion     @AN/SEP
-        % X_surf      @AN/SEP
         % i_Far       @AN/SEP
         % eta         @AN/SEP
+        % C_Liion     @AN/SEP
+        % C_Li        @AN/SEP
+        % Delta C_Li  @AN/SEP
+        % Temperature @AN/SEP
     SIM.OutputMatrix = zeros(N.N_Out , N.N_SV_tot);
         % Cell Voltage
             idx_phi_ed_AN = P.phi_ed;
@@ -583,27 +635,39 @@ if SIM.SimMode == 3
         % @AN/SEP
             i = N.N_CV_AN(end);
             index_offset = (i-1)*N.N_SV_AN;
-        % Delta Phi   @AN/SEP
+
+        % Delta Phi      @AN/SEP
             idx = index_offset + P.del_phi;
-            SIM.OutputMatrix(P.OM.del_phi,idx) =  1;
-        % Temperature @AN/SEP
-            idx = index_offset + P.T;
-            SIM.OutputMatrix(P.OM.temp,idx) = 1;
-        % C_Liion     @AN/SEP
-            idx = index_offset + P.C_Liion;
-            SIM.OutputMatrix(P.OM.C_Liion,idx) = 1;
-        % X_surf      @AN/SEP
-            idx = index_offset + P.C_Li_surf_AN;
-            SIM.OutputMatrix(P.OM.X_surf,idx) = 1/AN.C_Li_max;
-        % i_Far      @AN/SEP
+            SIM.OutputMatrix(P.OM.delta_phi,idx)  =  1;
+
+        % i_Far          @AN/SEP
             idx = index_offset + P.i_PS;
-            SIM.OutputMatrix(P.OM.i_Far,idx) = 1;
-        % Eta      @AN/SEP
+            SIM.OutputMatrix(P.OM.i_Far,idx)      =  1;
+
+        % Eta           @AN/SEP
             idx = index_offset + P.V_2;
-            SIM.OutputMatrix(P.OM.eta,idx) = 1;
+            SIM.OutputMatrix(P.OM.eta,idx)        =  1;
             idx = index_offset + P.V_1;
-            SIM.OutputMatrix(P.OM.eta,idx) = -1;
-end
+            SIM.OutputMatrix(P.OM.eta,idx)        = -1;
+
+        % C_Liion        @AN/SEP
+            idx = index_offset + P.C_Liion;
+            SIM.OutputMatrix(P.OM.C_Liion,idx)    =  1;
+
+        % C_Li (Surface) @AN/SEP
+            idx = index_offset + P.C_Li_surf_AN;
+            SIM.OutputMatrix(P.OM.C_Li,idx)       =  1;%/AN.C_Li_max;
+
+        % Delta C_Li     @AN/SEP (Over entire radius of particle)
+            idx = index_offset + P.C_Li_surf_AN;     % Surface Node
+            SIM.OutputMatrix(P.OM.delta_C_Li,idx) =  1;
+            idx = index_offset + P.C_Li;         % Most Interior Node
+            SIM.OutputMatrix(P.OM.delta_C_Li,idx) = -1;
+
+        % Temperature    @AN/SEP
+            idx = index_offset + P.T;
+            SIM.OutputMatrix(P.OM.T,idx)          =  1;
+
 
 
 %% Determine Initial State Vector
@@ -665,23 +729,23 @@ for i = 1:N.N_CV_CA
     end
 end
 
-%% Save the Equilibrium Values of the Output (Only Mode 3)
-if SIM.SimMode == 3
+
+%% Save the Equilibrium Values of the Output
     SIM.OutputAtEquil = SIM.OutputMatrix*SV_IC;
-    SIM.SV_IC_Static = SV_IC;
-end
+    SIM.SV_IC_Static  = SV_IC;
+
 
 %% Solve for better Initial conditions for phi
-SV = SV1Dto2D(SV_IC , N , P , FLAG);
-if ( FLAG.CONSTANT_PROPS_FROM_HANDLES || FLAG.VARIABLE_PROPS_FROM_HANDLES)
-    props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
-    if FLAG.CONSTANT_PROPS_FROM_HANDLES
-        % Update PROPS to use initial conditions
-        PROPS = props;
+    SV = SV1Dto2D(SV_IC , N , P , FLAG);
+    if ( FLAG.CONSTANT_PROPS_FROM_HANDLES || FLAG.VARIABLE_PROPS_FROM_HANDLES)
+        props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
+        if FLAG.CONSTANT_PROPS_FROM_HANDLES
+            % Update PROPS to use initial conditions
+            PROPS = props;
+        end
+    else
+       props = PROPS; 
     end
-else
-   props = PROPS; 
-end
 
 % Set i_user
     if SIM.SimMode == 3 % SS EIS
@@ -707,10 +771,10 @@ end
     end
 
 % Create phi vector    
-phi_temp = SV(P.del_phi:P.i_PS, :);
-phi_temp(end+1,: ) = zeros(1,N.N_CV_tot ); % Adding a row for the new constraint equation(i_dl)
-phi_temp(end,N.CV_Region_SEP) =   NaN(1,N.N_CV_SEP); % No SV in the SEP region for the new constraint
-phi_temp = reshape(phi_temp, [],1);
+    phi_temp = SV(P.del_phi:P.i_PS, :);
+    phi_temp(end+1,: ) = zeros(1,N.N_CV_tot ); % Adding a row for the new constraint equation(i_dl)
+    phi_temp(end,N.CV_Region_SEP) = NaN(1,N.N_CV_SEP); % No SV in the SEP region for the new constraint
+    phi_temp = reshape(phi_temp, [],1);
 
 % Remove NaN
     phi_guess = zeros((N.N_ES_var)*N.N_CV_AN + N.N_CV_SEP + (N.N_ES_var)*N.N_CV_CA , 1);
@@ -729,9 +793,10 @@ phi_temp = reshape(phi_temp, [],1);
     SIM.phi_guess = phi_guess;
     
 % Solve for better phi values
-phi_soln = fsolve(@(phi) phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props) , phi_guess , SIM.fsolve_options);
-i_user = phi_soln(end);
-phi = phi1Dto2D( phi_soln(1:end-1) , N , P , FLAG);
+    phi_soln = fsolve(@(phi) phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props) , phi_guess , SIM.fsolve_options);
+    i_user = phi_soln(end);
+    phi = phi1Dto2D( phi_soln(1:end-1) , N , P , FLAG);
+
 
 %% Fix phi for Initial State Vector
 % ---- Anode ----
@@ -772,6 +837,7 @@ for i = 1:N.N_CV_CA
 end
 
 SIM.SV_IC = SV_IC;
+
 
 %% Mass Matrix
 M = zeros(N.N_SV_tot,N.N_SV_tot);
@@ -852,22 +918,22 @@ SIM.M = M;
     for i = 1:N.N_CV_AN
         index_offset = (i-1)*N.N_SV_AN;
         % Temp
-        idx_diff(end+1) = index_offset+P.T;
+        idx_diff(end+1) = index_offset + P.T;
         % del_phi
-        idx_diff(end+1) = index_offset+P.del_phi;
+        idx_diff(end+1) = index_offset + P.del_phi;
         % phi_ed
-        idx_algb(end+1) = index_offset+P.phi_ed;
+        idx_algb(end+1) = index_offset + P.phi_ed;
         % V_1
-        idx_algb(end+1) = index_offset+P.V_1;
+        idx_algb(end+1) = index_offset + P.V_1;
         % V_2
-        idx_algb(end+1) = index_offset+P.V_2;
+        idx_algb(end+1) = index_offset + P.V_2;
         % i_PS
-        idx_algb(end+1) = index_offset+P.i_PS;
+        idx_algb(end+1) = index_offset + P.i_PS;
         % C_Li^+
-        idx_diff(end+1) = index_offset+P.C_Liion;
+        idx_diff(end+1) = index_offset + P.C_Liion;
         % C_Li
         for j = 1:N.N_R_AN
-            idx_diff(end+1) = index_offset+P.C_Li+j-1;
+            idx_diff(end+1) = index_offset + P.C_Li + j-1;
         end
     end
 
@@ -875,33 +941,33 @@ SIM.M = M;
     for i = 1:N.N_CV_SEP
         index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
         % Temp
-        idx_diff(end+1) = index_offset+P.SEP.T;
+        idx_diff(end+1) = index_offset + P.SEP.T;
         % phi_el
-        idx_algb(end+1) = index_offset+P.SEP.phi_el;
+        idx_algb(end+1) = index_offset + P.SEP.phi_el;
         % C_Li^+
-        idx_diff(end+1) = index_offset+P.SEP.C_Liion;
+        idx_diff(end+1) = index_offset + P.SEP.C_Liion;
     end
 
     % ---- Cathode ----
     for i = 1:N.N_CV_CA
         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
         % Temp
-        idx_diff(end+1) = index_offset+P.T;
+        idx_diff(end+1) = index_offset + P.T;
         % del_phi
-        idx_diff(end+1) = index_offset+P.del_phi;
+        idx_diff(end+1) = index_offset + P.del_phi;
         % phi_ed
-        idx_algb(end+1) = index_offset+P.phi_ed;
+        idx_algb(end+1) = index_offset + P.phi_ed;
         % V_1
-        idx_algb(end+1) = index_offset+P.V_1;
+        idx_algb(end+1) = index_offset + P.V_1;
         % V_2
-        idx_algb(end+1) = index_offset+P.V_2;
+        idx_algb(end+1) = index_offset + P.V_2;
         % i_PS
-        idx_algb(end+1) = index_offset+P.i_PS;
+        idx_algb(end+1) = index_offset + P.i_PS;
         % C_Li^+
-        idx_diff(end+1) = index_offset+P.C_Liion;
+        idx_diff(end+1) = index_offset + P.C_Liion;
         % C_Li
         for j = 1:N.N_R_CA
-            idx_diff(end+1) = index_offset+P.C_Li+j-1;
+            idx_diff(end+1) = index_offset + P.C_Li + j-1;
         end
     end
 
@@ -913,6 +979,7 @@ SIM.M = M;
     N.N_diff = length(SIM.diff_idx);
     N.N_algb = length(SIM.algb_idx);
 % end
+
 
 %% Set up Jacobian here too (sparse)
 %%%%% Later
