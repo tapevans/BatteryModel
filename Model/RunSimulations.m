@@ -7,8 +7,10 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
+% Project_Folder{i} = 'SlinkTol';   i = i+1;
+Project_Folder{i} = 'DeleteAfter';   i = i+1;
 % Project_Folder{i} = 'KalmanTest';   i = i+1;
-Project_Folder{i} = 'ObservabilityTest';   i = i+1;
+% Project_Folder{i} = 'ObservabilityTest';   i = i+1;
 % Project_Folder{i} = 'SeminarPres_Nov2022';   i = i+1;
 % Project_Folder{i} = 'TestingForTyrone';   i = i+1;
 % Project_Folder{i} = 'Final_Lui_Wiley_Model';   i = i+1;

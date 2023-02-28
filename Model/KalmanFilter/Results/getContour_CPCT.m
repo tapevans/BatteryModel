@@ -3,11 +3,11 @@ clear all; close all; clc;
 
 
 %% Define Noise to compare
-    Q_0 = 1e-6; R_0 = 1e-6; % TL
+%     Q_0 = 1e-6; R_0 = 1e-6; % TL
 %     Q_0 = 1e-6; R_0 = 1e1;  % BL
 %     Q_0 = 1e1;  R_0 = 1e1;  % BR
 %     Q_0 = 1e1;  R_0 = 1e-6; % TR
-%     Q_0 = 1e-3; R_0 = 1e-3; % Middle
+    Q_0 = 1e-3; R_0 = 1e-3; % Middle
 
     FLAG.QMode = 1; % 1) Input Q   2) State Q
 
@@ -18,12 +18,12 @@ clear all; close all; clc;
     localFLAG.Plot.Normalized2MaxCPCT     = 0;
     
     localFLAG.Plot.cell_voltage  = 1; % Terminal Voltage
-    localFLAG.Plot.delta_phi     = 1; % Electrostatic potential difference between active material and electrolyte @AN/SEP interface
+    localFLAG.Plot.delta_phi     = 0; % Electrostatic potential difference between active material and electrolyte @AN/SEP interface
     localFLAG.Plot.i_Far         = 1; % Chemical reaction current density at SEI @AN/SEP interface
     localFLAG.Plot.eta           = 0; % Overpotential at SEI @AN/SEP interface
-    localFLAG.Plot.C_Liion       = 1; % Concentration of Li^+ in the electrolyte @AN/SEP interface
-    localFLAG.Plot.C_Li          = 1; % Concentration of Li at the surface of active material @AN/SEP interface
-    localFLAG.Plot.delta_C_Li    = 1; % Difference of Li concentration between the surface and center of active material particle @AN/SEP interface
+    localFLAG.Plot.C_Liion       = 0; % Concentration of Li^+ in the electrolyte @AN/SEP interface
+    localFLAG.Plot.C_Li          = 0; % Concentration of Li at the surface of active material @AN/SEP interface
+    localFLAG.Plot.delta_C_Li    = 0; % Difference of Li concentration between the surface and center of active material particle @AN/SEP interface
     localFLAG.Plot.T             = 0; % Temperature
     
     localFLAG.Overwrite.MyData   = 0;

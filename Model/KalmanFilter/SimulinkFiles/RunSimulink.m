@@ -5,9 +5,11 @@ function [RESULTS] = RunSimulink(SIM,N,P,FLAG,RESULTS)
     [slink_filename] = getSlinkfilename(FLAG,SIM);
     if isfile(slink_filename)
         if FLAG.OverwriteData.Slink
+            disp('Overwriting Simulink File')
             RUNSIM = true;
             delete(slink_filename)
         else
+            disp('Simulink File Exists')
             Plant = load(slink_filename);
             RESULTS.Slink_plant = Plant.Plant_Data;
         end
@@ -66,7 +68,9 @@ if RUNSIM
 
     x_0_ROM = zeros(length(A_ROM),1);
 
+    Iden = eye(N.states);
 
+    
 %% Get sim Structs
     filename = getImpulseFilename(FLAG);
     simsys = load(filename);
@@ -130,6 +134,7 @@ if RUNSIM
     assignin(mdlWks,'Ts'          ,SIM.Ts)
     assignin(mdlWks,'InputSig_w'  ,InputSig_w)
     assignin(mdlWks,'InputSig_v'  ,InputSig_v)
+    assignin(mdlWks,'Iden'        ,Iden)
 %     assignin(mdlWks,'pow_Qi'      ,pow_Q)
 %     assignin(mdlWks,'pow_R'       ,SIM.pow_R)
 %     assignin(mdlWks,'tc'          ,SIM.tc)
