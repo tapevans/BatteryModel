@@ -12,10 +12,10 @@ function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
     i_user_DT = simsys.i_user(idx_vec);
     pulse_idx = find(i_user_DT ~= 0 );
     
-    z_imp = SIM.OutputMatrix * simsys.SV_soln';
+    z_imp    = SIM.OutputMatrix * simsys.SV_soln';
     g_k_temp = z_imp(:,idx_vec(pulse_idx-1:end));
-    IC  = z_imp(:,1);
-    g_k = g_k_temp - g_k_temp(:,1);
+    IC       = z_imp(:,1);
+    g_k      = g_k_temp - g_k_temp(:,1);
 
     t_imp = simsys.t_soln;
 
@@ -25,56 +25,114 @@ function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
         for i = 1:N.DesOut
         figure
         hold on
-        plot(t_imp           ,z_imp(i,:)               ,'-ok')
-        plot(t_imp(idx_vec,:),g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r')
+        plot(t_imp                            ,z_imp(i,:)      ,'-ok')
+        plot(t_imp(idx_vec(pulse_idx-1:end),:),g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r')
         title(['Data Used in Ho-Kalman Reduction ' RESULTS.Labels.title{i}])
         end
     end
 
 
-%% Get Hankle Matrix
-    H = myHankle(g_k);
+%% Initialize sys
+    if FLAG.EST.SepHK
+        sys = cell(1,N.DesOut-1);
+    else
+        sys = cell(1,1);
+    end
 
 
-%% Convert to SS DT sys
-% SVD of Hankle
-    [Nrows, Ncolms] = size(H);
-    N_outputs = Nrows/Ncolms;
-    N_in = 1; %%% !!! Hardcoded but always true for batteries
+%% Get ROM(s)
+    if FLAG.EST.SepHK % Calculate a ROM for each desired variable
+        for OO = 2:N.DesOut
+            %% Get Hankle Matrix
+            H = myHankle(g_k([1,OO],:));
     
-    [U,S,V] = svd(H);
-    r = rank(S,1.15e-7);
-%     r = 18;
     
-    U_colm = U(:,1:r);
-    S_colm = S(1:r,1:r);
-    V_colm = V(:,1:r);
-
-    % Balanced Reduction
-    S_sqrt = S_colm.^0.5;
-    obsv_r = U_colm*S_sqrt;
-    cont_r = S_sqrt*V_colm';
-
-% C_r
-    C_r = obsv_r(1:N_outputs,:   );
+            %% Convert to SS DT sys
+            % SVD of Hankle
+            [Nrows, Ncolms] = size(H);
+            N_outputs = Nrows/Ncolms;
+            N_in = 1; %%% !!! Hardcoded but always true for batteries
     
-% B_r
-    B_r = cont_r(:        ,N_in);
+            [U,S,V] = svd(H);
+            % r = rank(S);
+            % r = rank(S,1.15e-7);
+            % r = 18;
+            r = 10;
     
-% A_r
-    P   = obsv_r(1:end-N_outputs,:);
-    P_p = obsv_r(N_outputs+1:end,:);
-    threshold = 1e-7;
-    P_inv = pinv(P,threshold);
-    A_r = P_inv*P_p;
+            U_colm = U(:,1:r);
+            S_colm = S(1:r,1:r);
+            V_colm = V(:,1:r);
+    
+            % Balanced Reduction
+            S_sqrt = S_colm.^0.5;
+            obsv_r = U_colm*S_sqrt;
+            cont_r = S_sqrt*V_colm';
+    
+            % C_r
+            C_r = obsv_r(1:N_outputs,:   );
+    
+            % B_r
+            B_r = cont_r(:        ,N_in);
+    
+            % A_r
+            P   = obsv_r(1:end-N_outputs,:);
+            P_p = obsv_r(N_outputs+1:end,:);
+            threshold = 1e-7;
+            P_inv = pinv(P,threshold);
+            A_r = P_inv*P_p;
+    
+            % D_r ~ !!!!! I'm assuming this is correct
+            D_r = zeros(N_outputs,N_in);
+    
+    
+            %% Return the system
+            sys{OO-1} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
+        end
+    else
+        %% Get Hankle Matrix
+        H = myHankle(g_k);
 
-% D_r ~ !!!!! I'm assuming this is correct
-    D_r = zeros(N_outputs,N_in);
+
+        %% Convert to SS DT sys
+        % SVD of Hankle
+        [Nrows, Ncolms] = size(H);
+        N_outputs = Nrows/Ncolms;
+        N_in = 1; %%% !!! Hardcoded but always true for batteries
+
+        [U,S,V] = svd(H);
+        r = rank(S);
+        %     r = rank(S,1.15e-7);
+        %     r = 18;
+
+        U_colm = U(:,1:r);
+        S_colm = S(1:r,1:r);
+        V_colm = V(:,1:r);
+
+        % Balanced Reduction
+        S_sqrt = S_colm.^0.5;
+        obsv_r = U_colm*S_sqrt;
+        cont_r = S_sqrt*V_colm';
+
+        % C_r
+        C_r = obsv_r(1:N_outputs,:   );
+
+        % B_r
+        B_r = cont_r(:        ,N_in);
+
+        % A_r
+        P   = obsv_r(1:end-N_outputs,:);
+        P_p = obsv_r(N_outputs+1:end,:);
+        threshold = 1e-7;
+        P_inv = pinv(P,threshold);
+        A_r = P_inv*P_p;
+
+        % D_r ~ !!!!! I'm assuming this is correct
+        D_r = zeros(N_outputs,N_in);
 
 
-%% Return the system
-sys = ss(A_r, B_r, C_r, D_r, SIM.Ts);
-
+        %% Return the system
+        sys{1} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
+    end
 end
 
 

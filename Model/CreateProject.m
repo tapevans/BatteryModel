@@ -174,8 +174,8 @@ battery_name = 'PRBS_Sims';
 % ---- PRBS ---- 
     doPRBS = 1;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
-        PRBS_SOC     = 25; % [%],     State of Charge
-        PRBS_Tswitch = .1;  % [s],     Switching Time
+        PRBS_SOC     = 75; % [%],     State of Charge
+        PRBS_Tswitch = 100;  % [s],     Switching Time
 
         
 %% Create Folder    

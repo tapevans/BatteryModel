@@ -7,6 +7,17 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     SIM.tc  = FLAG.Ts;
     SIM.SOC = FLAG.SOC;
 
+    if FLAG.InputMode == 5
+        SIM.Tswitch = FLAG.Tswitch;
+        SIM.SamplesPerSwitch = FLAG.SamplesPerSwitch;
+        SIM.Ts = SIM.Tswitch / SIM.SamplesPerSwitch;
+        FLAG.Ts = SIM.Ts;
+        SIM.tc = SIM.Ts;
+    end
+
+    SIM.offsetROM_IC_Rel = FLAG.offsetROM_IC_Rel;
+    SIM.offsetROM_IC_Abs = FLAG.offsetROM_IC_Abs;
+
 
 %% Set pointers for variables
     i = 1;
@@ -14,48 +25,56 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
         P.cell_voltage = i; 
         RESULTS.Labels.title{i} = 'Cell Voltage';
         RESULTS.Labels.unit{i}  = 'Voltage [V]';
+        RESULTS.foldername{i}   = 'CellVoltage';
         i = i + 1;       
     end
     if FLAG.DesOut.delta_phi      % Delta Phi
         P.delta_phi = i; 
         RESULTS.Labels.title{i} = '\Delta \phi';
         RESULTS.Labels.unit{i}  = 'Voltage [V]';
+        RESULTS.foldername{i}   = 'DeltaPhi';
         i = i + 1;    
     end
     if FLAG.DesOut.i_Far          % i_Far
         P.i_Far = i;
         RESULTS.Labels.title{i} = 'i_{Far}';
         RESULTS.Labels.unit{i}  = 'Current [A/m^2]';
+        RESULTS.foldername{i}   = 'iFar';
         i = i + 1;
     end
     if FLAG.DesOut.eta          % eta
         P.eta = i;
         RESULTS.Labels.title{i} = '\eta';
         RESULTS.Labels.unit{i}  = 'Voltage [V]';
+        RESULTS.foldername{i}   = 'eta';
         i = i + 1;
     end
     if FLAG.DesOut.C_Liion        % C_Li+
         P.C_Liion = i; 
         RESULTS.Labels.title{i} = 'C_{Li^+}';
         RESULTS.Labels.unit{i}  = 'Concentration [kmol/m^3]';
+        RESULTS.foldername{i}   = 'C_Liion';
         i = i + 1;
     end
     if FLAG.DesOut.C_Li           % C_Li
         P.C_Li = i;
         RESULTS.Labels.title{i} = 'C_{Li,surf}';
         RESULTS.Labels.unit{i}  = 'Concentration [kmol/m^3]';
+        RESULTS.foldername{i}   = 'C_Li_surf';
         i = i + 1;
     end
     if FLAG.DesOut.delta_C_Li     % Delta C_Li
         P.delta_C_Li = i;
         RESULTS.Labels.title{i} = '\Delta C_{Li}';
         RESULTS.Labels.unit{i}  = 'Concentration [kmol/m^3]';
+        RESULTS.foldername{i}   = 'DeltaC_Li';
         i = i + 1;
     end
     if FLAG.DesOut.T              % Temperature
         P.T = i;
         RESULTS.Labels.title{i} = 'Temperature';
         RESULTS.Labels.unit{i}  = 'Temperature [K]';
+        RESULTS.foldername{i}   = 'Temperature';
         i = i + 1;
     end
     
@@ -68,15 +87,17 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     sys = load(filename);
 
     N.N_In  = sys.N.N_In;
-        % I_user
+        % i_user
+
     % Outputs
         % Cell Voltage
         % Delta Phi   @AN/SEP
-        % Temperature @AN/SEP
-        % C_Liion     @AN/SEP
-        % X_surf      @AN/SEP
         % i_Far       @AN/SEP
         % eta         @AN/SEP
+        % C_Liion     @AN/SEP
+        % C_Li        @AN/SEP
+        % Delta C_Li  @AN/SEP
+        % Temperature @AN/SEP
     SIM.OutputMatrix = zeros(N.DesOut , sys.N.N_SV_tot);
         if FLAG.DesOut.cell_voltage
         % Cell Voltage
@@ -171,6 +192,16 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
 % t_final_sim: Overall time for the simulation to fun for. It includes t_final and rest and ramp times
 % t_vec: The discretized time vector to return the solution
 
+if FLAG.InputMode == 5
+    filename = getPRBSFilename(FLAG);
+    sysSIM   = load(filename,'SIM');
+
+    t_vec  = (0:SIM.Ts:sysSIM.SIM.profile_time(end))';
+    i_user = interp1(sysSIM.SIM.profile_time , sysSIM.SIM.profile_current , t_vec);
+
+    SIM.InputSignal = [t_vec , i_user];
+else
+
     SIM.t_final_Relax_Step = (FLAG.N_samples+2)*SIM.Ts;
     SIM.t_vec_Relax_Step = 0:SIM.Ts:SIM.t_final_Relax_Step;
     
@@ -190,8 +221,8 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     end
     
     SIM.InputSignal = [SIM.t_vec_Relax_Step' input_load'];
-    
-%     plot(SIM.InputSignal(:,1),SIM.InputSignal(:,2))
+end
+     %plot(SIM.InputSignal(:,1),SIM.InputSignal(:,2))
 
 end
 

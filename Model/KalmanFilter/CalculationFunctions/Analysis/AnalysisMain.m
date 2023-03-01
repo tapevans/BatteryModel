@@ -9,7 +9,6 @@ function AnalysisMain(FLAG)
 %% Perform Analysis
 %% No Noise Comparison
 if FLAG.Analysis.NoNoiseCompare
-
     [SIM,FLAG,N,P,RESULTS] = NoNoiseComparisonMain(SIM,FLAG,N,P,RESULTS);
 end
 

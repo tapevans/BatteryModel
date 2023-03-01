@@ -1,7 +1,7 @@
 %% 
 function Kalman_plotFnc(RESULTS,N,SIM)
 %%
-FLAG.PLOT.NoNoiseCompare            = 0;    
+FLAG.PLOT.NoNoiseCompare            = 1;    
     FLAG.PLOT.ode        = 1;
     FLAG.PLOT.SS_CT      = 0;
     FLAG.PLOT.SS_DT      = 0;
@@ -29,16 +29,16 @@ if FLAG.PLOT.NoNoiseCompare
             figure
             hold on
             if FLAG.PLOT.ROM_HoKal && isfield(RESULTS,'ROM_HoKal')
-                plot(RESULTS.ROM_HoKal.t_soln,RESULTS.ROM_HoKal.z_soln(:,i),'or','LineWidth',2,'DisplayName','ROM Ho-Kal')
+                plot(RESULTS.ROM_HoKal.t_soln , RESULTS.ROM_HoKal.z_soln(:,i),'ro'     ,'LineWidth',2,'DisplayName','ROM Ho-Kal')
             end
             if FLAG.PLOT.SS_DT    && isfield(RESULTS,'SS_DT')
-                plot(RESULTS.SS_DT.t_soln,RESULTS.SS_DT.z_soln(:,i),'^','LineWidth',2,'DisplayName','SS DT')
+                plot(RESULTS.SS_DT.t_soln     , RESULTS.SS_DT.z_soln(:,i)    ,'b^'     ,'LineWidth',2,'DisplayName','SS DT')
             end
             if FLAG.PLOT.SS_CT    && isfield(RESULTS,'SS_CT')
-                plot(RESULTS.SS_CT.t_soln,RESULTS.SS_CT.z_soln(:,i),'square','LineWidth',2,'DisplayName','SS CT')
+                plot(RESULTS.SS_CT.t_soln     , RESULTS.SS_CT.z_soln(:,i)    ,'gsquare','LineWidth',2,'DisplayName','SS CT')
             end
             if FLAG.PLOT.ode      &&  isfield(RESULTS,'ode')
-                plot(RESULTS.ode.t_soln,RESULTS.ode.z_soln(i,:),'k','LineWidth',2,'DisplayName','ODE')
+                plot(RESULTS.ode.t_soln       , RESULTS.ode.z_soln(i,:)      ,'k'      ,'LineWidth',2,'DisplayName','ODE')
             end
             lgn = legend;
             lgn.Location = 'best';
