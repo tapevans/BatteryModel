@@ -50,9 +50,9 @@ if FLAG.Analysis.OptimalHK
     oldFLAGUseInput_r = FLAG.UseInput_r;
     FLAG.UseInput_r = 1;
 
-    tic
+    %tic
     HK_ErrorCalc(SIM,N,P,FLAG,RESULTS);
-    toc
+    %toc
 
     FLAG.UseInput_r = oldFLAGUseInput_r;
 end

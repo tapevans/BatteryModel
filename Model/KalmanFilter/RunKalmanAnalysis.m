@@ -16,9 +16,9 @@ clear all; close all; clc
 
 %% Analysis to Perform
     FLAG.Analysis.NoNoiseCompare        = 1;
-        FLAG.Analysis.ode           = 1;
-        FLAG.Analysis.SS_CT         = 1;
-        FLAG.Analysis.SS_DT         = 1;
+        FLAG.Analysis.ode           = 0;
+        FLAG.Analysis.SS_CT         = 0;
+        FLAG.Analysis.SS_DT         = 0;
         FLAG.Analysis.OptimalHK     = 1;
             FLAG.r_max = 50;
             FLAG.UseInput_r = 1;
@@ -91,11 +91,11 @@ clear all; close all; clc
         N_t_s   = 25;   % **Keep this fix for now
         T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
         T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
-%         Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-        Ts_vec  = [1];
+        Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
+%         Ts_vec  = [10];
 
-%     SOC_vec = 0:1:100;    
-    SOC_vec = [50];
+    SOC_vec = 0:1:100;    
+%     SOC_vec = [50];
 
     FLAG.N_samples = 600;
 

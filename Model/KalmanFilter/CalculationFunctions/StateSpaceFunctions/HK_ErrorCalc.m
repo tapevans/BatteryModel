@@ -258,16 +258,64 @@ function HK_ErrorCalc(SIM,N,P,FLAG,RESULTS)
             %% Calculate Relative Error at each time step
             % Step Individual
                 step.individualOutputs.RelError       = step.individualOutputs.Error       ./ step.z_interpODE(:,1:end-2);
+                idx = find(isnan(step.individualOutputs.RelError));
+                for j = idx
+                    step.individualOutputs.RelError(j) = 0;
+                end
+                idx = find(isinf(step.individualOutputs.RelError));
+                for j = idx
+                    step.individualOutputs.RelError(j) = 1e2;
+                end
             % Step Combined
                 step.combinedOutputs.RelError         = step.combinedOutputs.Error         ./ step.z_interpODE(:,1:end-2);
+                idx = find(isnan(step.combinedOutputs.RelError));
+                for j = idx
+                    step.combinedOutputs.RelError(j) = 0;
+                end
+                idx = find(isinf(step.combinedOutputs.RelError));
+                for j = idx
+                    step.combinedOutputs.RelError(j) = 1e2;
+                end
             % Tswitch10 Individual
                 Tswitch10.individualOutputs.RelError  = Tswitch10.individualOutputs.Error  ./ Tswitch10.z_interpODE(:,1:end-2);
+                idx = find(isnan(Tswitch10.individualOutputs.RelError));
+                for j = idx
+                    Tswitch10.individualOutputs.RelError(j) = 0;
+                end
+                idx = find(isinf(Tswitch10.individualOutputs.RelError));
+                for j = idx
+                    Tswitch10.individualOutputs.RelError(j) = 1e2;
+                end
             % Tswitch10 Combined
                 Tswitch10.combinedOutputs.RelError    = Tswitch10.combinedOutputs.Error    ./ Tswitch10.z_interpODE(:,1:end-2);
+                idx = find(isnan(Tswitch10.combinedOutputs.RelError));
+                for j = idx
+                    Tswitch10.combinedOutputs.RelError(j) = 0;
+                end
+                idx = find(isinf(Tswitch10.combinedOutputs.RelError));
+                for j = idx
+                    Tswitch10.combinedOutputs.RelError(j) = 1e2;
+                end
             % Tswitch100 Individual
                 Tswitch100.individualOutputs.RelError = Tswitch100.individualOutputs.Error ./ Tswitch100.z_interpODE(:,1:end-2);
+                idx = find(isnan(Tswitch100.individualOutputs.RelError));
+                for j = idx
+                    Tswitch100.individualOutputs.RelError(j) = 0;
+                end
+                idx = find(isinf(Tswitch100.individualOutputs.RelError));
+                for j = idx
+                    Tswitch100.individualOutputs.RelError(j) = 1e2;
+                end
             % Tswitch100 Combined
                 Tswitch100.combinedOutputs.RelError   = Tswitch100.combinedOutputs.Error   ./ Tswitch100.z_interpODE(:,1:end-2);
+                idx = find(isnan(Tswitch100.combinedOutputs.RelError));
+                for j = idx
+                    Tswitch100.combinedOutputs.RelError(j) = 0;
+                end
+                idx = find(isinf(Tswitch100.combinedOutputs.RelError));
+                for j = idx
+                    Tswitch100.combinedOutputs.RelError(j) = 1e2;
+                end
 
 
             %% Calculate Average Relative Error for each desired output
