@@ -1,5 +1,5 @@
 %% Get Ho-Kalman ROM
-function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
+function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
 %% Load Impulse Data
     filename = getImpulseFilename(FLAG);
     simsys = load(filename);
@@ -32,17 +32,14 @@ function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
     end
 
 
-%% Initialize sys
-    if FLAG.EST.SepHK
-        sys = cell(1,N.DesOut-1);
-    else
-        sys = cell(1,1);
-    end
+%% Initialize Function Outputs
+    sys      = cell(1,N.DesOut+1);
+    singVals = nan(1, N.DesOut+1);
 
-
-%% Get ROM(s)
-    if FLAG.EST.SepHK % Calculate a ROM for each desired variable
-        for OO = 2:N.DesOut
+    
+%% Get ROM for each desired outputs separately (Combined with Voltage)
+%     if FLAG.EST.SepHK % Calculate a ROM for each desired variable
+        for OO = 1:N.DesOut
             %% Get Hankle Matrix
             H = myHankle(g_k([1,OO],:));
     
@@ -57,7 +54,12 @@ function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
             % r = rank(S);
             % r = rank(S,1.15e-7);
             % r = 18;
-            r = 10;
+            if FLAG.UseInput_r
+                r = SIM.Input_r;
+            else
+                r = 10;
+            end
+            singVals(OO) = S(r,r);
     
             U_colm = U(:,1:r);
             S_colm = S(1:r,1:r);
@@ -86,9 +88,10 @@ function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
     
     
             %% Return the system
-            sys{OO-1} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
+            sys{OO} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
         end
-    else
+%     else
+%% Get ROM for all desired outputs combined
         %% Get Hankle Matrix
         H = myHankle(g_k);
 
@@ -100,9 +103,15 @@ function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
         N_in = 1; %%% !!! Hardcoded but always true for batteries
 
         [U,S,V] = svd(H);
-        r = rank(S);
+        %r = rank(S);
         %     r = rank(S,1.15e-7);
         %     r = 18;
+        if FLAG.UseInput_r
+            r = SIM.Input_r;
+        else
+            r = 10;
+        end
+        singVals(end) = S(r,r);
 
         U_colm = U(:,1:r);
         S_colm = S(1:r,1:r);
@@ -131,12 +140,18 @@ function [sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
 
 
         %% Return the system
-        sys{1} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
-    end
+        sys{1,N.DesOut+1} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
+%     end
 end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% OOOOOOOOOOOLD %%%%%%%%%%%%%%%%%%%%%%%%%% 
+%     if FLAG.EST.SepHK
+%         sys = cell(1,N.DesOut-1);
+%     else
+%         sys = cell(1,1);
+%     end
+
 %% Get Impulse Response
 %     FLAG.InputMode = 4;
 %     

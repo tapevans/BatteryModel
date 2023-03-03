@@ -1,18 +1,15 @@
 %% Initialization File
 function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
 %% Convert Some FLAG to SIM
-    SIM.Q_0 = FLAG.Q_0;
-    SIM.R_0 = FLAG.R_0;
-    SIM.Ts  = FLAG.Ts;
-    SIM.tc  = FLAG.Ts;
-    SIM.SOC = FLAG.SOC;
+    SIM.Q_0   = FLAG.Q_0;
+    SIM.R_0   = FLAG.R_0;
+    SIM.Ts    = FLAG.Ts;
+    SIM.tc    = FLAG.Ts;
+    SIM.SOC   = FLAG.SOC;
+    SIM.r_max = FLAG.r_max;
 
     if FLAG.InputMode == 5
         SIM.Tswitch = FLAG.Tswitch;
-        SIM.SamplesPerSwitch = FLAG.SamplesPerSwitch;
-        SIM.Ts = SIM.Tswitch / SIM.SamplesPerSwitch;
-        FLAG.Ts = SIM.Ts;
-        SIM.tc = SIM.Ts;
     end
 
     SIM.offsetROM_IC_Rel = FLAG.offsetROM_IC_Rel;
@@ -228,6 +225,13 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% OOOOOOOOOOOLD %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+        %SIM.SamplesPerSwitch = SIM.Tswitch/SIM.Ts;
+        %SIM.Ts = SIM.Tswitch / SIM.SamplesPerSwitch;
+        %FLAG.Ts = SIM.Ts;
+        %SIM.tc = SIM.Ts;
+
+        
 %% Set All Functions to Incomplete
 %     SIM.AnalysisComplete.Initialization             = 0;
 %     SIM.AnalysisComplete.NoNoiseCompare.ode         = 0;

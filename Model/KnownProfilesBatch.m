@@ -16,5 +16,6 @@ SOC_vec = linspace(SOC_min,SOC_max,N_SOC);
 for i = 1:length(SOC_vec)
 %     i
     KBSOC = SOC_vec(i);
+    PRBS_SOC = SOC_vec(i);
     CreateProject
 end

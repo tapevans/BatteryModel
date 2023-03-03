@@ -1,11 +1,14 @@
-function [t_soln, x_soln, z_soln] = getNoNoiseODE(SIM,FLAG,N,P)
+function [t_soln, x_soln, z_soln, i_user_time, i_user_value] = getNoNoiseODE(SIM,FLAG,N,P)
     if FLAG.InputMode == 5 % PRBS
         filename = getPRBSFilename(FLAG);
-        SOLN = load(filename,'SOLN');
+        SOLN = load(filename,'SOLN','t_soln','i_user');
         
         t_soln = SOLN.SOLN.x;
         x_soln = SOLN.SOLN.y;
         z_soln = SIM.OutputMatrix * x_soln;
+
+        i_user_time  = SOLN.t_soln;
+        i_user_value = SOLN.i_user;
     else
         % Get Filename
             filename = getODEStepFilename(FLAG);
@@ -33,5 +36,8 @@ function [t_soln, x_soln, z_soln] = getNoNoiseODE(SIM,FLAG,N,P)
             t_soln = t_sim_vec;
             x_soln = x;
             z_soln = z;
+        
+            i_user_time  = data.t_soln;
+            i_user_value = data.i_user;
     end
 end

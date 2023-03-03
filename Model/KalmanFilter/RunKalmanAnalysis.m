@@ -19,8 +19,12 @@ clear all; close all; clc
         FLAG.Analysis.ode           = 1;
         FLAG.Analysis.SS_CT         = 1;
         FLAG.Analysis.SS_DT         = 1;
-        FLAG.Analysis.ROM_HoKal     = 1;
+        FLAG.Analysis.OptimalHK     = 1;
+            FLAG.r_max = 50;
+            FLAG.UseInput_r = 1;
+        FLAG.Analysis.ROM_HoKal     = 0;
             FLAG.Analysis.PlotImp = 0;
+            FLAG.EST.SepHK        = 0; % 1 if calculate a ROM for each desired variable
     FLAG.Analysis.NoisyPlant            = 0;
     FLAG.Analysis.Estimator             = 0;
     FLAG.Analysis.Est_Error_calc        = 0;
@@ -34,14 +38,15 @@ clear all; close all; clc
         FLAG.READ_IN_DATA = 1;
 
     
-    FLAG.OverwriteData.All     = 0; %% If you try to run the same sim with different Analysis, it loads old flags and won't do new analysis
-    FLAG.OverwriteData.Slink   = 0; %% If changing t_final, need to rerun Slink
-    FLAG.OverwriteData.GenData = 0;
-    FLAG.OverwriteData.ROM     = 1;
+    FLAG.OverwriteData.All      = 0; %% If you try to run the same sim with different Analysis, it loads old flags and won't do new analysis
+    FLAG.OverwriteData.Slink    = 0; %% If changing t_final, need to rerun Slink
+    FLAG.OverwriteData.GenData  = 0;
+    FLAG.OverwriteData.ROMError = 1;
+    FLAG.OverwriteData.ROM      = 0; % Don't think I have used this yet
     
-    FLAG.PLOT.PlotResults = 1;
+    FLAG.PLOT.PlotResults = 0; 
     
-    FLAG.TestCase = 1; % Filename just becomes 'TestCase.mat'. Will still overwrite filenames for Slink and data generation
+    FLAG.TestCase = 1; % Don't think I have used this yet % Filename just becomes 'TestCase.mat'. Will still overwrite filenames for Slink and data generation
 
 %     FLAG.AnalysisComplete.Initialization = 0;
 
@@ -58,8 +63,9 @@ clear all; close all; clc
 
 
 %% Filepath to get simulation results
-    FLAG.folderpath = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest';
-
+    FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest';
+    FLAG.folderpathROMError = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanFilter\Results\ROMErrorData';
+    FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\PRBS_Sims';
 
 %% Noise
     % Q Modes
@@ -73,12 +79,12 @@ clear all; close all; clc
     %  1) Matlab SS_DT
     %  2) Ho-Kalman
     FLAG.EstimatorModel = 2;
-        FLAG.EST.SepHK = 1; % 1 if calculate a ROM for each desired variable
+        
     
 
 %% Conditions to Run
-    Q_0_vec = [1e1];
-    R_0_vec = [1e1];
+    Q_0_vec = [1e-3];
+    R_0_vec = [1e-3];
 %     R_0_vec = [1e1];
 
     % Desired Sampling Times
@@ -101,7 +107,7 @@ clear all; close all; clc
     %  3) Ramp ~ subset of step ##### Not implemented since I get step data from my P2D results
     %  4) Impulse ~ Not to be used as a simulation ## Not implemented 
     %  5) PRBS
-    FLAG.InputMode = 5;
+    FLAG.InputMode = 1;
 
 %%%%%%%%%%%%% 
 % What's available:
@@ -113,9 +119,8 @@ clear all; close all; clc
 %!!!(Can fix these issues if I implement a DT Impulse simulation instead of calling existing simulations)
 if FLAG.InputMode == 5
     FLAG.PRBSAmp = 1; 
-    FLAG.Tswitch = 10; 
-    FLAG.SamplesPerSwitch = 10;
-    FLAG.folderpathPRBS = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\PRBS_Sims';
+    FLAG.Tswitch = 100; 
+    %FLAG.SamplesPerSwitch = 10;
     %FLAG.N_samples
 end
 
