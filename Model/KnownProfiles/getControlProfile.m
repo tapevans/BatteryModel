@@ -238,6 +238,45 @@ j = 0;
 
 
 %% Impulse Simulation
+% initial_relax_samples = 2;
+% Ts = 1.0;   % [s], discrete time sampling rate
+% N_meas = 300-1-initial_relax_samples; % Number of discrete values to measure
+% N_meas = 100;
+% 
+% % Relaxation
+% j = j + 1;
+% MO_File(j).MO         = 3;
+% MO_File(j).CorD       = 'D';
+% MO_File(j).C_rate     = 0;
+% MO_File(j).Volt_ref   = []; % [V]
+% MO_File(j).Volt_lim   = 4.4;  % [V]
+% MO_File(j).Time_lim   = initial_relax_samples*Ts; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+% 
+% % Constant Current Charge C/20
+% j = j + 1;
+% MO_File(j).MO        = 1;
+% MO_File(j).CorD      = 'D';
+% MO_File(j).C_rate    = 0.040843474405010; % Results in i = 1 A/m^2
+% MO_File(j).Volt_ref  = [];
+% MO_File(j).Volt_lim  = 4.2;
+% MO_File(j).Time_lim  = Ts;
+% MO_File(j).delta_tol = [];
+% 
+% % Relaxation
+% j = j + 1;
+% MO_File(j).MO         = 3;
+% MO_File(j).CorD       = 'D';
+% MO_File(j).C_rate     = 0;
+% MO_File(j).Volt_ref   = []; % [V]
+% MO_File(j).Volt_lim   = 4.4;  % [V]
+% MO_File(j).Time_lim   = N_meas*Ts; % [s]
+% MO_File(j).delta_tol  = 1e-10;
+% MO_File(j).C_rate_sat = 2;
+
+
+%% Impulse Simulation (steps at t^-) Didn't change anything
 initial_relax_samples = 2;
 Ts = 1.0;   % [s], discrete time sampling rate
 N_meas = 300-1-initial_relax_samples; % Number of discrete values to measure
@@ -254,7 +293,7 @@ MO_File(j).Time_lim   = initial_relax_samples*Ts; % [s]
 MO_File(j).delta_tol  = 1e-10;
 MO_File(j).C_rate_sat = 2;
 
-% Constant Current Charge C/20
+% Constant Current 
 j = j + 1;
 MO_File(j).MO        = 1;
 MO_File(j).CorD      = 'D';

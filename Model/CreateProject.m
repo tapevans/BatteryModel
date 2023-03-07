@@ -71,8 +71,12 @@ FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one 
 % folder_name  = 'KalmanTest';
 % battery_name = 'KalmanTest_JustPlant';
 
-folder_name  = 'PRBS_Sims';
-battery_name = 'PRBS_Sims';
+% folder_name  = 'PRBS_Sims';
+% battery_name = 'PRBS_Sims';
+
+folder_name  = 'TestTimeMinus';
+battery_name = 'ObservabilityTest';
+% battery_name = 'PRBS_Sims';
 
 
 %% Simulations
@@ -98,11 +102,11 @@ battery_name = 'PRBS_Sims';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    SS_SOC = [];
+%     SS_SOC = [];
 %     SS_SOC = 0:1:100;
 %     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
 %     SS_SOC = [80.46];
-%     SS_SOC = [25];
+    SS_SOC = [50];
     
     % Desired frequency for impedance results
 %         SS_freq = [];
@@ -124,7 +128,7 @@ battery_name = 'PRBS_Sims';
 %         KBCPProfileFilename = 'DTImpulseTs0.562341325190349';
 %         KBCPProfileFilename = 'DTImpulseTs0.681292069057961';
 %         KBCPProfileFilename = 'DTImpulseTs0.825404185268018';
-%         KBCPProfileFilename = 'DTImpulseTs1.0';
+        KBCPProfileFilename = 'DTImpulseTs1.0';
 %         KBCPProfileFilename = 'DTImpulseTs1.21152765862859';
 %         KBCPProfileFilename = 'DTImpulseTs1.46779926762207';
 %         KBCPProfileFilename = 'DTImpulseTs1.77827941003892';
@@ -172,9 +176,9 @@ battery_name = 'PRBS_Sims';
         
 
 % ---- PRBS ---- 
-    doPRBS = 1;
+    doPRBS = 0;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
-        %PRBS_SOC     = 75; % [%],     State of Charge
+        % PRBS_SOC     = 50; % [%],     State of Charge
         PRBS_Tswitch = 10;  % [s],     Switching Time
 
         

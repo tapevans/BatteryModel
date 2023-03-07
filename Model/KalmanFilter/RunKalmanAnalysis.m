@@ -15,20 +15,23 @@ clear all; close all; clc
 
 
 %% Analysis to Perform
-    FLAG.Analysis.NoNoiseCompare        = 1;
-        FLAG.Analysis.ode           = 0;
+    FLAG.Analysis.NoNoiseCompare        = 0;
+        FLAG.Analysis.ode           = 1;
         FLAG.Analysis.SS_CT         = 0;
         FLAG.Analysis.SS_DT         = 0;
-        FLAG.Analysis.OptimalHK     = 1;
+        FLAG.Analysis.OptimalHK     = 0;
             FLAG.r_max = 50;
-            FLAG.UseInput_r = 1;
-        FLAG.Analysis.ROM_HoKal     = 0;
+            FLAG.UseInput_r = 0;
+        FLAG.Analysis.ROM_HoKal     = 1;
             FLAG.Analysis.PlotImp = 0;
-            FLAG.EST.SepHK        = 0; % 1 if calculate a ROM for each desired variable
+            FLAG.EST.SepHK        = 1; % 1 if calculate a ROM for each desired variable
+            FLAG.UseOptimal       = 0;
     FLAG.Analysis.NoisyPlant            = 0;
-    FLAG.Analysis.Estimator             = 0;
-    FLAG.Analysis.Est_Error_calc        = 0;
-        FLAG.Analysis.dispResults = 1;
+    FLAG.Analysis.Estimator             = 1;
+        FLAG.UseROMAsPlant          = 1;
+        FLAG.UseWrongIC             = 1;
+    FLAG.Analysis.Est_Error_calc        = 1;
+        FLAG.Analysis.dispResults   = 1;
     FLAG.Analysis.GenComparData         = 0;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
         % FLAG.CompareQMode
@@ -41,10 +44,10 @@ clear all; close all; clc
     FLAG.OverwriteData.All      = 0; %% If you try to run the same sim with different Analysis, it loads old flags and won't do new analysis
     FLAG.OverwriteData.Slink    = 0; %% If changing t_final, need to rerun Slink
     FLAG.OverwriteData.GenData  = 0;
-    FLAG.OverwriteData.ROMError = 1;
+    FLAG.OverwriteData.ROMError = 0;
     FLAG.OverwriteData.ROM      = 0; % Don't think I have used this yet
     
-    FLAG.PLOT.PlotResults = 0; 
+    FLAG.PLOT.PlotResults = 1; 
     
     FLAG.TestCase = 1; % Don't think I have used this yet % Filename just becomes 'TestCase.mat'. Will still overwrite filenames for Slink and data generation
 
@@ -67,6 +70,11 @@ clear all; close all; clc
     FLAG.folderpathROMError = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanFilter\Results\ROMErrorData';
     FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\PRBS_Sims';
 
+    % t^-
+    %FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestTimeMinus';
+    %FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestTimeMinus';
+
+
 %% Noise
     % Q Modes
     %  1) Input Q
@@ -79,23 +87,23 @@ clear all; close all; clc
     %  1) Matlab SS_DT
     %  2) Ho-Kalman
     FLAG.EstimatorModel = 2;
-        
+        FLAG.LargeQMultiply = 1;
+        FLAG.ResetStep = 100000;
     
-
 %% Conditions to Run
-    Q_0_vec = [1e-3];
-    R_0_vec = [1e-3];
+    Q_0_vec = [1e-6];
+    R_0_vec = [1e-6];
 %     R_0_vec = [1e1];
 
     % Desired Sampling Times
         N_t_s   = 25;   % **Keep this fix for now
         T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
         T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
-        Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-%         Ts_vec  = [10];
+%         Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
+        Ts_vec  = [1];
 
-    SOC_vec = 0:1:100;    
-%     SOC_vec = [50];
+%     SOC_vec = 0:1:100;    
+    SOC_vec = [50];
 
     FLAG.N_samples = 600;
 
@@ -107,7 +115,7 @@ clear all; close all; clc
     %  3) Ramp ~ subset of step ##### Not implemented since I get step data from my P2D results
     %  4) Impulse ~ Not to be used as a simulation ## Not implemented 
     %  5) PRBS
-    FLAG.InputMode = 1;
+    FLAG.InputMode = 5;
 
 %%%%%%%%%%%%% 
 % What's available:
@@ -119,15 +127,22 @@ clear all; close all; clc
 %!!!(Can fix these issues if I implement a DT Impulse simulation instead of calling existing simulations)
 if FLAG.InputMode == 5
     FLAG.PRBSAmp = 1; 
-    FLAG.Tswitch = 100; 
+    FLAG.Tswitch = 10; 
     %FLAG.SamplesPerSwitch = 10;
     %FLAG.N_samples
 end
 
 
 %% Offset IC for ROM
-    FLAG.offsetROM_IC_Rel = 1e-1; % [%], Relative offset for the initial conditions for ROM Estimator
-    FLAG.offsetROM_IC_Abs = 1e-6; % [%], Relative offset for the initial conditions for ROM Estimator
+    FLAG.offsetROM_IC_Rel  = 1e-3; % [%], Relative offset for the initial conditions for ROM Estimator
+    FLAG.offsetROM_IC_Abs  = 1e-6; % [%], Relative offset for the initial conditions for ROM Estimator
+    FLAG.offsetROM_IC_Zero = 1e-4; % [%], Relative offset for the initial conditions for ROM Estimator
+    if FLAG.EstimatorModel == 1
+        FLAG.offsetROM = 1e1;
+    else
+        FLAG.offsetROM = 1e-2;
+    end
+
 
 %% Call Analysis Main
     for QQ = Q_0_vec
@@ -183,13 +198,13 @@ end
 %     FLAG.Analysis.NoisyPlant            = 1;
 %     FLAG.Analysis.GenComparData         = 0;
 %     
-%     Q_vec = [1e1  1e1 1e1];
-%     R_vec = [1e1 1e-3 1e-6];
+%     Q_vec = [ 1e-6 1e1  1e1]; % 1e-6 1e-3
+%     R_vec = [ 1e1  1e-6 1e1]; % 1e-6 1e-3
 %     Noise_Vec = [Q_vec;R_vec];
 %     [r,c] = size(Noise_Vec);
 %     Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-%     Ts_vec = Ts_vec([25]); % [1,7,13, 20,25]
-%     SOC_vec = [25]; 
+%     Ts_vec = Ts_vec([1 13 25]); % [1,7,13, 20,25]
+%     SOC_vec = [ 50 75]; 
 % 
 %     for i = 1:c
 %         for TT = Ts_vec

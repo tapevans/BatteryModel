@@ -12,7 +12,7 @@ function [InputSig_w , InputSig_v] = getSlinkNoise(SIM,N,P,FLAG)
     mdl = 'getNoise';
     load_system(mdl)
     in = Simulink.SimulationInput(mdl);
-    in = in.setModelParameter('StartTime','0','StopTime',num2str(SIM.t_final_Relax_Step));
+    in = in.setModelParameter('StartTime','0','StopTime',num2str( SIM.InputSignal(end,1) ) );
     
     % Assign variable values by modifying the workspace
     mdlWks = get_param(in,'ModelWorkspace');   

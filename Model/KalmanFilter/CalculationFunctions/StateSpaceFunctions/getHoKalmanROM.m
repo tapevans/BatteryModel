@@ -14,6 +14,7 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
     
     z_imp    = SIM.OutputMatrix * simsys.SV_soln';
     g_k_temp = z_imp(:,idx_vec(pulse_idx-1:end));
+    %g_k_temp = z_imp(:,idx_vec(pulse_idx:end));    % t^-
     IC       = z_imp(:,1);
     g_k      = g_k_temp - g_k_temp(:,1);
 
@@ -27,6 +28,7 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
         hold on
         plot(t_imp                            ,z_imp(i,:)      ,'-ok')
         plot(t_imp(idx_vec(pulse_idx-1:end),:),g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r')
+        %plot(t_imp(idx_vec(pulse_idx:end),:)  ,g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r') % t^-
         title(['Data Used in Ho-Kalman Reduction ' RESULTS.Labels.title{i}])
         end
     end
@@ -36,9 +38,18 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
     sys      = cell(1,N.DesOut+1);
     singVals = nan(1, N.DesOut+1);
 
-    
+%% Optimal
+if FLAG.UseOptimal
+    [ROMError_filename] = getROMErrorFilename(FLAG);
+    if isfile(ROMError_filename)
+        optimal_r_obj = load(ROMError_filename,'optimal_r');
+    else
+        optimal_r_obj = 0;
+    end
+end
+   
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Get ROM for each desired outputs separately (Combined with Voltage)
-%     if FLAG.EST.SepHK % Calculate a ROM for each desired variable
         for OO = 1:N.DesOut
             %% Get Hankle Matrix
             H = myHankle(g_k([1,OO],:));
@@ -51,14 +62,39 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
             N_in = 1; %%% !!! Hardcoded but always true for batteries
     
             [U,S,V] = svd(H);
-            % r = rank(S);
-            % r = rank(S,1.15e-7);
-            % r = 18;
+            %r = rank(S);
+            %r = rank(S,1.15e-7);
             if FLAG.UseInput_r
                 r = SIM.Input_r;
             else
-                r = 10;
+                if FLAG.UseOptimal
+                    r = optimal_r_obj.optimal_r.ind.T100(OO);
+                else
+                    %r = 38;
+                    r = 18;
+                end
             end
+            if OO == P.delta_C_Li
+                r = 18;
+            end
+            % Delete Later!!!!!!!!!!!!!!!!!!!!
+            switch OO
+                case 1
+                    r = 23;
+                case 2
+                    r = 18;
+                case 3
+                    r = 29;
+                case 4
+                    r = 14;
+                case 5
+                    r = 49;
+                case 6
+                    r = 25;
+            end
+
+
+
             singVals(OO) = S(r,r);
     
             U_colm = U(:,1:r);
@@ -77,11 +113,11 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
             B_r = cont_r(:        ,N_in);
     
             % A_r
-            P   = obsv_r(1:end-N_outputs,:);
-            P_p = obsv_r(N_outputs+1:end,:);
+            PP   = obsv_r(1:end-N_outputs,:);
+            PP_p = obsv_r(N_outputs+1:end,:);
             threshold = 1e-7;
-            P_inv = pinv(P,threshold);
-            A_r = P_inv*P_p;
+            PP_inv = pinv(PP,threshold);
+            A_r = PP_inv*PP_p;
     
             % D_r ~ !!!!! I'm assuming this is correct
             D_r = zeros(N_outputs,N_in);
@@ -90,7 +126,8 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
             %% Return the system
             sys{OO} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
         end
-%     else
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Get ROM for all desired outputs combined
         %% Get Hankle Matrix
         H = myHankle(g_k);
@@ -104,13 +141,19 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
 
         [U,S,V] = svd(H);
         %r = rank(S);
-        %     r = rank(S,1.15e-7);
-        %     r = 18;
+        %r = rank(S,1.15e-7);
         if FLAG.UseInput_r
             r = SIM.Input_r;
         else
-            r = 10;
+            if FLAG.UseOptimal
+                r = optimal_r_obj.optimal_r.ind.AllSims(end);
+            else
+                %r = 38;
+                %r = 18;
+                r = 9;
+            end
         end
+        
         singVals(end) = S(r,r);
 
         U_colm = U(:,1:r);
@@ -129,104 +172,18 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
         B_r = cont_r(:        ,N_in);
 
         % A_r
-        P   = obsv_r(1:end-N_outputs,:);
-        P_p = obsv_r(N_outputs+1:end,:);
+        PP   = obsv_r(1:end-N_outputs,:);
+        PP_p = obsv_r(N_outputs+1:end,:);
         threshold = 1e-7;
-        P_inv = pinv(P,threshold);
-        A_r = P_inv*P_p;
+        PP_inv = pinv(PP,threshold);
+        A_r = PP_inv*PP_p;
 
         % D_r ~ !!!!! I'm assuming this is correct
         D_r = zeros(N_outputs,N_in);
 
 
         %% Return the system
-        sys{1,N.DesOut+1} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
-%     end
+        sys{1 , N.DesOut+1} = ss(A_r, B_r, C_r, D_r, SIM.Ts);
+
 end
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%% OOOOOOOOOOOLD %%%%%%%%%%%%%%%%%%%%%%%%%% 
-%     if FLAG.EST.SepHK
-%         sys = cell(1,N.DesOut-1);
-%     else
-%         sys = cell(1,1);
-%     end
-
-%% Get Impulse Response
-%     FLAG.InputMode = 4;
-%     
-%     N_samples = 50;
-%     SIM.time_rest = SIM.Ts;
-%     SIM.time_ramp = SIM.Ts/10;
-%     SIM.t_final   = (N_samples + 1)*SIM.Ts;
-%     SIM.t_vec_imp = 0:SIM.Ts/10:SIM.t_final;
-%     SIM.t_vec = SIM.t_vec_imp;
-% 
-%     SIM.F_init = 0;
-%     SIM.F_imp = 1;
-% %     SIM.F_init = SIM.F_init;    
-% %     SIM.F_imp = SIM.F_step_height;
-%     
-%     %SIM.F_imp = 1/SIM.Ts;
-% 
-%     [InputSignal] = getInputSignal(SIM,N,P,FLAG);
-% 
-%     if FLAG.Analysis.PlotImp
-%         figure
-%         plot(InputSignal(:,1),InputSignal(:,2),'-o')
-%         title('Impulse Signal')
-%     end
-
-    %% Run Impulse Response
-%     SIM.x_0 = [0 ,0 ,0 ,0 ]';
-%     
-%     [t_imp, x_imp, z_imp] = runODE(SIM,N,P,FLAG);
-% 
-%     if FLAG.Analysis.PlotImp
-%         figure
-%         hold on
-%         plot(t_imp,x_imp(:,P.x1),'-ok','DisplayName','x_1')
-%         plot(t_imp,x_imp(:,P.v1),'-ob','DisplayName','v_1')
-%         plot(t_imp,x_imp(:,P.x2),'-og','DisplayName','x_2')
-%         plot(t_imp,x_imp(:,P.v2),'-oc','DisplayName','v_2')
-%         title('ODE impulse Response')
-%         lgn = legend;
-%         lgn.Location = 'northeast';
-%     end
-
-% %     plot(t_imp(idx_vec,:),g_k(P.x1,:)+g_k_temp(P.x1,1),'or','MarkerFaceColor','r')
-% %     plot(t_imp(idx_vec,:),g_k(P.v1,:)+g_k_temp(P.v1,1),'or','MarkerFaceColor','r')
-% %     plot(t_imp(idx_vec,:),g_k(P.x2,:)+g_k_temp(P.x2,1),'or','MarkerFaceColor','r')
-% %     plot(t_imp(idx_vec,:),g_k(P.v2,:)+g_k_temp(P.v2,1),'or','MarkerFaceColor','r')
-
-%%
-%         figure
-%         hold on
-%         plot(t_imp,x_imp(:,P.v1),'-ob')
-%         plot(t_imp(idx_vec,:),g_k(P.v1,:)+SIM.x_0(P.v1,1),'or','MarkerFaceColor','r')
-%         title('Data Used in Ho-Kalman Reduction v_1')
-%     
-%         figure
-%         hold on
-%         plot(t_imp,x_imp(:,P.x2),'-og')
-%         plot(t_imp(idx_vec,:),g_k(P.x2,:)+SIM.x_0(P.x2,1),'or','MarkerFaceColor','r')
-%         title('Data Used in Ho-Kalman Reduction x_2')
-%     
-%         figure
-%         hold on
-%         plot(t_imp,x_imp(:,P.v2),'-oc')
-%         plot(t_imp(idx_vec,:),g_k(P.v2,:)+SIM.x_0(P.v2,1),'or','MarkerFaceColor','r')
-%         title('Data Used in Ho-Kalman Reduction v_2')
-
-
-%%
-%     g_k = zeros(numP , length(idx_vec)-(pulse_idx-2)); %%%%%%%%% -2 is hardcoded
-
-
-
-%     idx_vec = 11:10:length(SIM.t_vec);
-% 
-%     g_k = nan(P.v2,N_samples+1);
-% 
-%     g_k_temp = z_imp(idx_vec,:)';
-%     g_k = g_k_temp - g_k_temp(:,1);

@@ -7,6 +7,8 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     SIM.tc    = FLAG.Ts;
     SIM.SOC   = FLAG.SOC;
     SIM.r_max = FLAG.r_max;
+    SIM.LargeQMultiply = FLAG.LargeQMultiply;
+    SIM.ResetStep      = FLAG.ResetStep;
 
     if FLAG.InputMode == 5
         SIM.Tswitch = FLAG.Tswitch;
@@ -181,6 +183,14 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     SIM.y_0_FOM = SIM.OutputMatrix * sys.SIM.SV_IC;
     SIM.x_0_FOM = sys.SIM.SV_IC;
     
+    % Wrong IC
+    y_0_FOM_Offset = (SIM.y_0_FOM * FLAG.offsetROM_IC_Rel) + FLAG.offsetROM_IC_Abs + SIM.y_0_FOM;
+    idx = find(y_0_FOM_Offset == FLAG.offsetROM_IC_Abs);
+    for j = idx
+        y_0_FOM_Offset(j) = FLAG.offsetROM_IC_Zero;
+    end
+    SIM.y_0_FOM_Offset = y_0_FOM_Offset;
+
 
 %% Input Signal Parameters
 % time_rest: The time before any type of input occurs, where the system holds its initial conditions
@@ -231,7 +241,7 @@ end
         %FLAG.Ts = SIM.Ts;
         %SIM.tc = SIM.Ts;
 
-        
+
 %% Set All Functions to Incomplete
 %     SIM.AnalysisComplete.Initialization             = 0;
 %     SIM.AnalysisComplete.NoNoiseCompare.ode         = 0;

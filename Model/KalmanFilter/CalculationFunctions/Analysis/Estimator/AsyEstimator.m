@@ -23,9 +23,15 @@ B_DT = sys.B;
 C_DT = sys.C;
 
 x_asy(:,1) = x_hat_0;
+    
+% if FLAG.UseWrongIC
+%     z_init = SIM.y_0_FOM_Offset(P.cell_voltage,1);
+% else
+    z_init = SIM.y_0_FOM(P.cell_voltage,1);
+% end
 
-z_init = SIM.y_0_FOM(P.cell_voltage,1);
-
+%z_init = SIM.y_0_FOM(P.cell_voltage,1);
+initial_z = C_DT * x_hat_0 + z_init;
 
 %% Run Estimation
 for i = 2:N_steps

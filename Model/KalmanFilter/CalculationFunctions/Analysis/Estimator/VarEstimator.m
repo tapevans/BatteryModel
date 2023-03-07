@@ -22,19 +22,19 @@ K_k       = zeros(N_states,N_measur,N_steps); % Kalman Gains
 P_k       = zeros(N_states,N_states,N_steps); % Error Covariance
 P_k_pre   = zeros(N_states,N_states,N_steps); % Error Covariance predict phase
 
-% confidence = 0.5; % Range from [0,1]
-% P_k_pre(:,:,1) = confidence*eye(N_states);
-% P_k(:,:,1) = confidence*eye(N_states);
-P_k(:,:,1)     = P_infty;
-P_k_pre(:,:,1) = P_infty;
+confidence = 0.5; % Range from [0,1]
+P_k_pre(:,:,1) = confidence*eye(N_states);
+P_k(:,:,1) = confidence*eye(N_states);
+% P_k(:,:,1)     = P_infty;
+% P_k_pre(:,:,1) = P_infty;
 
 K_k(:,:,1) = K_infty;
-
-x_var(:,1) = x_hat_0;
 
 A_DT = sys.A;
 B_DT = sys.B;
 C_DT = sys.C;
+
+x_var(:,1) = x_hat_0;
 
 switch FLAG.QMode
     case 1 % Input Q
@@ -45,7 +45,17 @@ end
 R = SIM.R_0 * eye(N_measur);
 % SIM.R = (diag(R))';
 
-z_init = SIM.y_0_FOM(P.cell_voltage,1);
+% if FLAG.UseWrongIC
+%     z_init = SIM.y_0_FOM_Offset(P.cell_voltage,1);
+% else
+    z_init = SIM.y_0_FOM(P.cell_voltage,1);
+% end
+
+% z_init = SIM.y_0_FOM(P.cell_voltage,1);
+
+
+reset_steps = SIM.ResetStep; % Reset P back to the original P
+
 
 %% Run Estimation
 switch FLAG.QMode
@@ -54,6 +64,13 @@ switch FLAG.QMode
         % Predict Phase
             x_var_pre(:,i) = A_DT * x_var(:,i-1)  +  B_DT * u_k(:,i-1);
             P_k_pre(:,:,i) = A_DT * P_k(:,:,i-1) * A_DT'  +  B_DT*Q*B_DT';
+            %i
+            %mod(i,100)
+            if mod(i,reset_steps) == 0
+                P_k_pre(:,:,i) = P_k_pre(:,:,1);
+                P_k(:,:,i)     = P_k(:,:,1);
+                K_k(:,:,i)     = K_k(:,:,1);
+            end
         
     %     % Actuate System
     %         x_EST_sys(:,i) = A_DT * x_EST_sys(:,i-1)  +  B_DT * u_k(i-1)  +  w_k(:,i-1);
@@ -87,4 +104,46 @@ end
 
 x_hat = x_var;
 
+% %%%% Converging Test
+% error_P_k_pre = P_k_pre - P_infty;
+% for i = 1:N_steps
+%     norm_error_P_k_pre(:,i) = norm(error_P_k_pre(:,:,i));
+% end
+% 
+% error_P_k = P_k - P_infty;
+% for i = 1:N_steps
+%     norm_error_P_k(:,i) = norm(error_P_k(:,:,i));
+% end
+% 
+% error_K_k = K_k - K_infty;
+% for i = 1:N_steps
+%     norm_error_K_k(:,i) = norm(error_K_k(:,:,i));
+% end
+% 
+% figure
+% title('Convergence to Asymptotic Pre')
+% yyaxis left
+% plot(1:1:N_steps,norm_error_P_k_pre,'Linewidth',2)
+% ylabel('|Error P_k|')
+% 
+% yyaxis right
+% plot(1:1:N_steps,norm_error_K_k,'Linewidth',2)
+% ylabel('|Error K_k|')
+% 
+% xlabel('Number of Discrete Steps')
+% % xlim([1,NS])
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% figure
+% title('Convergence to Asymptotic')
+% yyaxis left
+% plot(1:1:N_steps,norm_error_P_k,'Linewidth',2)
+% ylabel('|Error P_k|')
+% 
+% yyaxis right
+% plot(1:1:N_steps,norm_error_K_k,'Linewidth',2)
+% ylabel('|Error K_k|')
+% 
+% xlabel('Number of Discrete Steps')
+% % xlim([1,NS])
 end

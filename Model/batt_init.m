@@ -535,6 +535,7 @@ elseif SIM.SimMode == 8
     SIM.profile_time    = t_Demand(1);
     SIM.profile_current = C_Demand(1);
 
+    % Step at t^+
     for i = 2:length(t_Demand)
         % @ k
         SIM.profile_time(end+1,1)    = t_Demand(i);
@@ -546,6 +547,19 @@ elseif SIM.SimMode == 8
     end
     SIM.profile_time    = SIM.profile_time(1:end-1);
     SIM.profile_current = SIM.profile_current(1:end-1);
+
+%     % Step at t^-
+%     for i = 2:length(t_Demand)
+%         % Before k
+%         SIM.profile_time(end+1,1)    = t_Demand(i) - SIM.Tswitch * SIM.t_ramp_ratio;
+%         SIM.profile_current(end+1,1) = C_Demand(i-1);
+% 
+%         % @ k
+%         SIM.profile_time(end+1,1)    = t_Demand(i);
+%         SIM.profile_current(end+1,1) = C_Demand(i);
+%     end
+%     SIM.profile_time    = SIM.profile_time(1:end-1);
+%     SIM.profile_current = SIM.profile_current(1:end-1);
 
 
 %     % Test Plot
@@ -612,7 +626,7 @@ end
 
     N.N_In  = 1;
         % i_user
-        
+
     % Outputs
         % Cell Voltage
         % Delta Phi   @AN/SEP

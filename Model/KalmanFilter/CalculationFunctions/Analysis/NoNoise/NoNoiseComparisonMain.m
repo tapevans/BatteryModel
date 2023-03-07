@@ -51,7 +51,8 @@ if FLAG.Analysis.OptimalHK
     FLAG.UseInput_r = 1;
 
     %tic
-    HK_ErrorCalc(SIM,N,P,FLAG,RESULTS);
+    %HK_OptiStates(SIM,N,P,FLAG,RESULTS);
+    HK_OptiStatesTest(SIM,N,P,FLAG,RESULTS);
     %toc
 
     FLAG.UseInput_r = oldFLAGUseInput_r;
@@ -84,7 +85,7 @@ if FLAG.Analysis.ROM_HoKal
         x_red = zeros(length(sys_HK{end}.A),1);
 
         % Run Simulation
-        [RESULTS.ROM_HoKal.z_soln,RESULTS.ROM_HoKal.t_soln,RESULTS.ROM_HoKal.x_soln] = lsim(sys_HK{end},NewInputSignal(:,2),NewInputSignal(:,1),x_red);
+        [RESULTS.ROM_HoKal.z_soln , RESULTS.ROM_HoKal.t_soln , RESULTS.ROM_HoKal.x_soln] = lsim(sys_HK{end},NewInputSignal(:,2),NewInputSignal(:,1),x_red);
 
     end
     % Add Initial Offset back to SS

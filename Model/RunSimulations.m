@@ -7,7 +7,8 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
-Project_Folder{i} = 'PRBS_Sims';   i = i+1;
+% Project_Folder{i} = 'PRBS_Sims';   i = i+1;
+Project_Folder{i} = 'TestTimeMinus';   i = i+1;
 % Project_Folder{i} = 'KalmanTest';   i = i+1;
 % Project_Folder{i} = 'ObservabilityTest';   i = i+1;
 % Project_Folder{i} = 'SeminarPres_Nov2022';   i = i+1;
@@ -240,14 +241,24 @@ for i = 1:num_sim_files
                     if k == 1
                         idx = 1;
                     else
-                        idx = 2;
+                        idx = 2; % t^+ simulations
+                        %idx = 1; % t^- simulations
+                        %disp(idx)
                     end
-
+                    
+                    % t^+ simulations
                     t_soln      = [t_soln      ; t_soln_int(idx:end)     ];
                     SV_soln     = [SV_soln     ; SV_soln_int(idx:end,:)  ];
                     i_user_soln = [i_user_soln ; i_user_soln_int(idx:end)];
                     mode_soln   = [mode_soln   ; mode_soln_int(idx:end)  ];
                     step_soln   = [step_soln   ; step_soln_int(idx:end)  ];
+                    
+%                     % t^- simulations
+%                     t_soln      = [t_soln(1:end-1,:)      ; t_soln_int(idx:end)     ];
+%                     SV_soln     = [SV_soln(1:end-1,:)     ; SV_soln_int(idx:end,:)  ];
+%                     i_user_soln = [i_user_soln(1:end-1,:) ; i_user_soln_int(idx:end)];
+%                     mode_soln   = [mode_soln(1:end-1,:)   ; mode_soln_int(idx:end)  ];
+%                     step_soln   = [step_soln(1:end-1,:)   ; step_soln_int(idx:end)  ];
             end
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- MOO Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

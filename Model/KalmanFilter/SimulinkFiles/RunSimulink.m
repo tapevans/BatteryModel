@@ -30,8 +30,6 @@ if RUNSIM
     % This is mostly so the cache files don't save to the main workspace
 
 
-
-
 %% Calculate LC parameters
     [LC_param] = getLCParam(SIM,N,P,FLAG);
     M_cross = LC_param.M_cross;
@@ -58,6 +56,7 @@ if RUNSIM
             est_sys = sys_DT;
         case 2
             [est_sys] = getHoKalmanROM(SIM,N,P,FLAG);
+            est_sys = est_sys{end}; %%%%%% Don't know if I like this
     end
     A_ROM = est_sys.A;
     B_ROM = est_sys.B;
@@ -104,7 +103,7 @@ if RUNSIM
 %% Run Simulink
     load_system(mdl)
     in = Simulink.SimulationInput(mdl);
-    in = in.setModelParameter('StartTime','0','StopTime',num2str(SIM.t_final_Relax_Step));
+    in = in.setModelParameter('StartTime','0','StopTime',num2str( SIM.InputSignal(end,1) ));
     
     % Assign variable values by modifying the workspace
     mdlWks = get_param(in,'ModelWorkspace');
@@ -148,41 +147,48 @@ if RUNSIM
     
 %% Save Simulink Variables
     %%%%%%%%%%%% States of Ideal Plant %%%%%%%%%%%% 
-    if length(size(out.x_plant.signals.values)) >2
-        for i = 1:length(out.x_plant.time)
-            x_plant.value(:,i) = reshape(out.x_plant.signals.values(:,:,i),[],1);
+%     if isfield(out,'x_plant')
+        if length(size(out.x_plant.signals.values)) >2
+            for i = 1:length(out.x_plant.time)
+                x_plant.value(:,i) = reshape(out.x_plant.signals.values(:,:,i),[],1);
+            end
+        else
+            x_plant.value = out.x_plant.signals.values;
         end
-    else
-        x_plant.value = out.x_plant.signals.values;
-    end
-    x_plant.time = out.x_plant.time;
-    RESULTS.Slink_plant.x.t_soln = x_plant.time;
-    RESULTS.Slink_plant.x.x_soln = x_plant.value;
+        x_plant.time = out.x_plant.time;
+        RESULTS.Slink_plant.x.t_soln = x_plant.time;
+        RESULTS.Slink_plant.x.x_soln = x_plant.value;
+%     end
 
     %%%%%%%%%%%% Measurement of Ideal Plant %%%%%%%%%%%% 
-    if length(size(out.z_plant.signals.values)) >2
-        for i = 1:length(out.z_plant.time)
-            z_plant.value(:,i) = reshape(out.z_plant.signals.values(:,:,i),[],1);
+%     if isfield(out,'z_plant')
+        if length(size(out.z_plant.signals.values)) >2
+            for i = 1:length(out.z_plant.time)
+                z_plant.value(:,i) = reshape(out.z_plant.signals.values(:,:,i),[],1);
+            end
+        else
+            z_plant.value = out.z_plant.signals.values;
         end
-    else
-        z_plant.value = out.z_plant.signals.values;
-    end
-    z_plant.time = out.z_plant.time;
-    RESULTS.Slink_plant.z.t_soln = z_plant.time;
-    RESULTS.Slink_plant.z.z_soln = z_plant.value;
+        z_plant.time = out.z_plant.time;
+        RESULTS.Slink_plant.z.t_soln = z_plant.time;
+        RESULTS.Slink_plant.z.z_soln = z_plant.value;
+%     end
 
     %%%%%%%%%%%% Measurement of All Outputs of Ideal Plant %%%%%%%%%%%% 
-    if length(size(out.z_plant_All.signals.values)) >2
-        for i = 1:length(out.z_plant_All.time)
-            z_plant_All.value(:,i) = reshape(out.z_plant_All.signals.values(:,:,i),[],1);
+%     if isfield(out,'z_plant_All')
+        if length(size(out.z_plant_All.signals.values)) >2
+            for i = 1:length(out.z_plant_All.time)
+                z_plant_All.value(:,i) = reshape(out.z_plant_All.signals.values(:,:,i),[],1);
+            end
+        else
+            z_plant_All.value = out.z_plant_All.signals.values;
         end
-    else
-        z_plant_All.value = out.z_plant_All.signals.values;
-    end
-    z_plant_All.time = out.z_plant_All.time;
-    RESULTS.Slink_plant.zA.t_soln = z_plant_All.time;
-    RESULTS.Slink_plant.zA.z_soln = z_plant_All.value;
+        z_plant_All.time = out.z_plant_All.time;
+        RESULTS.Slink_plant.zA.t_soln = z_plant_All.time;
+        RESULTS.Slink_plant.zA.z_soln = z_plant_All.value;
+%     end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%% States of Input Noise Plant %%%%%%%%%%%% 
     if length(size(out.x_plant_IN.signals.values)) >2
         for i = 1:length(out.x_plant_IN.time)
@@ -218,7 +224,9 @@ if RUNSIM
     z_plant_All_IN.time = out.z_plant_All_IN.time;
     RESULTS.Slink_plant.zNA.t_soln = z_plant_All_IN.time;
     RESULTS.Slink_plant.zNA.z_soln = z_plant_All_IN.value;
-            
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%% Process Noise Applied to Input Noise Plant %%%%%%%%%%%% 
     if length(size(out.w_k_IN.signals.values)) >2
         for i = 1:length(out.w_k_IN.time)
@@ -255,41 +263,50 @@ if RUNSIM
     RESULTS.Slink_plant.i_user.t_soln  = i_user_in.time;
     RESULTS.Slink_plant.i_user.i_user_soln = i_user_in.value;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%% States of Input Noise ROM %%%%%%%%%%%% 
-    if length(size(out.x_ROM_IN.signals.values)) >2
-        for i = 1:length(out.x_ROM_IN.time)
-            x_ROM_IN.value(:,i) = reshape(out.x_ROM_IN.signals.values(:,:,i),[],1);
+    if isfield(out,'x_ROM')
+        if length(size(out.x_ROM_IN.signals.values)) >2
+            for i = 1:length(out.x_ROM_IN.time)
+                x_ROM_IN.value(:,i) = reshape(out.x_ROM_IN.signals.values(:,:,i),[],1);
+            end
+        else
+            x_ROM_IN.value = out.x_ROM_IN.signals.values;
         end
-    else
-        x_ROM_IN.value = out.x_ROM_IN.signals.values;
+        x_ROM_IN.time = out.x_ROM_IN.time;
+        RESULTS.Slink_plant.xNR.t_soln = x_ROM_IN.time;
+        RESULTS.Slink_plant.xNR.x_soln = x_ROM_IN.value;
     end
-    x_ROM_IN.time = out.x_ROM_IN.time;
-    RESULTS.Slink_plant.xNR.t_soln = x_ROM_IN.time;
-    RESULTS.Slink_plant.xNR.x_soln = x_ROM_IN.value;
     
     %%%%%%%%%%%% Measurement of Input Noise ROM %%%%%%%%%%%% 
-    if length(size(out.z_ROM_IN.signals.values)) >2
-        for i = 1:length(out.z_ROM_IN.time)
-            z_ROM_IN.value(:,i) = reshape(out.z_ROM_IN.signals.values(:,:,i),[],1);
+    if isfield(out,'z_ROM_IN')
+        if length(size(out.z_ROM_IN.signals.values)) >2
+            for i = 1:length(out.z_ROM_IN.time)
+                z_ROM_IN.value(:,i) = reshape(out.z_ROM_IN.signals.values(:,:,i),[],1);
+            end
+        else
+            z_ROM_IN.value = out.z_ROM_IN.signals.values;
         end
-    else
-        z_ROM_IN.value = out.z_ROM_IN.signals.values;
+        z_ROM_IN.time = out.z_ROM_IN.time;
+        RESULTS.Slink_plant.zNR.t_soln = z_ROM_IN.time;
+        RESULTS.Slink_plant.zNR.z_soln = z_ROM_IN.value;
     end
-    z_ROM_IN.time = out.z_ROM_IN.time;
-    RESULTS.Slink_plant.zNR.t_soln = z_ROM_IN.time;
-    RESULTS.Slink_plant.zNR.z_soln = z_ROM_IN.value;
     
     %%%%%%%%%%%% Measurement of All Outputs of Input Noise ROM %%%%%%%%%%%% 
-    if length(size(out.z_ROM_All_IN.signals.values)) >2
-        for i = 1:length(out.z_ROM_All_IN.time)
-            z_ROM_All_IN.value(:,i) = reshape(out.z_ROM_All_IN.signals.values(:,:,i),[],1);
+    if isfield(out,'z_ROM_All_IN')
+        if length(size(out.z_ROM_All_IN.signals.values)) >2
+            for i = 1:length(out.z_ROM_All_IN.time)
+                z_ROM_All_IN.value(:,i) = reshape(out.z_ROM_All_IN.signals.values(:,:,i),[],1);
+            end
+        else
+            z_ROM_All_IN.value = out.z_ROM_All_IN.signals.values;
         end
-    else
-        z_ROM_All_IN.value = out.z_ROM_All_IN.signals.values;
+        z_ROM_All_IN.time = out.z_ROM_All_IN.time;
+        RESULTS.Slink_plant.zNRA.t_soln = z_ROM_All_IN.time;
+        RESULTS.Slink_plant.zNRA.z_soln = z_ROM_All_IN.value;
     end
-    z_ROM_All_IN.time = out.z_ROM_All_IN.time;
-    RESULTS.Slink_plant.zNRA.t_soln = z_ROM_All_IN.time;
-    RESULTS.Slink_plant.zNRA.z_soln = z_ROM_All_IN.value;
 
     
 %% Return to Old Working Directory
@@ -299,31 +316,3 @@ if RUNSIM
 end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%% OOOOOOOOOOOLD %%%%%%%%%%%%%%%%%%%%%%%%%% 
-%% InputSignalMode
-%  1) From code
-%  2) From function input
-%     FLAG.InputSignalMode = 2;
-
-
-%     old_C_mode = FLAG.C_mode;
-%     FLAG.C_mode = 5;
-%     N.states = 4;
-%     [A,B,C,~] = getAll_SS(SIM,N,P,FLAG);
-%     [InputSignal] = getInputSignal(SIM,N,P,FLAG);
-
-
-%     FLAG.C_mode = old_C_mode;
-
-    % Get Measured for both FOM and ROM   
-%     switch FLAG.C_mode
-%         case N.states+1
-%             C_m     = C_des;
-%             C_m_ROM = C_des_ROM;
-%         otherwise
-%     end
-            
-%     y_0 = C_des*SIM.x_0;
-
-%     assignin(mdlWks,'A'           ,A)
-%     assignin(mdlWks,'B'           ,B)
