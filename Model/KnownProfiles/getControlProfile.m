@@ -280,7 +280,7 @@ j = 0;
 initial_relax_samples = 2;
 Ts = 1.0;   % [s], discrete time sampling rate
 N_meas = 300-1-initial_relax_samples; % Number of discrete values to measure
-N_meas = 100;
+N_meas = 800;
 
 % Relaxation
 j = j + 1;

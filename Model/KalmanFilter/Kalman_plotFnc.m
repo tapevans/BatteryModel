@@ -1,5 +1,5 @@
 %% 
-function Kalman_plotFnc(RESULTS,N,SIM)
+function Kalman_plotFnc(RESULTS,N,SIM,FLAG)
 %%
 FLAG.PLOT.NoNoiseCompare            = 1;    
     FLAG.PLOT.ode        = 1;
@@ -14,11 +14,11 @@ FLAG.PLOT.NoisyPlant                = 0;
     FLAG.PLOT.NoisyPlantROM_CV  = 0; % (Q & R) , CV:  cell voltage
     FLAG.PLOT.NoisyPlantROM_All = 0; % (Q)     , All: All Desired Outputs
 
-FLAG.PLOT.EstimatorZ       = 1;
-    FLAG.PLOT.ASYZ         = 0;
-    FLAG.PLOT.VARZ         = 0; 
+FLAG.PLOT.EstimatorZ                = 1;
+    FLAG.PLOT.ASYZ              = 0;
+    FLAG.PLOT.VARZ              = 1; 
         FLAG.PLOT.PlantComparZ = 1;
-    FLAG.All3              = 1; % Plant, Asy, and Var
+    FLAG.All3                   = 1; % Plant, Asy, and Var
 
 z_init = SIM.y_0_FOM;
 
@@ -122,21 +122,45 @@ end
 % Asymtptotic Estimator
 if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
     if FLAG.PLOT.ASYZ && isfield(RESULTS.EST,'ASY')
-        [r,~] = size(RESULTS.EST.ASY.z_soln_ALL);
-        for i = 1:r
-            figure
-            hold on
-            plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL(i,:),'o','LineWidth',2,'DisplayName',['Est ASY'])
-            if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
-                plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL(i,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
-                title([RESULTS.Labels.title{i} ' Compare Plant and Asymptotic Estimator Outputs'])
+        if isfield(RESULTS.EST.ASY,'z_soln_ALL')
+            if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
+                [r,~] = size(RESULTS.EST.ASY.z_soln_ALL);
+                for OO = 1:r
+                    figure
+                    hold on
+                    plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{1}(OO,:),'o','LineWidth',2,'DisplayName',['Est ASY'])
+                    if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
+                        if OO == 1
+                            plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln{1}(OO,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
+                        else
+                            plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{1}(OO,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
+                        end
+                        title([RESULTS.Labels.title{OO} ' Compare Plant and Asymptotic Estimator Outputs'])
+                    else
+                        title([RESULTS.Labels.title{OO} ' Asymptotic Estimator Outputs'])
+                    end
+                    xlabel('Time [s]')
+                    ylabel(RESULTS.Labels.unit{OO})
+                    lgn = legend;
+                    lgn.Location = 'best';
+                end
             else
-                title([RESULTS.Labels.title{i} ' Asymptotic Estimator Outputs'])
+                for OO = 1:length(RESULTS.EST.ASY.z_soln_ALL)
+                    figure
+                    hold on
+                    plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{OO}(2,:),'o','LineWidth',2,'DisplayName',['Est ASY'])
+                    if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
+                        plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{OO}(2,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
+                        title([RESULTS.Labels.title{OO} ' Compare Plant and Asymptotic Estimator Outputs'])
+                    else
+                        title([RESULTS.Labels.title{OO} ' Asymptotic Estimator Outputs'])
+                    end
+                    xlabel('Time [s]')
+                    ylabel(RESULTS.Labels.unit{OO})
+                    lgn = legend;
+                    lgn.Location = 'best';
+                end
             end
-            xlabel('Time [s]')
-            ylabel(RESULTS.Labels.unit{i})
-            lgn = legend;
-            lgn.Location = 'best';
         end
     end
 end
@@ -144,44 +168,83 @@ end
 % Variable Estimator
 if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
     if FLAG.PLOT.VARZ && isfield(RESULTS.EST,'VAR')
-        [r,~] = size(RESULTS.EST.VAR.z_soln_ALL);
-        for i = 1:r
-            figure
-            hold on
-            plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL(i,:),'o','LineWidth',2,'DisplayName',['Est VAR'])
-            if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
-                plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL(i,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
-                title([RESULTS.Labels.title{i} ' Compare Plant and Variable Estimator Outputs'])
+        if isfield(RESULTS.EST.VAR,'z_soln_ALL')
+            if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
+                [r,~] = size(RESULTS.EST.VAR.z_soln_ALL);
+                for OO = 1:r
+                    figure
+                    hold on
+                    plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{1}(OO,:),'o','LineWidth',2,'DisplayName',['Est VAR'])
+                    if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
+                        if OO == 1
+                            plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln{1}(OO,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
+                        else
+                            plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{1}(OO,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
+                        end
+                        title([RESULTS.Labels.title{OO} ' Compare Plant and Variable Estimator Outputs'])
+                    else
+                        title([RESULTS.Labels.title{OO} ' Variable Estimator Outputs'])
+                    end
+                    xlabel('Time [s]')
+                    ylabel(RESULTS.Labels.unit{OO})
+                    lgn = legend;
+                    lgn.Location = 'best';
+                end
             else
-                title([RESULTS.Labels.title{i} ' Variable Estimator Outputs'])
+                for OO = 1:length(RESULTS.EST.VAR.z_soln_ALL)
+                    figure
+                    hold on
+                    plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{OO}(2,:),'o','LineWidth',2,'DisplayName',['Est VAR'])
+                    if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
+                        plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{OO}(2,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
+                        title([RESULTS.Labels.title{OO} ' Compare Plant and Variable Estimator Outputs'])
+                    else
+                        title([RESULTS.Labels.title{OO} ' Variable Estimator Outputs'])
+                    end
+                    xlabel('Time [s]')
+                    ylabel(RESULTS.Labels.unit{OO})
+                    lgn = legend;
+                    lgn.Location = 'best';
+                end
             end
-            xlabel('Time [s]')
-            ylabel(RESULTS.Labels.unit{i})
-            lgn = legend;
-            lgn.Location = 'best';
         end
     end
 end
 
 % All 3
 if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
-    if FLAG.All3 && isfield(RESULTS.EST,'VAR') && isfield(RESULTS.EST,'PLANT') && isfield(RESULTS.EST,'ASY')
-        [r,~] = size(RESULTS.EST.VAR.z_soln_ALL);
-        for i = 1:r
-            figure
-            hold on
-            plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL(i,:),'or','LineWidth',2,'DisplayName',['Asymptotic'])
-            plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL(i,:),'og','LineWidth',2,'DisplayName',['Variable'])
-            if r == 1
-                plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln(i,:),'k','LineWidth',2,'DisplayName',['Plant'])
-            else
-                plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL(i,:),'k','LineWidth',2,'DisplayName',['Plant'])
+    if FLAG.All3 && isfield(RESULTS.EST.VAR,'z_soln_ALL') && isfield(RESULTS.EST,'PLANT') && isfield(RESULTS.EST.ASY,'z_soln_ALL')
+        if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
+            [r,~] = size( RESULTS.EST.VAR.z_soln_ALL{1} );
+            for OO = 1:r
+                figure
+                hold on
+                plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{1}(OO,:),'or','LineWidth',2,'DisplayName',['Asymptotic'])
+                plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{1}(OO,:),'og','LineWidth',2,'DisplayName',['Variable'])
+                if OO == 1
+                    plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln{1}(OO,:),'k','LineWidth',2,'DisplayName',['Plant'])
+                else
+                    plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{1}(OO,:),'k','LineWidth',2,'DisplayName',['Plant'])
+                end
+                title([RESULTS.Labels.title{OO} ' Compare Plant to Variable and Asymptotic Estimators'])
+                xlabel('Time [s]')
+                ylabel(RESULTS.Labels.unit{OO})
+                lgn = legend;
+                lgn.Location = 'best';
             end
-            title([RESULTS.Labels.title{i} ' Compare Plant to Variable and Asymptotic Estimators'])
-            xlabel('Time [s]')
-            ylabel(RESULTS.Labels.unit{i})
-            lgn = legend;
-            lgn.Location = 'best';
+        else
+            for OO = 1:length(RESULTS.EST.VAR.z_soln_ALL)
+                figure
+                hold on
+                plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{OO}(2,:),'or','LineWidth',2,'DisplayName',['Asymptotic'])
+                plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{OO}(2,:),'og','LineWidth',2,'DisplayName',['Variable'])
+                plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{OO}(2,:),'k','LineWidth',2,'DisplayName',['Plant'])
+                title([RESULTS.Labels.title{OO} ' Compare Plant to Variable and Asymptotic Estimators'])
+                xlabel('Time [s]')
+                ylabel(RESULTS.Labels.unit{OO})
+                lgn = legend;
+                lgn.Location = 'best';
+            end
         end
     end
 end
@@ -209,3 +272,22 @@ if FigArrange == 1
     end
 end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%             [r,~] = size(RESULTS.EST.ASY.z_soln_ALL);
+%             for i = 1:r
+%                 figure
+%                 hold on
+%                 plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL(i,:),'o','LineWidth',2,'DisplayName',['Est ASY'])
+%                 if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
+%                     plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL(i,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
+%                     title([RESULTS.Labels.title{i} ' Compare Plant and Asymptotic Estimator Outputs'])
+%                 else
+%                     title([RESULTS.Labels.title{i} ' Asymptotic Estimator Outputs'])
+%                 end
+%                 xlabel('Time [s]')
+%                 ylabel(RESULTS.Labels.unit{i})
+%                 lgn = legend;
+%                 lgn.Location = 'best';
+%             end

@@ -26,10 +26,12 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
         for i = 1:N.DesOut
         figure
         hold on
-        plot(t_imp                            ,z_imp(i,:)      ,'-ok')
-        plot(t_imp(idx_vec(pulse_idx-1:end),:),g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r')
+        plot(t_imp                            ,z_imp(i,:)      ,'-ok','DisplayName','ODE')
+        plot(t_imp(idx_vec(pulse_idx-1:end),:),g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r','DisplayName','Selected Data')
         %plot(t_imp(idx_vec(pulse_idx:end),:)  ,g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r') % t^-
         title(['Data Used in Ho-Kalman Reduction ' RESULTS.Labels.title{i}])
+        lgn = legend;
+        lgn.Location = 'best';
         end
     end
 
@@ -62,36 +64,36 @@ end
             N_in = 1; %%% !!! Hardcoded but always true for batteries
     
             [U,S,V] = svd(H);
-            %r = rank(S);
+            r = rank(S);
             %r = rank(S,1.15e-7);
-            if FLAG.UseInput_r
-                r = SIM.Input_r;
-            else
-                if FLAG.UseOptimal
-                    r = optimal_r_obj.optimal_r.ind.T100(OO);
-                else
-                    %r = 38;
-                    r = 18;
-                end
-            end
-            if OO == P.delta_C_Li
-                r = 18;
-            end
-            % Delete Later!!!!!!!!!!!!!!!!!!!!
-            switch OO
-                case 1
-                    r = 23;
-                case 2
-                    r = 18;
-                case 3
-                    r = 29;
-                case 4
-                    r = 14;
-                case 5
-                    r = 49;
-                case 6
-                    r = 25;
-            end
+%             if FLAG.UseInput_r
+%                 r = SIM.Input_r;
+%             else
+%                 if FLAG.UseOptimal
+%                     r = optimal_r_obj.optimal_r.ind.T100(OO);
+%                 else
+%                     %r = 38;
+%                     r = 18;
+%                 end
+%             end
+%             if OO == P.delta_C_Li
+%                 r = 18;
+%             end
+%             % Delete Later!!!!!!!!!!!!!!!!!!!!
+%             switch OO
+%                 case 1
+%                     r = 23;
+%                 case 2
+%                     r = 18;
+%                 case 3
+%                     r = 29;
+%                 case 4
+%                     r = 14;
+%                 case 5
+%                     r = 49;
+%                 case 6
+%                     r = 25;
+%             end
 
 
 
@@ -121,6 +123,14 @@ end
     
             % D_r ~ !!!!! I'm assuming this is correct
             D_r = zeros(N_outputs,N_in);
+
+            if FLAG.PlotSingVal
+                figure
+                semilogy(1:1:length(diag(S)) , diag(S),'-k','Linewidth',2)
+                xlim([0,length(diag(S))])
+                ylabel('Singular Values')
+                title([RESULTS.Labels.title{OO} ' Singular Values of \Sigma for Hankel'])
+            end
     
     
             %% Return the system
@@ -140,19 +150,19 @@ end
         N_in = 1; %%% !!! Hardcoded but always true for batteries
 
         [U,S,V] = svd(H);
-        %r = rank(S);
+        r = rank(S);
         %r = rank(S,1.15e-7);
-        if FLAG.UseInput_r
-            r = SIM.Input_r;
-        else
-            if FLAG.UseOptimal
-                r = optimal_r_obj.optimal_r.ind.AllSims(end);
-            else
-                %r = 38;
-                %r = 18;
-                r = 9;
-            end
-        end
+%         if FLAG.UseInput_r
+%             r = SIM.Input_r;
+%         else
+%             if FLAG.UseOptimal
+%                 r = optimal_r_obj.optimal_r.ind.AllSims(end);
+%             else
+%                 %r = 38;
+%                 %r = 18;
+%                 r = 9;
+%             end
+%         end
         
         singVals(end) = S(r,r);
 
@@ -180,6 +190,14 @@ end
 
         % D_r ~ !!!!! I'm assuming this is correct
         D_r = zeros(N_outputs,N_in);
+
+        if FLAG.PlotSingVal
+            figure
+            semilogy(1:1:length(diag(S)) , diag(S),'-k','Linewidth',2)
+            xlim([0,length(diag(S))])
+            ylabel('Singular Values')
+            title('All ROM Singular Values of \Sigma for Hankel')
+        end
 
 
         %% Return the system

@@ -35,7 +35,7 @@
         
         
 %%
-% clear all; close all; clc;
+clear all; close all; clc;
 
 
 %% Subdirecties to Include
@@ -74,7 +74,7 @@ FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one 
 % folder_name  = 'PRBS_Sims';
 % battery_name = 'PRBS_Sims';
 
-folder_name  = 'TestTimeMinus';
+folder_name  = 'LongerImpulse';
 battery_name = 'ObservabilityTest';
 % battery_name = 'PRBS_Sims';
 
@@ -102,11 +102,11 @@ battery_name = 'ObservabilityTest';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-%     SS_SOC = [];
+    SS_SOC = [];
 %     SS_SOC = 0:1:100;
 %     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
 %     SS_SOC = [80.46];
-    SS_SOC = [50];
+%     SS_SOC = [50];
     
     % Desired frequency for impedance results
 %         SS_freq = [];
@@ -114,7 +114,7 @@ battery_name = 'ObservabilityTest';
 %         SS_freq = (logspace(-2,6,75) *(2*pi));
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 0;
+    KBCP   = 1;
         KBCPProfileOverwrite = 1;
 %         KBCPProfileFilename = 'DTImpulseTs0.1';
 %         KBCPProfileFilename = 'DTImpulseTs0.121152765862859';

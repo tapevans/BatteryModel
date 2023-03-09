@@ -54,7 +54,7 @@ end
 
 %% Plot Results
 if FLAG.PLOT.PlotResults
-    Kalman_plotFnc(RESULTS,N,SIM)
+    Kalman_plotFnc(RESULTS,N,SIM,FLAG)
 end
 
 

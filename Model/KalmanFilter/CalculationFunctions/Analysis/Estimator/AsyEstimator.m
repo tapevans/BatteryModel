@@ -4,7 +4,11 @@
 %%
 function [x_hat] = AsyEstimator(sys,FLAG,SIM,P,x_hat_0,u,z)
 %% Perform Pre-Calcs
-[K_infty, ~] = AsymptoticPreCalcs(FLAG,SIM,sys);
+if FLAG.DoPreCalc
+    [K_infty, ~] = AsymptoticPreCalcs(FLAG,SIM,sys);
+else
+    % Put something here, len(sys)
+end
 
 u_k = reshape(u,1,[]);
 z_k = reshape(z,1,[]);

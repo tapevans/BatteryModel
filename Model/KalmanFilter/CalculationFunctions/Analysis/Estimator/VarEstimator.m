@@ -3,8 +3,14 @@
 %
 %%
 function [x_hat,K_k,P_k_pre] = VarEstimator(sys,FLAG,SIM,P,x_hat_0,u,z)
+[N_measur, N_states] = size(sys.C);
 %% Perform Pre-Calcs
-[K_infty, P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys);
+if FLAG.DoPreCalc
+    [K_infty, P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys);
+else
+    K_infty = 0.5*ones(N_states,N_measur);
+    P_infty = 0.5*eye(N_states);
+end
 
 u_k = reshape(u,1,[]);
 z_k = reshape(z,1,[]);
@@ -12,7 +18,7 @@ z_k = reshape(z,1,[]);
 
 %% Initialize Variables
 N_steps = length(u);
-[N_measur, N_states] = size(sys.C);
+
 
 x_var     = zeros(N_states,N_steps);   % Estimator States
 x_var_pre = zeros(N_states,N_steps);   % Estimator States predict phase

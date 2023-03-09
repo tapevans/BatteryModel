@@ -15,7 +15,7 @@ clear all; close all; clc
 
 
 %% Analysis to Perform
-    FLAG.Analysis.NoNoiseCompare        = 0;
+    FLAG.Analysis.NoNoiseCompare        = 1;
         FLAG.Analysis.ode           = 1;
         FLAG.Analysis.SS_CT         = 0;
         FLAG.Analysis.SS_DT         = 0;
@@ -26,10 +26,14 @@ clear all; close all; clc
             FLAG.Analysis.PlotImp = 0;
             FLAG.EST.SepHK        = 1; % 1 if calculate a ROM for each desired variable
             FLAG.UseOptimal       = 0;
-    FLAG.Analysis.NoisyPlant            = 0;
-    FLAG.Analysis.Estimator             = 1;
-        FLAG.UseROMAsPlant          = 1;
+            FLAG.PlotSingVal      = 0;
+    FLAG.Analysis.NoisyPlant            = 1; 
+    FLAG.Analysis.Estimator             = 1; %%%%%%%%%%% Add something here to pull Plant Data if struct is empty
+        FLAG.UseROMAsPlant          = 0;
         FLAG.UseWrongIC             = 1;
+        FLAG.DoPreCalc              = 0;
+        FLAG.DoAsy                  = 0;
+        FLAG.DoVar                  = 1;
     FLAG.Analysis.Est_Error_calc        = 1;
         FLAG.Analysis.dispResults   = 1;
     FLAG.Analysis.GenComparData         = 0;
@@ -74,6 +78,9 @@ clear all; close all; clc
     %FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestTimeMinus';
     %FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestTimeMinus';
 
+    % LongerImpulse
+    FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerImpulse';
+
 
 %% Noise
     % Q Modes
@@ -89,6 +96,8 @@ clear all; close all; clc
     FLAG.EstimatorModel = 2;
         FLAG.LargeQMultiply = 1;
         FLAG.ResetStep = 100000;
+
+
     
 %% Conditions to Run
     Q_0_vec = [1e-6];
@@ -127,7 +136,7 @@ clear all; close all; clc
 %!!!(Can fix these issues if I implement a DT Impulse simulation instead of calling existing simulations)
 if FLAG.InputMode == 5
     FLAG.PRBSAmp = 1; 
-    FLAG.Tswitch = 10; 
+    FLAG.Tswitch = 1; 
     %FLAG.SamplesPerSwitch = 10;
     %FLAG.N_samples
 end

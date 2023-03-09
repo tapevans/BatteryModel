@@ -1,5 +1,15 @@
 %% Test Getting Noise for Slink
 function [InputSig_w , InputSig_v] = getSlinkNoise(SIM,N,P,FLAG)
+%% Add Battery Model to path
+    addpath(genpath('F:\TylerFiles\GitHubRepos\BatteryModel\Model'))
+
+
+%% Change Working Directory
+    [current_file_path,~,~] = fileparts(mfilename('fullpath'));
+    oldFolder = cd(current_file_path); % Change to the folder that contains the Simulink files. 
+    % This is mostly so the cache files don't save to the main workspace
+
+
 %% Define Variables
     switch FLAG.QMode
         case 1 % Input Q
@@ -109,57 +119,10 @@ InputSig_v = [t_vec_interp , v_vec_interp];
 %     lgn = legend;
 %     lgn.Location = 'best';
 
+
+    
+%% Return to Old Working Directory
+    cd(oldFolder);
+
+
 end
-
-%%%%%%%%%%%%%%%%%%% TEST %%%%%%%%%%%%%%%%%%%%%%%%%
-
-%     Q_0_vec = [1e-6];
-%     R_0_vec = [1e-6];
-%     Ts_vec  = [1];
-%     SOC_vec = [50];
-% 
-%     FLAG.Q_0 = QQ; % Process Noise
-%     FLAG.R_0 = RR; % Measurement Noise
-%     FLAG.Ts = TT;  % Sampling Rate (When to save outputs)
-%     FLAG.SOC = SS; % State of Charge
-% 
-%     SIM.Q_0 = FLAG.Q_0;
-%     SIM.R_0 = FLAG.R_0;
-%     SIM.Ts  = FLAG.Ts;
-%     SIM.tc  = FLAG.Ts;
-
-% %% Change Working Directory !!!!!!!!!!!(Remove after testing)
-%     [current_file_path,~,~] = fileparts(mfilename('fullpath'));
-%     oldFolder = cd(current_file_path); % Change to the folder that contains the Simulink files. 
-%     % This is mostly so the cache files don't save to the main workspace
-
-% %% Define Variables !!!!!!!!!!!(Remove after testing)
-%     SIM.Q_0 = [1e-6];
-%     SIM.R_0 = [1e-6];
-%     SIM.Ts  = [1];
-%     SIM.SOC = [50];
-% 
-%     FLAG.N_samples = 600;
-%     SIM.t_final_Relax_Step = (FLAG.N_samples+2)*SIM.Ts;
-%     SIM.t_vec_Relax_Step = 0:SIM.Ts:SIM.t_final_Relax_Step;
-% 
-%     N.inputs = 1;
-%     N.measur = 1;
-%     N.states = 355;
-% 
-%     SIM.tc = SIM.Ts;
-% 
-%     SIM.Qi = SIM.Q_0 * eye(N.inputs);
-%     
-%     Q       = SIM.Q_0 * eye(N.states);
-%     SIM.Qs = (diag(Q));
-%     
-%     R     = SIM.R_0 * eye(N.measur);
-%     SIM.R = (diag(R));
-%     
-%     SIM.pow_Qi = SIM.tc * SIM.Qi;
-%     SIM.pow_Qs = SIM.tc * SIM.Qs;
-%     SIM.pow_R  = SIM.tc * SIM.R;
-% 
-%     pow_Q = SIM.pow_Qi;
-%%
