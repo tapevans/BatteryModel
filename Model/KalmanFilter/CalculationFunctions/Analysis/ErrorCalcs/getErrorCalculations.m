@@ -1,7 +1,9 @@
 function [ERROR_CALC,RESULTS] = getErrorCalculations(SIM,FLAG,N,P,RESULTS,ESTIMATOR)
-idx = floor((1/2)*FLAG.N_samples)+2;
-idx = 750; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Fix this !!!!!!!!!!!!!!!!!!!!!!!!!!!
-% idx = floor((3/4)*FLAG.N_samples);
+%idx = floor((1/2)*FLAG.N_samples)+2;
+%idx = 500; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Fix this !!!!!!!!!!!!!!!!!!!!!!!!!!!
+N_samples = length(RESULTS.EST.VAR.t_soln);
+idx = floor(FLAG.FractionOfData*N_samples);
+
 
 
 %% From DARE
@@ -19,13 +21,18 @@ end
 %% Calculate the error in the outputs (ASY)
 if isfield(RESULTS.EST.ASY,'z_soln_ALL')
     for OO = 1:length(RESULTS.EST.PLANT.z_soln_ALL)
-        plant_outputs = RESULTS.EST.PLANT.z_soln_ALL{OO};
+%         if OO == 1 && FLAG.EstimatorModel ~= 1 %%% Removing this if statement. I think the comparison should be between the actual voltage and estimated voltage. Not the noisy plany voltage
+%             plant_outputs = [RESULTS.EST.PLANT.z_soln{OO}
+%                              RESULTS.EST.PLANT.z_soln{OO}];
+%         else
+            plant_outputs = RESULTS.EST.PLANT.z_soln_ALL{OO};
+%         end
         est_outputs   = RESULTS.EST.ASY.z_soln_ALL{OO};
 
         [N_outputs, ~] = size(plant_outputs);
-        error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
+        %error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
         %error_outputs = est_outputs(:,idx+1:end) - plant_outputs(:,idx:end-1);
-        %error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);
+        error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);
 
         covar_outputs = nan(N_outputs);
         for i = 1:N_outputs
@@ -52,9 +59,9 @@ if isfield(RESULTS.EST.VAR,'z_soln_ALL')
         est_outputs   = RESULTS.EST.VAR.z_soln_ALL{OO};
 
         [N_outputs, ~] = size(plant_outputs);
-        error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
+        %error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
         %error_outputs = est_outputs(:,idx+1:end) - plant_outputs(:,idx:end-1);
-        %error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);
+        error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);
 
         covar_outputs = nan(N_outputs);
         for i = 1:N_outputs
@@ -84,7 +91,7 @@ end
 
 %% Display Results to Command Window
     if FLAG.Analysis.dispResults
-        if 0 && FLAG.DoAsy
+        if 1 && FLAG.DoAsy
             %% Asymptotic
             disp(newline)
             disp('____________________')

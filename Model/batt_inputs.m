@@ -91,7 +91,7 @@ if ( FLAG.CONSTANT_PROPS_FROM_HANDLES && FLAG.VARIABLE_PROPS_FROM_HANDLES)
     warning('Both FLAG.CONSTANT_PROPS_FROM_HANDLES and FLAG.VARIABLE_PROPS_FROM_HANDLES are 1.')
 end
 
-FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
+FLAG.SaveSolnDiscreteTime = 0; % 1 if evaluate the ode soln at a given sampling rate
     SIM.Ts           = 1.0;                    % [s], Sampling rate of the DT system
 	SIM.TsMultiple   = 5;                     % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
     SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple;   % [s], Sampling rate of the ode output
@@ -215,8 +215,11 @@ end
 
 %% ---- PRBS ----
 if SIM.SimMode == 8
-    SIM.PRBSLength     = 100;
-    SIM.t_ramp_ratio   = 1/20;        % Fraction of the switching time that is used as ramp interpolation
+    %SIM.PRBSLength     = 100;
+    %SIM.PRBSLength     = 77; % New PRBS
+    SIM.PRBSLength     = 159; % New PRBS
+    %SIM.t_ramp_ratio   = 1/20;        % Fraction of the switching time that is used as ramp interpolation
+    SIM.t_ramp_ratio   = 1/50;        % Fraction of the switching time that is used as ramp interpolation
     SIM.initial_offset = SIM.Tswitch; % Initial zero offset
 %%%% Input from batch mode 
 %     SIM.SOC_start = 50;   % [%], Initial state of charge 
@@ -414,16 +417,24 @@ if SIM.SimMode ~= 8
     SIM.initial_offset = 0;          % [s], How long there is an initial zero current
 end
 
-% Properties for SOC calcualtion
-%%% Wiley
-SIM.VoltageMax         = 4.2 ;  % [V] 
-SIM.VoltageMin         = 3.4 ;  % [V] 
-SIM.AnodeFormation_X   = 0.00;  % [-] 
-SIM.CathodeFormation_X = 1.00;  % [-] 
+if SIM.SimMode ~= 8
+    % Properties for SOC calcualtion
+    %%% Wiley
+    SIM.VoltageMax         = 4.2 ;  % [V] 
+    SIM.VoltageMin         = 3.4 ;  % [V] 
+    SIM.AnodeFormation_X   = 0.00;  % [-] 
+    SIM.CathodeFormation_X = 1.00;  % [-] 
+    
+    %%% Wiley Half Cell NMC
+    % SIM.VoltageMax         = 5.4 ;  % [V] 
+    % SIM.VoltageMin         = 2.9 ;  % [V] 
+    % SIM.AnodeFormation_X   = 1.00;  % [-] 
+    % SIM.CathodeFormation_X = 0.00;  % [-] 
+else
+    SIM.VoltageMax         = 5 ;  % [V] 
+    SIM.VoltageMin         = 2 ;  % [V] 
+    SIM.AnodeFormation_X   = 0.00;  % [-] 
+    SIM.CathodeFormation_X = 1.00;  % [-] 
+end
 
-%%% Wiley Half Cell NMC
-% SIM.VoltageMax         = 5.4 ;  % [V] 
-% SIM.VoltageMin         = 2.9 ;  % [V] 
-% SIM.AnodeFormation_X   = 1.00;  % [-] 
-% SIM.CathodeFormation_X = 0.00;  % [-] 
 end

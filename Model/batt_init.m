@@ -517,13 +517,16 @@ elseif SIM.SimMode == 7
 elseif SIM.SimMode == 8
     SIM.A_c        = min( AN.A_c, CA.A_c );
     SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-    N_PRBS  = 255;                      % Length of the input           [-]
+    %N_PRBS  = 255;                      % Length of the input           [-]
+    N_PRBS  = 2^9 - 1;                      % Length of the input           [-] % New PRBS
     TYPE    = 'PRBS';                   % Create a PRBS signal          [-]
     BAND    = [0 1];                    % Freq. band                    [s]
     LEVELS  = [-1 1];                   % PRBS limits                   [-]
     PRBS_gen= idinput(N_PRBS,TYPE,BAND,LEVELS);         % PRBS Demand   [A/m^2]
-    t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
-    C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
+%     t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
+%     C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
+    t_Demand = ((0:1:SIM.PRBSLength-9)*(SIM.Tswitch))'; % PRBS Demand t [s]
+    C_Demand = PRBS_gen(9:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
     
     % Append a no-current entry
     if SIM.initial_offset > 0
@@ -531,19 +534,47 @@ elseif SIM.SimMode == 8
         C_Demand = [0; C_Demand];                    % PRBS & entry [A/m^2]
     end
 
+    % Add Rest
+        if SIM.AddIntermediateRelaxTime
+            % Find Zero-Crossings
+                change_idx = find( C_Demand(1:end-1)~=C_Demand(2:end) ); % True when the following idx doesn't match
+                change_idx = change_idx + 1; % Change occurs at the value now
+
+            % Drop first change
+                change_idx = change_idx(2:end);
+
+            % Find Insert index
+                mod_idx = (SIM.NumZeroCrossingUntilNextRelax : SIM.NumZeroCrossingUntilNextRelax : length(change_idx))';
+                insert_idx = change_idx(mod_idx);
+
+            % Create New Current Demand Vector
+                C_new = C_Demand(1:insert_idx(1)-1);
+                N_changes = length(insert_idx);
+                for i = 1:N_changes-1
+                    C_new = [C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(i):insert_idx(i+1)-1)];
+                end
+                C_new = [ C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(N_changes):end) ];
+
+            % Create New Time Vector
+                t_new = (0:1:length(C_new)-1)*SIM.Tswitch;
+        else
+            C_new = C_Demand;
+            t_new = t_Demand;
+        end
+
     % Add Ramp Times
-    SIM.profile_time    = t_Demand(1);
-    SIM.profile_current = C_Demand(1);
+    SIM.profile_time    = t_new(1);
+    SIM.profile_current = C_new(1);
 
     % Step at t^+
-    for i = 2:length(t_Demand)
+    for i = 2:length(t_new)
         % @ k
-        SIM.profile_time(end+1,1)    = t_Demand(i);
-        SIM.profile_current(end+1,1) = C_Demand(i-1);
+        SIM.profile_time(end+1,1)    = t_new(i);
+        SIM.profile_current(end+1,1) = C_new(i-1);
 
         % After k
-        SIM.profile_time(end+1,1)    = t_Demand(i) + SIM.Tswitch * SIM.t_ramp_ratio;
-        SIM.profile_current(end+1,1) = C_Demand(i);
+        SIM.profile_time(end+1,1)    = t_new(i) + SIM.Tswitch * SIM.t_ramp_ratio;
+        SIM.profile_current(end+1,1) = C_new(i);
     end
     SIM.profile_time    = SIM.profile_time(1:end-1);
     SIM.profile_current = SIM.profile_current(1:end-1);
@@ -568,10 +599,11 @@ elseif SIM.SimMode == 8
 %     hold on
 %     %plot(SIM.profile_time           ,SIM.profile_current,'ro')
 %     plot(0:0.1:SIM.profile_time(end),i_user             ,'ro')
-%     plot(t_Demand                   ,C_Demand           ,'-k')
+%     plot(t_new                      ,C_new           ,'-k')
 
 %     t_vec_Report{i} = 0:t_Report(i):t_Demand{i}(end);
 end
+
 
 %% Determine Simulation Time Vector
 % ---- Polarization ----

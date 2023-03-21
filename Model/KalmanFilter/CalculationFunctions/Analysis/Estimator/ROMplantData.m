@@ -3,9 +3,15 @@ function [t, u , x , z_all] = ROMplantData(SIM,FLAG,N,P,RESULTS)
         [InputSig_w , InputSig_v] = getSlinkNoise(SIM,N,P,FLAG);
     
     % Find times to obtain noise
+    if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+        w_k = InputSig_w(:,2)';
+        v_k = InputSig_v(:,2)';
+        clear InputSig_w InputSig_v
+    else
         idx = [1 4:3:length(InputSig_w)];
         w_k = InputSig_w(idx,2)';
         v_k = InputSig_v(idx,2)';
+    end
 
 %         idx = [1 3:3:length(InputSig_w)];
 %         t   = InputSig_w(idx,1)';

@@ -80,20 +80,20 @@ end
 %                 r = 18;
 %             end
 %             % Delete Later!!!!!!!!!!!!!!!!!!!!
-%             switch OO
-%                 case 1
-%                     r = 23;
-%                 case 2
-%                     r = 18;
-%                 case 3
-%                     r = 29;
-%                 case 4
-%                     r = 14;
-%                 case 5
-%                     r = 49;
-%                 case 6
-%                     r = 25;
-%             end
+            switch OO
+                case 1
+                    r = 23;
+                case 2
+                    r = 18;
+                case 3
+                    r = 29;
+                case 4
+                    r = 14;
+                case 5
+                    r = 49;
+                case 6
+                    r = 25;
+            end
 
 
 
@@ -152,17 +152,17 @@ end
         [U,S,V] = svd(H);
         r = rank(S);
         %r = rank(S,1.15e-7);
-%         if FLAG.UseInput_r
-%             r = SIM.Input_r;
-%         else
-%             if FLAG.UseOptimal
-%                 r = optimal_r_obj.optimal_r.ind.AllSims(end);
-%             else
-%                 %r = 38;
-%                 %r = 18;
-%                 r = 9;
-%             end
-%         end
+        if FLAG.UseInput_r
+            r = SIM.Input_r;
+        else
+            if FLAG.UseOptimal
+                r = optimal_r_obj.optimal_r.ind.AllSims(end);
+            else
+                %r = 38;
+                %r = 18;
+                r = 9;
+            end
+        end
         
         singVals(end) = S(r,r);
 

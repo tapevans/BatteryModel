@@ -11,7 +11,9 @@ SOC_min = 0;
 SOC_max = 100;
 
 % T_s_vec = logspace(T_s_min,T_s_max,N_t_s);
-SOC_vec = linspace(SOC_min,SOC_max,N_SOC);
+% SOC_vec = linspace(SOC_min,SOC_max,N_SOC);
+SOC_vec = SOC_min:5:SOC_max;
+%SOC_vec = [50];
 
 for i = 1:length(SOC_vec)
 %     i

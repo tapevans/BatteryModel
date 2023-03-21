@@ -15,10 +15,10 @@ clear all; close all; clc
 
 
 %% Analysis to Perform
-    FLAG.Analysis.NoNoiseCompare        = 1;
+    FLAG.Analysis.NoNoiseCompare        = 1; 
         FLAG.Analysis.ode           = 1;
         FLAG.Analysis.SS_CT         = 0;
-        FLAG.Analysis.SS_DT         = 0;
+        FLAG.Analysis.SS_DT         = 1;
         FLAG.Analysis.OptimalHK     = 0;
             FLAG.r_max = 50;
             FLAG.UseInput_r = 0;
@@ -27,14 +27,15 @@ clear all; close all; clc
             FLAG.EST.SepHK        = 1; % 1 if calculate a ROM for each desired variable
             FLAG.UseOptimal       = 0;
             FLAG.PlotSingVal      = 0;
-    FLAG.Analysis.NoisyPlant            = 1; 
-    FLAG.Analysis.Estimator             = 1; %%%%%%%%%%% Add something here to pull Plant Data if struct is empty
+    FLAG.Analysis.NoisyPlant            = 0; 
+    FLAG.Analysis.Estimator             = 0; %%## 
         FLAG.UseROMAsPlant          = 0;
         FLAG.UseWrongIC             = 1;
-        FLAG.DoPreCalc              = 0;
-        FLAG.DoAsy                  = 0;
+        FLAG.DoPreCalc              = 1;
+        FLAG.DoAsy                  = 1;
         FLAG.DoVar                  = 1;
-    FLAG.Analysis.Est_Error_calc        = 1;
+    FLAG.Analysis.Est_Error_calc        = 1; %%##
+        FLAG.FractionOfData = 3/4; % Start index occurs this fraction of samples (Ex: 3/4 means calculating erro with last 1/4 of the data)
         FLAG.Analysis.dispResults   = 1;
     FLAG.Analysis.GenComparData         = 0;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
@@ -52,7 +53,9 @@ clear all; close all; clc
     FLAG.OverwriteData.ROM      = 0; % Don't think I have used this yet
     
     FLAG.PLOT.PlotResults = 1; 
-    
+    FLAG.PLOT.K_k_gain    = 0; % Plots the norm of the kalman gain wrt time
+
+
     FLAG.TestCase = 1; % Don't think I have used this yet % Filename just becomes 'TestCase.mat'. Will still overwrite filenames for Slink and data generation
 
 %     FLAG.AnalysisComplete.Initialization = 0;
@@ -72,7 +75,7 @@ clear all; close all; clc
 %% Filepath to get simulation results
     FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest';
     FLAG.folderpathROMError = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanFilter\Results\ROMErrorData';
-    FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\PRBS_Sims';
+    %FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\PRBS_Sims';
 
     % t^-
     %FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestTimeMinus';
@@ -81,6 +84,8 @@ clear all; close all; clc
     % LongerImpulse
     FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerImpulse';
 
+    % zeroMean PRBS
+    FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims';
 
 %% Noise
     % Q Modes
@@ -94,14 +99,13 @@ clear all; close all; clc
     %  1) Matlab SS_DT
     %  2) Ho-Kalman
     FLAG.EstimatorModel = 2;
-        FLAG.LargeQMultiply = 1;
+        FLAG.LargeQMultiply = 1e3; % = 1 when use Q from Slink
         FLAG.ResetStep = 100000;
-
 
     
 %% Conditions to Run
     Q_0_vec = [1e-6];
-    R_0_vec = [1e-6];
+    R_0_vec = [1e-3];
 %     R_0_vec = [1e1];
 
     % Desired Sampling Times
@@ -136,7 +140,7 @@ clear all; close all; clc
 %!!!(Can fix these issues if I implement a DT Impulse simulation instead of calling existing simulations)
 if FLAG.InputMode == 5
     FLAG.PRBSAmp = 1; 
-    FLAG.Tswitch = 1; 
+    FLAG.Tswitch = 10; 
     %FLAG.SamplesPerSwitch = 10;
     %FLAG.N_samples
 end
@@ -152,6 +156,13 @@ end
         FLAG.offsetROM = 1e-2;
     end
 
+%% Save my computer
+if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+    disp("Hey idiot, don't do that")
+    return % Don't use `quit`, that closes the Matlab window entirely
+    FLAG.DoPreCalc              = 0;
+    FLAG.DoAsy                  = 0;
+end
 
 %% Call Analysis Main
     for QQ = Q_0_vec

@@ -22,7 +22,12 @@ function [InputSig_w , InputSig_v] = getSlinkNoise(SIM,N,P,FLAG)
     mdl = 'getNoise';
     load_system(mdl)
     in = Simulink.SimulationInput(mdl);
-    in = in.setModelParameter('StartTime','0','StopTime',num2str( SIM.InputSignal(end,1) ) );
+    if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+        in = in.setModelParameter('StartTime','0','StopTime',num2str( SIM.InputSignal(1001,1) ) );
+    else
+        in = in.setModelParameter('StartTime','0','StopTime',num2str( SIM.InputSignal(end,1) ) );
+    end
+    
     
     % Assign variable values by modifying the workspace
     mdlWks = get_param(in,'ModelWorkspace');   
@@ -74,29 +79,45 @@ function [InputSig_w , InputSig_v] = getSlinkNoise(SIM,N,P,FLAG)
 
 
 %% Make New Vector
-t_vec_interp = 0;
-w_vec_interp = 0;
-v_vec_interp = 0;
-
-for i = 2:length(zero_off_time_vec)
-    % Minus
-    t_vec_interp(end+1,1) = zero_off_time_vec(i) - SIM.Ts/20;
-    w_vec_interp(end+1,1) = zero_off_w_vec(i-1);
-    v_vec_interp(end+1,1) = zero_off_v_vec(i-1);
-
-    % k
-    t_vec_interp(end+1,1) = zero_off_time_vec(i);
-    w_vec_interp(end+1,1) = ( zero_off_w_vec(i-1) + zero_off_w_vec(i) )/2;
-    v_vec_interp(end+1,1) = ( zero_off_v_vec(i-1) + zero_off_v_vec(i) )/2;
-
-    % Plus
-    t_vec_interp(end+1,1) = zero_off_time_vec(i) + SIM.Ts/20;
-    w_vec_interp(end+1,1) = zero_off_w_vec(i);
-    v_vec_interp(end+1,1) = zero_off_v_vec(i);
+if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+    for i = 1:10
+        if i == 1
+            t_vec = [ zero_off_time_vec ];
+            w_vec = [ zero_off_w_vec ];
+            v_vec = [ zero_off_v_vec ];
+        else
+            t_vec = [t_vec; v_k_IN.time+t_vec(end)+SIM.Ts];
+            w_vec = [w_vec; w_k_IN.value'];
+            v_vec = [v_vec; v_k_IN.value'];
+        end
+    end
+    InputSig_w = [t_vec , w_vec];
+    InputSig_v = [t_vec , v_vec];
+else
+    t_vec_interp = 0;
+    w_vec_interp = 0;
+    v_vec_interp = 0;
+    
+    for i = 2:length(zero_off_time_vec)
+        % Minus
+        t_vec_interp(end+1,1) = zero_off_time_vec(i) - SIM.Ts/20;
+        w_vec_interp(end+1,1) = zero_off_w_vec(i-1);
+        v_vec_interp(end+1,1) = zero_off_v_vec(i-1);
+    
+        % k
+        t_vec_interp(end+1,1) = zero_off_time_vec(i);
+        w_vec_interp(end+1,1) = ( zero_off_w_vec(i-1) + zero_off_w_vec(i) )/2;
+        v_vec_interp(end+1,1) = ( zero_off_v_vec(i-1) + zero_off_v_vec(i) )/2;
+    
+        % Plus
+        t_vec_interp(end+1,1) = zero_off_time_vec(i) + SIM.Ts/20;
+        w_vec_interp(end+1,1) = zero_off_w_vec(i);
+        v_vec_interp(end+1,1) = zero_off_v_vec(i);
+    end
+    
+    InputSig_w = [t_vec_interp , w_vec_interp];
+    InputSig_v = [t_vec_interp , v_vec_interp];
 end
-
-InputSig_w = [t_vec_interp , w_vec_interp];
-InputSig_v = [t_vec_interp , v_vec_interp];
 
 %% Plot
 % % Process Noise

@@ -16,9 +16,10 @@ FLAG.PLOT.NoisyPlant                = 0;
 
 FLAG.PLOT.EstimatorZ                = 1;
     FLAG.PLOT.ASYZ              = 0;
-    FLAG.PLOT.VARZ              = 1; 
+    FLAG.PLOT.VARZ              = 0; 
         FLAG.PLOT.PlantComparZ = 1;
     FLAG.All3                   = 1; % Plant, Asy, and Var
+    
 
 z_init = SIM.y_0_FOM;
 
@@ -128,7 +129,7 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
                 for OO = 1:r
                     figure
                     hold on
-                    plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{1}(OO,:),'o','LineWidth',2,'DisplayName',['Est ASY'])
+                    plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{1}(OO,:),'or','LineWidth',2,'DisplayName',['Est ASY'])
                     if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
                         if OO == 1
                             plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln{1}(OO,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
@@ -148,7 +149,7 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
                 for OO = 1:length(RESULTS.EST.ASY.z_soln_ALL)
                     figure
                     hold on
-                    plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{OO}(2,:),'o','LineWidth',2,'DisplayName',['Est ASY'])
+                    plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{OO}(2,:),'or','LineWidth',2,'DisplayName',['Est ASY'])
                     if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
                         plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{OO}(2,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
                         title([RESULTS.Labels.title{OO} ' Compare Plant and Asymptotic Estimator Outputs'])
@@ -174,7 +175,7 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
                 for OO = 1:r
                     figure
                     hold on
-                    plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{1}(OO,:),'o','LineWidth',2,'DisplayName',['Est VAR'])
+                    plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{1}(OO,:),'og','LineWidth',2,'DisplayName',['Est VAR'])
                     if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
                         if OO == 1
                             plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln{1}(OO,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
@@ -194,7 +195,7 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
                 for OO = 1:length(RESULTS.EST.VAR.z_soln_ALL)
                     figure
                     hold on
-                    plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{OO}(2,:),'o','LineWidth',2,'DisplayName',['Est VAR'])
+                    plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{OO}(2,:),'og','LineWidth',2,'DisplayName',['Est VAR'])
                     if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
                         plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{OO}(2,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
                         title([RESULTS.Labels.title{OO} ' Compare Plant and Variable Estimator Outputs'])
@@ -221,11 +222,11 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
                 hold on
                 plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{1}(OO,:),'or','LineWidth',2,'DisplayName',['Asymptotic'])
                 plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{1}(OO,:),'og','LineWidth',2,'DisplayName',['Variable'])
-                if OO == 1
-                    plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln{1}(OO,:),'k','LineWidth',2,'DisplayName',['Plant'])
-                else
+%                 if OO == 1
+%                     plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln{1}(OO,:),'k','LineWidth',2,'DisplayName',['Plant'])
+%                 else
                     plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{1}(OO,:),'k','LineWidth',2,'DisplayName',['Plant'])
-                end
+%                 end
                 title([RESULTS.Labels.title{OO} ' Compare Plant to Variable and Asymptotic Estimators'])
                 xlabel('Time [s]')
                 ylabel(RESULTS.Labels.unit{OO})

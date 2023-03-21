@@ -28,6 +28,31 @@ end
 if FLAG.Analysis.Estimator 
     [plant_filename] = getSlinkfilename(FLAG,SIM);
     [ESTIMATOR,RESULTS] = PerformEstimation(plant_filename,SIM,FLAG,N,P,RESULTS);
+
+    %% Plot Kalman Gain
+    if FLAG.PLOT.K_k_gain
+        [~,~,N_steps] = size(ESTIMATOR.K_k{1});
+        norm_vec = nan(1,N_steps);
+        for i = 1:N_steps % get norm
+           norm_vec(i) = norm(ESTIMATOR.K_k{1}(:,:,i));
+        end
+
+        figure
+        plot(RESULTS.EST.PLANT.t_soln , norm_vec, 'k','Linewidth',2)
+        title('Norm of Kalman Gain')
+        xlabel('Time [s]')
+        ylabel('|K_k|')
+
+        min_t = RESULTS.EST.PLANT.t_soln(end-50);
+        max_t = RESULTS.EST.PLANT.t_soln(end);
+        figure
+        plot(RESULTS.EST.PLANT.t_soln , norm_vec, 'k','Linewidth',2)
+        title('Norm of Kalman Gain: Last 50 Points')
+        xlabel('Time [s]')
+        ylabel('|K_k|')
+        xlim([min_t,max_t])
+    end
+
 end
 
 
