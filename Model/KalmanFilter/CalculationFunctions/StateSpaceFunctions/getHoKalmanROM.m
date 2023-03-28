@@ -14,24 +14,31 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
     
     z_imp    = SIM.OutputMatrix * simsys.SV_soln';
     g_k_temp = z_imp(:,idx_vec(pulse_idx-1:end));
-    %g_k_temp = z_imp(:,idx_vec(pulse_idx:end));    % t^-
     IC       = z_imp(:,1);
     g_k      = g_k_temp - g_k_temp(:,1);
 
     t_imp = simsys.t_soln;
 
 
+%% Adjust for Order of Magnitude
+    range    = (max(g_k')-min(g_k'));
+    g_k      = inv(diag(range))*g_k;
+    multiple = diag(range);
+
+
 %% Plot Impulse Response
     if FLAG.Analysis.PlotImp
+        ODE_data_adj = inv(diag(range))*(z_imp -IC);
         for i = 1:N.DesOut
-        figure
-        hold on
-        plot(t_imp                            ,z_imp(i,:)      ,'-ok','DisplayName','ODE')
-        plot(t_imp(idx_vec(pulse_idx-1:end),:),g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r','DisplayName','Selected Data')
-        %plot(t_imp(idx_vec(pulse_idx:end),:)  ,g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r') % t^-
-        title(['Data Used in Ho-Kalman Reduction ' RESULTS.Labels.title{i}])
-        lgn = legend;
-        lgn.Location = 'best';
+            figure
+            hold on
+            % plot(t_imp                            ,z_imp(i,:)/multiple(i,i) ,'-ok'                      ,'DisplayName','ODE')
+            plot(t_imp                            ,ODE_data_adj(i,:) ,'-ok'                      ,'DisplayName','ODE')
+            plot(t_imp(idx_vec(pulse_idx-1:end),:),g_k(i,:)  , 'or','MarkerFaceColor','r','DisplayName','Selected Data') %+IC(i,1)
+            title(['Data Used in Ho-Kalman Reduction ' RESULTS.Labels.title{i}])
+            lgn = legend;
+            lgn.Location = 'best';
+            xlim([0,10])
         end
     end
 
@@ -53,12 +60,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Get ROM for each desired outputs separately (Combined with Voltage)
         for OO = 1:N.DesOut
-            %% Get Hankle Matrix
-            H = myHankle(g_k([1,OO],:));
+            %% Get Hankel Matrix
+            H = myHankel(g_k([1,OO],:));
     
     
             %% Convert to SS DT sys
-            % SVD of Hankle
+            % SVD of Hankel
             [Nrows, Ncolms] = size(H);
             N_outputs = Nrows/Ncolms;
             N_in = 1; %%% !!! Hardcoded but always true for batteries
@@ -110,6 +117,7 @@ end
     
             % C_r
             C_r = obsv_r(1:N_outputs,:   );
+            C_r = multiple(OO,OO) * C_r;
     
             % B_r
             B_r = cont_r(:        ,N_in);
@@ -139,12 +147,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Get ROM for all desired outputs combined
-        %% Get Hankle Matrix
-        H = myHankle(g_k);
+        %% Get Hankel Matrix
+        H = myHankel(g_k);
 
 
         %% Convert to SS DT sys
-        % SVD of Hankle
+        % SVD of Hankel
         [Nrows, Ncolms] = size(H);
         N_outputs = Nrows/Ncolms;
         N_in = 1; %%% !!! Hardcoded but always true for batteries
@@ -177,6 +185,7 @@ end
 
         % C_r
         C_r = obsv_r(1:N_outputs,:   );
+        C_r = multiple * C_r;
 
         % B_r
         B_r = cont_r(:        ,N_in);
@@ -205,3 +214,4 @@ end
 
 end
 
+%plot(t_imp(idx_vec(pulse_idx:end),:)  ,g_k(i,:)+IC(i,1),'or','MarkerFaceColor','r') % t^-

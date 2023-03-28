@@ -11,13 +11,14 @@ function [ESTIMATOR,RESULTS] = PerformEstimation(plant_filename,SIM,FLAG,N,P,RES
         
         % Plant Data
         u = Plant.Plant_Data.i_user.i_user_soln;
+        u = [u(2:end) ; u(end)]; %% Fix the delay
         z = Plant.Plant_Data.zN.z_soln;
         t = Plant.Plant_Data.i_user.t_soln;
     else
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
-            [t, u , ~ , z_all] = ROMplantData(SIM,FLAG,N,P,RESULTS);
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
+            [t, u , ~ , z_all, z_cell_voltage] = ROMplantData(SIM,FLAG,N,P,RESULTS);
         else
-            [t, u , x , z_all] = ROMplantData(SIM,FLAG,N,P,RESULTS);
+            [t, u , x , z_all, z_cell_voltage] = ROMplantData(SIM,FLAG,N,P,RESULTS);
         end
     end
     
@@ -32,7 +33,7 @@ function [ESTIMATOR,RESULTS] = PerformEstimation(plant_filename,SIM,FLAG,N,P,RES
             [~ , sys_DT] = getSS_System(SIM,N,P,FLAG);
             est_sys_tot{1} = sys_DT;
         case 2
-            [HK_sys] = getHoKalmanROM(SIM,N,P,FLAG);
+            [HK_sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS);
             if FLAG.EST.SepHK
                 est_sys_tot = HK_sys(1:N.DesOut);
             else
@@ -48,9 +49,9 @@ for OO = 1:length(est_sys_tot)
     ESTIMATOR.C_des_ROM{OO} = C_des_ROM;
     ESTIMATOR.sys{OO} = est_sys;
 
-    C_m = est_sys.C(P.cell_voltage,:);
-    D_m = est_sys.D(P.cell_voltage,:);
-    est_sys = ss(est_sys.A , est_sys.B , C_m , D_m , SIM.Ts);
+    % C_m = est_sys.C(P.cell_voltage,:);
+    % D_m = est_sys.D(P.cell_voltage,:);
+    % est_sys = ss(est_sys.A , est_sys.B , C_m , D_m , SIM.Ts);
 
     if FLAG.UseWrongIC
         random = randi([-9,9],length(est_sys.A),1);
@@ -60,7 +61,7 @@ for OO = 1:length(est_sys_tot)
     end
     
     if FLAG.UseROMAsPlant
-        z = z_all{OO}(1,:);
+        z = z_cell_voltage{OO}(P.cell_voltage,:);
     end
     
 
@@ -70,9 +71,9 @@ for OO = 1:length(est_sys_tot)
         if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
             y_hat_asy_ALL = C_des_ROM * x_hat_asy + z_init;
         else
-            y_hat_asy_ALL = C_des_ROM * x_hat_asy + z_init([1,OO],1);
+            y_hat_asy_ALL = C_des_ROM * x_hat_asy + z_init([P.cell_voltage,OO],1);
         end
-        y_hat_asy = y_hat_asy_ALL(1,:);
+        y_hat_asy = y_hat_asy_ALL(P.cell_voltage,:);
         
         RESULTS.EST.ASY.x_soln{OO}      = x_hat_asy;
         RESULTS.EST.ASY.z_soln{OO}      = y_hat_asy;
@@ -90,11 +91,11 @@ for OO = 1:length(est_sys_tot)
         if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
             y_hat_var_ALL = C_des_ROM * x_hat_var + z_init;
         else
-            y_hat_var_ALL = C_des_ROM * x_hat_var + z_init([1,OO],1);
+            y_hat_var_ALL = C_des_ROM * x_hat_var + z_init([P.cell_voltage,OO],1);
         end
-        y_hat_var = y_hat_var_ALL(1,:);
+        y_hat_var = y_hat_var_ALL(P.cell_voltage,:);
         
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
         else
             RESULTS.EST.VAR.x_soln{OO}      = x_hat_var;
         end
@@ -107,7 +108,7 @@ for OO = 1:length(est_sys_tot)
     if FLAG.DoPreCalc
         [ESTIMATOR.K_infty{OO}, ESTIMATOR.P_infty{OO}] = AsymptoticPreCalcs(FLAG,SIM,est_sys);
     else
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
         else
             ESTIMATOR.K_infty{OO} = ESTIMATOR.K_k{OO}(:,:,end);
             ESTIMATOR.P_infty{OO} = ESTIMATOR.P_k_pre{OO}(:,:,end);
@@ -115,16 +116,19 @@ for OO = 1:length(est_sys_tot)
     end  
     
 end    
-SIM.Qi = oldQ;
-RESULTS.EST.ASY.t_soln   = t;
-RESULTS.EST.VAR.t_soln   = t;
-RESULTS.EST.PLANT.t_soln = t;
+
+
+%% Something
+    SIM.Qi = oldQ;
+    RESULTS.EST.ASY.t_soln   = t;
+    RESULTS.EST.VAR.t_soln   = t;
+    RESULTS.EST.PLANT.t_soln = t;
 
 
 %% Save Plant Results
     if ~FLAG.UseROMAsPlant % Load from Slink
         if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
-            if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+            if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
             else
                 RESULTS.EST.PLANT.x_soln{1}     = Plant.Plant_Data.xN.x_soln;
             end
@@ -137,18 +141,20 @@ RESULTS.EST.PLANT.t_soln = t;
                 else
                     RESULTS.EST.PLANT.x_soln{OO}     = Plant.Plant_Data.xN.x_soln;
                 end
-                RESULTS.EST.PLANT.z_soln_ALL{OO} = plant_z_all([1,OO],:);
+                RESULTS.EST.PLANT.z_soln_ALL{OO} = plant_z_all([P.cell_voltage,OO],:);
                 RESULTS.EST.PLANT.z_soln{OO}     = Plant.Plant_Data.zN.z_soln;
             end
         end
     else
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
         else
             RESULTS.EST.PLANT.x_soln     = x;
         end
+        
         RESULTS.EST.PLANT.z_soln_ALL     = z_all;
+        
         for OO = 1:length(est_sys_tot)
-            RESULTS.EST.PLANT.z_soln{OO} = z_all{OO}(1,:);
+            RESULTS.EST.PLANT.z_soln{OO} = z_cell_voltage{OO}(P.cell_voltage,:);
         end
     end
 

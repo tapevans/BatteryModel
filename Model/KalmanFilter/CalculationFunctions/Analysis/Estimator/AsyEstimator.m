@@ -15,16 +15,17 @@ z_k = reshape(z,1,[]);
 
 
 %% Initialize Variables
+A_DT = sys.A;
+B_DT = sys.B;
+C_DT = sys.C(P.cell_voltage,:);
+K_infty = K_infty(:,P.cell_voltage);
+
 N_steps = length(u);
-[N_measur, N_states] = size(sys.C);
+[N_measur, N_states] = size(C_DT);
 
 x_asy     = zeros(N_states,N_steps);   % Estimator States
 x_asy_pre = zeros(N_states,N_steps);   % Estimator States predict phase
 y_tilde_k = zeros(N_measur,N_steps);   % Estimation Error
-
-A_DT = sys.A;
-B_DT = sys.B;
-C_DT = sys.C;
 
 x_asy(:,1) = x_hat_0;
     

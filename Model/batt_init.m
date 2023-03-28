@@ -517,14 +517,14 @@ elseif SIM.SimMode == 7
 elseif SIM.SimMode == 8
     SIM.A_c        = min( AN.A_c, CA.A_c );
     SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-    %N_PRBS  = 255;                      % Length of the input           [-]
-    N_PRBS  = 2^9 - 1;                      % Length of the input           [-] % New PRBS
+    % N_PRBS  = 255;                      % Length of the input           [-]
+    N_PRBS  = 2^9 - 1;                  % Length of the input           [-] % New PRBS
     TYPE    = 'PRBS';                   % Create a PRBS signal          [-]
     BAND    = [0 1];                    % Freq. band                    [s]
     LEVELS  = [-1 1];                   % PRBS limits                   [-]
     PRBS_gen= idinput(N_PRBS,TYPE,BAND,LEVELS);         % PRBS Demand   [A/m^2]
-%     t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
-%     C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
+    % t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
+    % C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
     t_Demand = ((0:1:SIM.PRBSLength-9)*(SIM.Tswitch))'; % PRBS Demand t [s]
     C_Demand = PRBS_gen(9:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
     

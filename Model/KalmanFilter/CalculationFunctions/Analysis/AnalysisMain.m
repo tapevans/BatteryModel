@@ -13,6 +13,12 @@ if FLAG.Analysis.NoNoiseCompare
 end
 
 
+%% get DARE
+if FLAG.Analysis.getDARE
+    [RESULTS] = getDARE(SIM,FLAG,N,P,RESULTS);
+end
+
+
 %% Noisy Plant
 if FLAG.Analysis.NoisyPlant
     [RESULTS] = RunSimulink(SIM,N,P,FLAG,RESULTS);
@@ -27,6 +33,7 @@ end
 %% Estimator
 if FLAG.Analysis.Estimator 
     [plant_filename] = getSlinkfilename(FLAG,SIM);
+    FLAG.Analysis.PlotImp = 0;
     [ESTIMATOR,RESULTS] = PerformEstimation(plant_filename,SIM,FLAG,N,P,RESULTS);
 
     %% Plot Kalman Gain

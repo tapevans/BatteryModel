@@ -15,28 +15,29 @@ clear all; close all; clc
 
 
 %% Analysis to Perform
-    FLAG.Analysis.NoNoiseCompare        = 1; 
+    FLAG.Analysis.NoNoiseCompare        = 0; 
         FLAG.Analysis.ode           = 1;
         FLAG.Analysis.SS_CT         = 0;
-        FLAG.Analysis.SS_DT         = 1;
+        FLAG.Analysis.SS_DT         = 0;
         FLAG.Analysis.OptimalHK     = 0;
             FLAG.r_max = 50;
             FLAG.UseInput_r = 0;
         FLAG.Analysis.ROM_HoKal     = 1;
-            FLAG.Analysis.PlotImp = 0;
-            FLAG.EST.SepHK        = 1; % 1 if calculate a ROM for each desired variable
+            FLAG.EST.SepHK        = 1; % 1 if calculate a ROM for each desired output
             FLAG.UseOptimal       = 0;
-            FLAG.PlotSingVal      = 0;
+    FLAG.Analysis.getDARE               = 1;
+        FLAG.IDV                    = 1;
+        FLAG.COM                    = 0;
     FLAG.Analysis.NoisyPlant            = 0; 
-    FLAG.Analysis.Estimator             = 0; %%## 
-        FLAG.UseROMAsPlant          = 0;
+    FLAG.Analysis.Estimator             = 1; %%## 
+        FLAG.UseROMAsPlant          = 1;
         FLAG.UseWrongIC             = 1;
         FLAG.DoPreCalc              = 1;
         FLAG.DoAsy                  = 1;
         FLAG.DoVar                  = 1;
     FLAG.Analysis.Est_Error_calc        = 1; %%##
-        FLAG.FractionOfData = 3/4; % Start index occurs this fraction of samples (Ex: 3/4 means calculating erro with last 1/4 of the data)
-        FLAG.Analysis.dispResults   = 1;
+        FLAG.FractionOfData         = 1/2;%3/4; % Start index occurs this fraction of samples (Ex: 3/4 means calculating erro with last 1/4 of the data)
+        FLAG.Analysis.dispResults   = 1;        
     FLAG.Analysis.GenComparData         = 0;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
         % FLAG.CompareQMode
@@ -45,16 +46,20 @@ clear all; close all; clc
         FLAG.CompareQMode = 1;
         FLAG.READ_IN_DATA = 1;
 
-    
+%% Overwrite?
     FLAG.OverwriteData.All      = 0; %% If you try to run the same sim with different Analysis, it loads old flags and won't do new analysis
     FLAG.OverwriteData.Slink    = 0; %% If changing t_final, need to rerun Slink
     FLAG.OverwriteData.GenData  = 0;
     FLAG.OverwriteData.ROMError = 0;
     FLAG.OverwriteData.ROM      = 0; % Don't think I have used this yet
     
-    FLAG.PLOT.PlotResults = 1; 
-    FLAG.PLOT.K_k_gain    = 0; % Plots the norm of the kalman gain wrt time
 
+%% Plots
+    FLAG.PLOT.PlotResults = 1;
+    FLAG.Analysis.PlotImp = 0; % Plot the impulse response for each output (HK)
+    FLAG.PlotSingVal      = 0;
+    FLAG.PLOT.K_k_gain    = 0; % Plots the norm of the kalman gain wrt time
+    FLAG.PlotError        = 0; % Plots the abs(error) between the ROM and plant
 
     FLAG.TestCase = 1; % Don't think I have used this yet % Filename just becomes 'TestCase.mat'. Will still overwrite filenames for Slink and data generation
 
@@ -87,6 +92,7 @@ clear all; close all; clc
     % zeroMean PRBS
     FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims';
 
+
 %% Noise
     % Q Modes
     %  1) Input Q
@@ -99,14 +105,26 @@ clear all; close all; clc
     %  1) Matlab SS_DT
     %  2) Ho-Kalman
     FLAG.EstimatorModel = 2;
-        FLAG.LargeQMultiply = 1e3; % = 1 when use Q from Slink
-        FLAG.ResetStep = 100000;
+        FLAG.LargeQMultiply = 1;%e3; % = 1 when use Q from Slink
+        FLAG.ResetStep = 10000000;
+        FLAG.Q_Add = 0e-1;
 
     
 %% Conditions to Run
-    Q_0_vec = [1e-6];
-    R_0_vec = [1e-3];
-%     R_0_vec = [1e1];
+    % Q_0_vec = [1e-6];
+    % Q_0_vec = [1e-5];
+    % Q_0_vec = [1e-4];
+    Q_0_vec = [1e-3];
+    % Q_0_vec = [1e-2];
+
+    % R_0_vec = [1e-6];
+    % R_0_vec = [1e-5];
+    % R_0_vec = [1e-4];
+    % R_0_vec = [1e-3];
+    % R_0_vec = [1e-2];
+    % R_0_vec = [1e-1];
+    R_0_vec = [1e0];
+    % R_0_vec = [1e1];
 
     % Desired Sampling Times
         N_t_s   = 25;   % **Keep this fix for now
@@ -138,8 +156,7 @@ clear all; close all; clc
 %(Can't do Tswitch=0.1 when doing Ho-Kalman since I don't have Ts=0.01 Impulse Response, unless SamplesPerSwitch == 1)
 %(Can't do Tswitch=100 when doing Ho-Kalman and using SamplesPerSwitch == 1 since I don't have Ts=100 Impulse Response)
 %!!!(Can fix these issues if I implement a DT Impulse simulation instead of calling existing simulations)
-if FLAG.InputMode == 5
-    FLAG.PRBSAmp = 1; 
+if FLAG.InputMode == 5    FLAG.PRBSAmp = 1; 
     FLAG.Tswitch = 10; 
     %FLAG.SamplesPerSwitch = 10;
     %FLAG.N_samples
@@ -151,9 +168,9 @@ end
     FLAG.offsetROM_IC_Abs  = 1e-6; % [%], Relative offset for the initial conditions for ROM Estimator
     FLAG.offsetROM_IC_Zero = 1e-4; % [%], Relative offset for the initial conditions for ROM Estimator
     if FLAG.EstimatorModel == 1
-        FLAG.offsetROM = 1e1;
+        FLAG.offsetROM = -1e1;
     else
-        FLAG.offsetROM = 1e-2;
+        FLAG.offsetROM = 1e-1;
     end
 
 %% Save my computer

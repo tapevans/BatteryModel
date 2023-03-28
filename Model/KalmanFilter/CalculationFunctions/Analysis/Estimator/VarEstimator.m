@@ -3,7 +3,12 @@
 %
 %%
 function [x_hat,K_k,P_k_pre] = VarEstimator(sys,FLAG,SIM,P,x_hat_0,u,z)
-[N_measur, N_states] = size(sys.C);
+A_DT = sys.A;
+B_DT = sys.B;
+C_DT = sys.C(P.cell_voltage,:);
+
+[N_measur, N_states] = size(C_DT);
+
 %% Perform Pre-Calcs
 if FLAG.DoPreCalc
     [K_infty, P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys);
@@ -11,6 +16,7 @@ else
     K_infty = 0.5*ones(N_states,N_measur);
     P_infty = 0.5*eye(N_states);
 end
+K_infty = K_infty(:,P.cell_voltage);
 
 u_k = reshape(u,1,[]);
 z_k = reshape(z,1,[]);
@@ -18,7 +24,6 @@ z_k = reshape(z,1,[]);
 
 %% Initialize Variables
 N_steps = length(u);
-
 
 x_var     = zeros(N_states,N_steps);   % Estimator States
 x_var_pre = zeros(N_states,N_steps);   % Estimator States predict phase
@@ -34,19 +39,18 @@ P_k(:,:,1) = confidence*eye(N_states);
 % P_k(:,:,1)     = P_infty;
 % P_k_pre(:,:,1) = P_infty;
 
-K_k(:,:,1) = K_infty;
-
-A_DT = sys.A;
-B_DT = sys.B;
-C_DT = sys.C;
+% K_k(:,:,1) = K_infty;
+K_k(:,:,1) = 2*K_infty;
 
 x_var(:,1) = x_hat_0;
 
 switch FLAG.QMode
     case 1 % Input Q
         Q = SIM.Qi;
+        Q_matrix = B_DT*Q*B_DT';
+        Q_matrix = Q_matrix + SIM.Q_Add * eye(size(Q_matrix));
     case 2 % State Q
-        Q = SIM.Qs;
+        Q_matrix = SIM.Qs;
 end
 R = SIM.R_0 * eye(N_measur);
 % SIM.R = (diag(R))';
@@ -59,8 +63,7 @@ R = SIM.R_0 * eye(N_measur);
 
 % z_init = SIM.y_0_FOM(P.cell_voltage,1);
 
-
-reset_steps = SIM.ResetStep; % Reset P back to the original P
+% reset_steps = SIM.ResetStep; % Reset P back to the original P
 
 
 %% Run Estimation
@@ -69,14 +72,15 @@ switch FLAG.QMode
         for i = 2:N_steps
         % Predict Phase
             x_var_pre(:,i) = A_DT * x_var(:,i-1)  +  B_DT * u_k(:,i-1);
-            P_k_pre(:,:,i) = A_DT * P_k(:,:,i-1) * A_DT'  +  B_DT*Q*B_DT';
+            % P_k_pre(:,:,i) = A_DT * P_k(:,:,i-1) * A_DT'  +  B_DT*Q*B_DT';
+            P_k_pre(:,:,i) = A_DT * P_k(:,:,i-1) * A_DT'  +  Q_matrix;
             %i
             %mod(i,100)
-            if mod(i,reset_steps) == 0
-                P_k_pre(:,:,i) = P_k_pre(:,:,1);
-                P_k(:,:,i)     = P_k(:,:,1);
-                K_k(:,:,i)     = K_k(:,:,1);
-            end
+            % if mod(i,reset_steps) == 0
+            %     P_k_pre(:,:,i) = P_k_pre(:,:,1);
+            %     P_k(:,:,i)     = P_k(:,:,1);
+            %     K_k(:,:,i)     = K_k(:,:,1);
+            % end
         
     %     % Actuate System
     %         x_EST_sys(:,i) = A_DT * x_EST_sys(:,i-1)  +  B_DT * u_k(i-1)  +  w_k(:,i-1);

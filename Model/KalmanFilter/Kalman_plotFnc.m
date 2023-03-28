@@ -34,7 +34,7 @@ if FLAG.PLOT.NoNoiseCompare
                 plot(RESULTS.ROM_HoKal.t_soln , RESULTS.ROM_HoKal.z_soln(:,i),'ro'     ,'LineWidth',2,'DisplayName','ROM Ho-Kal')
             end
             if FLAG.PLOT.SS_DT    && isfield(RESULTS,'SS_DT')
-                plot(RESULTS.SS_DT.t_soln     , RESULTS.SS_DT.z_soln(:,i)    ,'r^'     ,'LineWidth',2,'DisplayName','SS DT')
+                plot(RESULTS.SS_DT.t_soln     , RESULTS.SS_DT.z_soln(:,i)    ,'b^'     ,'LineWidth',2,'DisplayName','SS DT')
             end
             if FLAG.PLOT.SS_CT    && isfield(RESULTS,'SS_CT')
                 plot(RESULTS.SS_CT.t_soln     , RESULTS.SS_CT.z_soln(:,i)    ,'gsquare','LineWidth',2,'DisplayName','SS CT')
@@ -237,9 +237,9 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
             for OO = 1:length(RESULTS.EST.VAR.z_soln_ALL)
                 figure
                 hold on
-                plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{OO}(2,:),'or','LineWidth',2,'DisplayName',['Asymptotic'])
-                plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{OO}(2,:),'og','LineWidth',2,'DisplayName',['Variable'])
-                plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{OO}(2,:),'k','LineWidth',2,'DisplayName',['Plant'])
+                plot(RESULTS.EST.ASY.t_soln ,     RESULTS.EST.ASY.z_soln_ALL{OO}(2,:),'or','LineWidth',2,'DisplayName',['Asymptotic'])
+                plot(RESULTS.EST.VAR.t_soln ,     RESULTS.EST.VAR.z_soln_ALL{OO}(2,:),'og','LineWidth',2,'DisplayName',['Variable'])
+                plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{OO}(2,:),'k' ,'LineWidth',2,'DisplayName',['Plant'])
                 title([RESULTS.Labels.title{OO} ' Compare Plant to Variable and Asymptotic Estimators'])
                 xlabel('Time [s]')
                 ylabel(RESULTS.Labels.unit{OO})

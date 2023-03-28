@@ -4,7 +4,12 @@ function [ERROR_CALC,RESULTS] = getErrorCalculations(SIM,FLAG,N,P,RESULTS,ESTIMA
 N_samples = length(RESULTS.EST.VAR.t_soln);
 idx = floor(FLAG.FractionOfData*N_samples);
 
-
+fig = gcf;
+NumFig = fig.Number;
+if NumFig == 1
+    close(1)
+    NumFig = 0;
+end
 
 %% From DARE
 for OO = 1:length(RESULTS.EST.PLANT.z_soln_ALL)
@@ -21,18 +26,37 @@ end
 %% Calculate the error in the outputs (ASY)
 if isfield(RESULTS.EST.ASY,'z_soln_ALL')
     for OO = 1:length(RESULTS.EST.PLANT.z_soln_ALL)
-%         if OO == 1 && FLAG.EstimatorModel ~= 1 %%% Removing this if statement. I think the comparison should be between the actual voltage and estimated voltage. Not the noisy plany voltage
-%             plant_outputs = [RESULTS.EST.PLANT.z_soln{OO}
-%                              RESULTS.EST.PLANT.z_soln{OO}];
-%         else
-            plant_outputs = RESULTS.EST.PLANT.z_soln_ALL{OO};
-%         end
+        plant_outputs = RESULTS.EST.PLANT.z_soln_ALL{OO};
         est_outputs   = RESULTS.EST.ASY.z_soln_ALL{OO};
 
+        if FLAG.PlotError
+            error_outputs = abs(est_outputs - plant_outputs);
+            if FLAG.EST.SepHK
+                figure(NumFig + OO)
+                hold on
+                plot(RESULTS.EST.VAR.t_soln   , error_outputs(2,:),'r','Linewidth',2,'DisplayName','Asymptotic')
+                xline(idx,'Linewidth',2)
+                xlabel('Time [s]')
+                ylabel([RESULTS.Labels.unit{OO}])
+                title([RESULTS.Labels.title{OO}  ' Output Error'])
+                lgn = legend;
+            else
+                for i = 1:N.DesOut
+                    figure(NumFig + i)
+                    hold on
+                    plot(RESULTS.EST.VAR.t_soln   , error_outputs(i,:),'r','Linewidth',2,'DisplayName','Asymptotic')
+                    xline(idx,'Linewidth',2)
+                    xlabel('Time [s]')
+                    ylabel([RESULTS.Labels.unit{i}])
+                    title([RESULTS.Labels.title{i}  ' Output Error'])
+                    lgn = legend;
+                end
+            end
+            
+        end
+
         [N_outputs, ~] = size(plant_outputs);
-        %error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
-        %error_outputs = est_outputs(:,idx+1:end) - plant_outputs(:,idx:end-1);
-        error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);
+        error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
 
         covar_outputs = nan(N_outputs);
         for i = 1:N_outputs
@@ -58,10 +82,33 @@ if isfield(RESULTS.EST.VAR,'z_soln_ALL')
         plant_outputs = RESULTS.EST.PLANT.z_soln_ALL{OO};
         est_outputs   = RESULTS.EST.VAR.z_soln_ALL{OO};
 
+        if FLAG.PlotError
+            error_outputs = abs(est_outputs - plant_outputs);
+            if FLAG.EST.SepHK
+                figure(NumFig + OO)
+                hold on
+                plot(RESULTS.EST.VAR.t_soln   , error_outputs(2,:),'g','Linewidth',2,'DisplayName','Variable')
+                xline(idx,'Linewidth',2)
+                xlabel('Time [s]')
+                ylabel([RESULTS.Labels.unit{OO}])
+                title([RESULTS.Labels.title{OO}  ' Output Error'])
+                lgn = legend;
+            else
+                for i = 1:N.DesOut
+                    figure(NumFig + i)
+                    hold on
+                    plot(RESULTS.EST.VAR.t_soln   , error_outputs(i,:),'g','Linewidth',2,'DisplayName','Variable')
+                    xline(idx,'Linewidth',2)
+                    xlabel('Time [s]')
+                    ylabel([RESULTS.Labels.unit{i}])
+                    title([RESULTS.Labels.title{i}  ' Output Error'])
+                    lgn = legend;
+                end
+            end
+        end
+
         [N_outputs, ~] = size(plant_outputs);
-        %error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
-        %error_outputs = est_outputs(:,idx+1:end) - plant_outputs(:,idx:end-1);
-        error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);
+        error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
 
         covar_outputs = nan(N_outputs);
         for i = 1:N_outputs
@@ -349,3 +396,8 @@ end
 %         disp('CPC^T diagonal Calculated')
 %         disp(num2str(CPCT_calc_diag))
 
+
+        %error_outputs = est_outputs(:,idx+1:end) - plant_outputs(:,idx:end-1);
+        %error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);
+        %error_outputs = est_outputs(:,idx+1:end) - plant_outputs(:,idx:end-1);
+        %error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);

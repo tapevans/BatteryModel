@@ -9,9 +9,11 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     SIM.r_max = FLAG.r_max;
     SIM.LargeQMultiply = FLAG.LargeQMultiply;
     SIM.ResetStep      = FLAG.ResetStep;
+    SIM.Q_Add          = FLAG.Q_Add;
 
     if FLAG.InputMode == 5
         SIM.Tswitch = FLAG.Tswitch;
+        SIM.PRBSAmp = FLAG.PRBSAmp;
     end
 
     SIM.offsetROM_IC_Rel = FLAG.offsetROM_IC_Rel;
@@ -202,13 +204,14 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
 if FLAG.InputMode == 5
     filename = getPRBSFilename(FLAG);
     sysSIM   = load(filename,'SIM');
-
+    
     t_vec  = (0:SIM.Ts:sysSIM.SIM.profile_time(end))';
     i_user = interp1(sysSIM.SIM.profile_time , sysSIM.SIM.profile_current , t_vec);
-
-    SIM.InputSignal = [t_vec , i_user];
+    
+    %SIM.InputSignal = [t_vec , i_user];
+    SIM.InputSignal = [t_vec , [i_user(2:end);i_user(end)]]; % Proper ZOH
 else
-
+    %%%%%%%%%%%%%%%%%%!!!!!!!!!!! Fix else for proper ZOH
     SIM.t_final_Relax_Step = (FLAG.N_samples+2)*SIM.Ts;
     SIM.t_vec_Relax_Step = 0:SIM.Ts:SIM.t_final_Relax_Step;
     
@@ -216,8 +219,6 @@ else
     % Add a time right after the step
     SIM.t_vec_Relax_Step = [SIM.t_vec_Relax_Step(1:3) , SIM.t_vec_Relax_Step(3)+SIM.Ts/10 , SIM.t_vec_Relax_Step(4:end)];
     
-    
-
     input_load = ones(size(SIM.t_vec_Relax_Step));
     input_load(1) = 0;
     input_load(2) = 0;
@@ -229,8 +230,6 @@ else
     
     SIM.InputSignal = [SIM.t_vec_Relax_Step' input_load'];
 end
-     %plot(SIM.InputSignal(:,1),SIM.InputSignal(:,2))
-
 end
 
 
@@ -287,3 +286,20 @@ end
 %     
 %     SIM.t_final_sim = SIM.t_final + SIM.time_rest + SIM.time_ramp;
 %     SIM.t_vec = 0:SIM.tc:SIM.t_final_sim;
+
+
+
+
+
+
+% if 0
+%     figure
+%     hold on
+%     plot(sysSIM2.t_soln        ,sysSIM2.i_user        ,'k','LineWidth' ,2,'DisplayName','ODE')
+%     plot(SIM.InputSignal(:,1)  ,SIM.InputSignal(:,2)  ,'ro','LineWidth',5,'DisplayName','DT')
+%     plot(SIM.InputSignal2(:,1) ,SIM.InputSignal2(:,2) ,'bo','LineWidth',2,'DisplayName','DT Fix')
+%     xlabel('Time [s]')
+%     ylabel('Current [A m^{-2}]')
+%     title('Compare ODE to DT Input Signal')
+%     lgn = legend;
+% end
