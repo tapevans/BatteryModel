@@ -35,7 +35,7 @@
         
         
 %%
-clear all; close all; clc;
+% clear all; close all; clc;
 
 
 %% Subdirecties to Include
@@ -77,11 +77,11 @@ FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one 
 % folder_name  = 'zeroMeanPRBS_Sims';
 % battery_name = 'PRBS_Sims';
 
-folder_name  = 'zeroMeanPRBS_withRelax_Sims';
-battery_name = 'PRBS_Sims';
+% folder_name  = 'zeroMeanPRBS_withRelax_Sims';
+% battery_name = 'PRBS_Sims';
 
-% folder_name  = 'LongerImpulse';
-% battery_name = 'ObservabilityTest';
+folder_name  = 'LongerImpulse';
+battery_name = 'ObservabilityTest';
 % battery_name = 'PRBS_Sims';
 
 
@@ -108,7 +108,7 @@ battery_name = 'PRBS_Sims';
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    SS_SOC = [];
+    % SS_SOC = [];
 %     SS_SOC = 0:1:100;
 %     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
 %     SS_SOC = [80.46];
@@ -120,7 +120,7 @@ battery_name = 'PRBS_Sims';
 %         SS_freq = (logspace(-2,6,75) *(2*pi));
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 0;
+    KBCP   = 1;
         KBCPProfileOverwrite = 1;
 %         KBCPProfileFilename = 'DTImpulseTs0.1';
 %         KBCPProfileFilename = 'DTImpulseTs0.121152765862859';
@@ -161,7 +161,7 @@ battery_name = 'PRBS_Sims';
     % Initial SOC
     %         KBSOC = 81.93;
     %         KBSOC = 100; 
-            KBSOC = 50;
+            % KBSOC = 50;
 
 
 % ---- MOO Controller ----
@@ -182,7 +182,7 @@ battery_name = 'PRBS_Sims';
         
 
 % ---- PRBS ---- 
-    doPRBS = 1;
+    doPRBS = 0;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
         PRBS_SOC     = 50; % [%],     State of Charge
         PRBS_Tswitch = 100;  % [s],     Switching Time

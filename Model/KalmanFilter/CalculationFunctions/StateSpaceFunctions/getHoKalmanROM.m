@@ -73,34 +73,34 @@ end
             [U,S,V] = svd(H);
             r = rank(S);
             %r = rank(S,1.15e-7);
-%             if FLAG.UseInput_r
-%                 r = SIM.Input_r;
-%             else
-%                 if FLAG.UseOptimal
-%                     r = optimal_r_obj.optimal_r.ind.T100(OO);
-%                 else
-%                     %r = 38;
-%                     r = 18;
-%                 end
-%             end
+            if FLAG.UseInput_r
+                r = SIM.Input_r;
+            else
+                if FLAG.UseOptimal
+                    r = optimal_r_obj.optimal_r.ind.T100(OO);
+                else
+                    %r = 38;
+                    r = 18;
+                end
+            end
 %             if OO == P.delta_C_Li
 %                 r = 18;
 %             end
 %             % Delete Later!!!!!!!!!!!!!!!!!!!!
-            switch OO
-                case 1
-                    r = 23;
-                case 2
-                    r = 18;
-                case 3
-                    r = 29;
-                case 4
-                    r = 14;
-                case 5
-                    r = 49;
-                case 6
-                    r = 25;
-            end
+            % switch OO
+            %     case 1
+            %         r = 23;
+            %     case 2
+            %         r = 18;
+            %     case 3
+            %         r = 29;
+            %     case 4
+            %         r = 14;
+            %     case 5
+            %         r = 49;
+            %     case 6
+            %         r = 25;
+            % end
 
 
 
@@ -117,7 +117,9 @@ end
     
             % C_r
             C_r = obsv_r(1:N_outputs,:   );
-            C_r = multiple(OO,OO) * C_r;
+            ind_multiple_vec = [multiple(1,1) , multiple(OO,OO)];
+            ind_multiple = diag(ind_multiple_vec);
+            C_r = ind_multiple * C_r;
     
             % B_r
             B_r = cont_r(:        ,N_in);

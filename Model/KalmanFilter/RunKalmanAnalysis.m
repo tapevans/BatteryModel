@@ -15,28 +15,28 @@ clear all; close all; clc
 
 
 %% Analysis to Perform
-    FLAG.Analysis.NoNoiseCompare        = 0; 
-        FLAG.Analysis.ode           = 1;
+    FLAG.Analysis.NoNoiseCompare        = 1; 
+        FLAG.Analysis.ode           = 0;
         FLAG.Analysis.SS_CT         = 0;
         FLAG.Analysis.SS_DT         = 0;
-        FLAG.Analysis.OptimalHK     = 0;
+        FLAG.Analysis.OptimalHK     = 1;
             FLAG.r_max = 50;
             FLAG.UseInput_r = 0;
-        FLAG.Analysis.ROM_HoKal     = 1;
+        FLAG.Analysis.ROM_HoKal     = 0;
             FLAG.EST.SepHK        = 1; % 1 if calculate a ROM for each desired output
             FLAG.UseOptimal       = 0;
-    FLAG.Analysis.getDARE               = 1;
+    FLAG.Analysis.getDARE               = 0;
         FLAG.IDV                    = 1;
         FLAG.COM                    = 0;
     FLAG.Analysis.NoisyPlant            = 0; 
-    FLAG.Analysis.Estimator             = 1; %%## 
+    FLAG.Analysis.Estimator             = 0; %%## 
         FLAG.UseROMAsPlant          = 1;
         FLAG.UseWrongIC             = 1;
         FLAG.DoPreCalc              = 1;
         FLAG.DoAsy                  = 1;
         FLAG.DoVar                  = 1;
-    FLAG.Analysis.Est_Error_calc        = 1; %%##
-        FLAG.FractionOfData         = 1/2;%3/4; % Start index occurs this fraction of samples (Ex: 3/4 means calculating erro with last 1/4 of the data)
+    FLAG.Analysis.Est_Error_calc        = 0; %%##
+        FLAG.FractionOfData         = 3/4;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating erro with last 1/4 of the data)
         FLAG.Analysis.dispResults   = 1;        
     FLAG.Analysis.GenComparData         = 0;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
@@ -55,7 +55,7 @@ clear all; close all; clc
     
 
 %% Plots
-    FLAG.PLOT.PlotResults = 1;
+    FLAG.PLOT.PlotResults = 0;
     FLAG.Analysis.PlotImp = 0; % Plot the impulse response for each output (HK)
     FLAG.PlotSingVal      = 0;
     FLAG.PLOT.K_k_gain    = 0; % Plots the norm of the kalman gain wrt time
@@ -107,7 +107,7 @@ clear all; close all; clc
     FLAG.EstimatorModel = 2;
         FLAG.LargeQMultiply = 1;%e3; % = 1 when use Q from Slink
         FLAG.ResetStep = 10000000;
-        FLAG.Q_Add = 0e-1;
+        FLAG.Q_Add = 0e-2;
 
     
 %% Conditions to Run
@@ -117,13 +117,13 @@ clear all; close all; clc
     Q_0_vec = [1e-3];
     % Q_0_vec = [1e-2];
 
-    % R_0_vec = [1e-6];
+    R_0_vec = [1e-6];
     % R_0_vec = [1e-5];
     % R_0_vec = [1e-4];
     % R_0_vec = [1e-3];
     % R_0_vec = [1e-2];
     % R_0_vec = [1e-1];
-    R_0_vec = [1e0];
+    % R_0_vec = [1e0];
     % R_0_vec = [1e1];
 
     % Desired Sampling Times
@@ -170,7 +170,7 @@ end
     if FLAG.EstimatorModel == 1
         FLAG.offsetROM = -1e1;
     else
-        FLAG.offsetROM = 1e-1;
+        FLAG.offsetROM = 1e0;
     end
 
 %% Save my computer

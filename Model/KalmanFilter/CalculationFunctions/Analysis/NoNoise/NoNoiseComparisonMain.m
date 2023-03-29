@@ -52,9 +52,11 @@ function [SIM,FLAG,N,P,RESULTS] = NoNoiseComparisonMain(SIM,FLAG,N,P,RESULTS)
     
         %tic
         %HK_OptiStates(SIM,N,P,FLAG,RESULTS);
-        HK_OptiStatesTest(SIM,N,P,FLAG,RESULTS);
+        % HK_OptiStatesTest(SIM,N,P,FLAG,RESULTS);
         %toc
     
+        batchOptiRank(SIM,FLAG,N,P,RESULTS)
+
         FLAG.UseInput_r = oldFLAGUseInput_r;
     end
 

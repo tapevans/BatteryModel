@@ -25,16 +25,23 @@ if RUNSIM
 
     %% Get ROM
     switch FLAG.EstimatorModel
-        case 1 % Matlab SS_DT
-            [~ , est_sys] = getSS_System(SIM,N,P,FLAG);
-        case 2 % Ho-Kalman
-            FLAG.Analysis.PlotImp = 0;
-            [est_sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS);
+        case 1
+            [~ , sys_DT] = getSS_System(SIM,N,P,FLAG);
+            est_sys_tot{1} = sys_DT;
+        case 2
+            [HK_sys] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS);
+            if FLAG.EST.SepHK
+                est_sys_tot = HK_sys(1:N.DesOut);
+            else
+                est_sys_tot{1} = HK_sys{end};
+            end
     end
+
+
     C_des = est_sys.C;
     C_m = est_sys.C(P.cell_voltage,:);
 
-
+for OO = 1:length(est_sys_tot)
     %% CPCT from DARE
     [~, P_infty] = AsymptoticPreCalcs(FLAG,SIM,est_sys);
     CPCT = C_des * P_infty * C_des';
@@ -76,7 +83,7 @@ if RUNSIM
         end
     end
 
-
+end
     %% Save Results
     Q_0 = SIM.Q_0;
     R_0 = SIM.R_0;
