@@ -2,9 +2,9 @@
 %
 function batchOptiRank(SIM,FLAG,N,P,RESULTS)
 %% Initialize
-% SOC_vec = [50];
-SOC_vec = 0:5:100;
-Ts_vec  = [1];
+% SOC_vec = [20];
+% SOC_vec = 0:5:100;
+% Ts_vec  = [1];
 rankMax = 20;
 
 %% Set FLAGS
@@ -14,15 +14,16 @@ FLAG.PRBSAmp = 1;
 FLAG.Tswitch = 10;
 FLAG.UseInput_r = 1;
 
-
+SOC = FLAG.SOC;
+Ts  = FLAG.Ts;
 % Loop through SOC
-for SS = SOC_vec
-    disp(['SOC: ' num2str(SS)])
-    disp(datestr(datetime));
+% for SS = SOC_vec
+    % disp(['SOC: ' num2str(SS)])
+    % disp(datestr(datetime));
     % Loop through Ts
-    for TT = Ts_vec
-        FLAG.SOC = SS;
-        FLAG.Ts  = TT;
+    % for TT = Ts_vec
+        % FLAG.SOC = SS;
+        % FLAG.Ts  = TT;
         %% Check if batch exists
         RUNSIM = false;
         [batch_filename] = getBatchFilename(SIM,FLAG);
@@ -44,11 +45,12 @@ for SS = SOC_vec
             [t_soln_ODE, x_soln_ODE, z_soln_ODE, i_user_time_ODE, i_user_value_ODE] = getNoNoiseODE(SIM,FLAG,N,P);
 
             % DT Input Signal
-            if TT == SIM.Ts
+            % if TT == SIM.Ts
+            if SIM.Ts == 1
                 NewInputSignal = SIM.InputSignal;
             else
                 disp('Wrong Ts')
-                break
+                % break
             end
 
             % Loop through Desired Outputs
@@ -128,10 +130,10 @@ for SS = SOC_vec
             end
 
             % Save Results
-            save(batch_filename,'All_ErrorSqSum','MinAndIDX','SS','TT','RESULTS','P','N')
+            save(batch_filename,'All_ErrorSqSum','MinAndIDX','SOC','Ts','RESULTS','P','N')
         end
         clear z_interpODE All_ErrorSqSum MinAndIDX individualOutputs combinedOutputs ind com
-    end
-end
+    % end
+% end
 
 end

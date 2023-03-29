@@ -24,8 +24,8 @@ SIM = 'temp';
 
 
 %% Plot FLAGS
-FLAG.PlotErrorVsRank_Ind = 0;
-FLAG.PlotErrorVsRank_Com = 1;
+FLAG.PlotErrorVsRank_Ind = 1;
+FLAG.PlotErrorVsRank_Com = 0;
 
 
 %% Get Labels

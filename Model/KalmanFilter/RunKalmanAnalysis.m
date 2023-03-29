@@ -46,6 +46,7 @@ clear all; close all; clc
         FLAG.CompareQMode = 1;
         FLAG.READ_IN_DATA = 1;
 
+
 %% Overwrite?
     FLAG.OverwriteData.All      = 0; %% If you try to run the same sim with different Analysis, it loads old flags and won't do new analysis
     FLAG.OverwriteData.Slink    = 0; %% If changing t_final, need to rerun Slink
@@ -132,9 +133,10 @@ clear all; close all; clc
         T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
 %         Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
         Ts_vec  = [1];
-
-%     SOC_vec = 0:1:100;    
-    SOC_vec = [50];
+    
+    % SOC_vec = [20];
+    % SOC_vec = 0:1:100;    
+    SOC_vec = 0:5:100;
 
     FLAG.N_samples = 600;
 
@@ -191,7 +193,7 @@ end
                     FLAG.Ts = TT;  % Sampling Rate (When to save outputs)
                     FLAG.SOC = SS; % State of Charge
                     disp(['Q: ' num2str(FLAG.Q_0) ' R: ' num2str(FLAG.R_0) ' Ts: ' num2str(FLAG.Ts) ' SOC: ' num2str(FLAG.SOC) ] )
-
+                    disp(datestr(datetime))
                     AnalysisMain(FLAG)
                 end
             end

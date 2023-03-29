@@ -18,9 +18,9 @@ SIM = 'temp';
 
 
 %% Plot FLAGS
-FLAG.PlotSOCVsRank_Ind = 0;
-FLAG.PlotSOCVsRank_Com = 1;
-FLAG.PlotSOCVsRank_Com_All = 1;
+FLAG.PlotSOCVsRank_Ind     = 1;
+FLAG.PlotSOCVsRank_Com     = 0;
+FLAG.PlotSOCVsRank_Com_All = 0;
 
 
 %% Get Labels
