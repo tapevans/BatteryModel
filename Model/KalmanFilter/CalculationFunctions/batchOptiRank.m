@@ -2,7 +2,7 @@
 %
 function batchOptiRank(SIM,FLAG,N,P,RESULTS)
 %% Initialize
-% SOC_vec = [20];
+% SOC_vec = [20];  %%%%%%%%% Now uses the RunKalmanAnalysis for SOC and Ts
 % SOC_vec = 0:5:100;
 % Ts_vec  = [1];
 rankMax = 20;

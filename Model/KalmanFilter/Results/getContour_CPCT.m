@@ -3,31 +3,33 @@ clear all; close all; clc;
 
 
 %% Define Noise to compare
-%     Q_0 = 1e-6; R_0 = 1e-6; % TL
-%     Q_0 = 1e-6; R_0 = 1e1;  % BL
-%     Q_0 = 1e1;  R_0 = 1e1;  % BR
-%     Q_0 = 1e1;  R_0 = 1e-6; % TR
+    % Q_0 = 1e-6; R_0 = 1e-6; % TL
+    % Q_0 = 1e-6; R_0 = 1e1;  % BL
+    % Q_0 = 1e1;  R_0 = 1e1;  % BR
+    % Q_0 = 1e1;  R_0 = 1e-6; % TR
     Q_0 = 1e-3; R_0 = 1e-3; % Middle
+    % Q_0 = 1e-3; R_0 = 1e-6; % 
 
     FLAG.QMode = 1; % 1) Input Q   2) State Q
 
 
 %% Local FLAGS
+    localFLAG.Overwrite.MyData   = 0;
+    
+    localFLAG.IDVorCOM                    = 0; % 1 if individual (IDV), 0 if combined (COM)
     localFLAG.Plot.NotNormalized          = 0;
-    localFLAG.Plot.Normalized2CellVoltage = 1;
-    localFLAG.Plot.Normalized2MaxCPCT     = 0;
+    localFLAG.Plot.Normalized2CellVoltage = 0;
+    localFLAG.Plot.Normalized2MaxCPCT     = 1;
     
     localFLAG.Plot.cell_voltage  = 1; % Terminal Voltage
-    localFLAG.Plot.delta_phi     = 0; % Electrostatic potential difference between active material and electrolyte @AN/SEP interface
-    localFLAG.Plot.i_Far         = 1; % Chemical reaction current density at SEI @AN/SEP interface
-    localFLAG.Plot.eta           = 0; % Overpotential at SEI @AN/SEP interface
-    localFLAG.Plot.C_Liion       = 0; % Concentration of Li^+ in the electrolyte @AN/SEP interface
-    localFLAG.Plot.C_Li          = 0; % Concentration of Li at the surface of active material @AN/SEP interface
-    localFLAG.Plot.delta_C_Li    = 0; % Difference of Li concentration between the surface and center of active material particle @AN/SEP interface
+    localFLAG.Plot.delta_phi     = 1; % Electrostatic potential difference between active material and electrolyte @AN/SEP interface
+    localFLAG.Plot.i_Far         = 0; % Chemical reaction current density at SEI @AN/SEP interface
+    localFLAG.Plot.eta           = 1; % Overpotential at SEI @AN/SEP interface
+    localFLAG.Plot.C_Liion       = 1; % Concentration of Li^+ in the electrolyte @AN/SEP interface
+    localFLAG.Plot.C_Li          = 1; % Concentration of Li at the surface of active material @AN/SEP interface
+    localFLAG.Plot.delta_C_Li    = 1; % Difference of Li concentration between the surface and center of active material particle @AN/SEP interface
     localFLAG.Plot.T             = 0; % Temperature
     
-    localFLAG.Overwrite.MyData   = 0;
-
     if localFLAG.Plot.NotNormalized
         cmin = -14;
         cmax = -7;
@@ -44,6 +46,11 @@ clear all; close all; clc;
 
 %% Make string for filenames to read in
     NoiseStr = ['Q' num2str(Q_0) '_R' num2str(R_0)];
+    % if localFLAG.IDVorCOM
+    %     IDVorCOM = '_IDV';
+    % else
+    %     IDVorCOM = '_COM';
+    % end
 
 
 %% Filepath 
@@ -57,6 +64,7 @@ clear all; close all; clc;
 
 %% Check if Data has already been consolidated
     data_filename = ['MyData_' NoiseStr '.mat'];
+    % data_filename = ['MyData_' NoiseStr IDVorCOM '.mat'];
     ReadData = false;
     if isfile(data_filename)
         if localFLAG.Overwrite.MyData
@@ -72,6 +80,7 @@ clear all; close all; clc;
     if ReadData
         % Get Comparison filenames
             list = dir(['*' NoiseStr '*']);
+            % list = dir(['*' NoiseStr IDVorCOM '*']);
             num_files = length(list);
             for j = 1:num_files % Creates a cell array with all simulations' full path name
                 if ~exist('sim_filenames')
@@ -113,21 +122,27 @@ clear all; close all; clc;
 
 %% Add Normalized Values
     for i = 1:N_sims
-        MyData(i).CPCT_diag       = diag(MyData(i).CPCT);
-        MyData(i).CPCT_normalized = MyData(i).CPCT_diag / MyData(i).CPCT_diag(MyData(i).P.cell_voltage);
-        MyData(i).CPCT_normMAX    = MyData(i).CPCT_diag / max(MyData(i).CPCT_diag);
+        for OO = 1:length(MyData(i).CPCT)
+            MyData(i).CPCT_diag{OO}       = diag(MyData(i).CPCT{OO});
+            MyData(i).CPCT_normalized{OO} = MyData(i).CPCT_diag{OO} / MyData(i).CPCT_diag{OO}(MyData(i).P.cell_voltage); % Normalized WRT voltage CPCT
+            MyData(i).CPCT_normMAX{OO}    = MyData(i).CPCT_diag{OO} / max(MyData(i).CPCT_diag{OO}); % Normalized to the largest CPCT
+        end
     end
 
 
 %% Axis Variables
 % State of Charge
     SOC_vec = 0:1:100;
+    % SOC_vec = 0:5:100;
 
 % Desired Sampling Rate
     N_t_s   = 25;   % **Keep this fix for now
     T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
     T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
     Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
+
+    % SOC_vec = [50,55];
+    % Ts_vec  = Ts_vec([12,13]);
 
 
 %% Initialize variables for Contour plots
@@ -154,13 +169,24 @@ clear all; close all; clc;
 n_Outs = length(fieldnames(MyData(1).P));
     for SS = 1:length(SOC_vec)
         for TT = 1:length(Ts_vec)
-            for i = 1:n_Outs
-                Z_CPCT(SS,TT,i)         = log10( MyData(IDX_Mat(SS,TT)).CPCT_diag(i) );
-                Z_CPCT_norm(SS,TT,i)    = log10( MyData(IDX_Mat(SS,TT)).CPCT_normalized(i) );
-                Z_CPCT_normMax(SS,TT,i) = log10( MyData(IDX_Mat(SS,TT)).CPCT_normMAX(i) );
-            end
-            if SS == 1 && TT == 1
-                Z_CPCT_norm(SS,TT,1) = 1.00000000000000000000000000001;
+            if localFLAG.IDVorCOM % Individual
+                for OO = 1:n_Outs
+                    Z_CPCT(SS,TT,OO)         = log10( MyData(IDX_Mat(SS,TT)).CPCT_diag{OO}(2) );
+                    Z_CPCT_norm(SS,TT,OO)    = log10( MyData(IDX_Mat(SS,TT)).CPCT_normalized{OO}(2) );
+                    Z_CPCT_normMax(SS,TT,OO) = log10( MyData(IDX_Mat(SS,TT)).CPCT_normMAX{OO}(2) );
+                end
+                if SS == 1 && TT == 1
+                    Z_CPCT_norm(SS,TT,1) = 1.00000000000000000000000000001;
+                end
+            else % Combined
+                for OO = 1:n_Outs
+                    Z_CPCT(SS,TT,OO)         = log10( MyData(IDX_Mat(SS,TT)).CPCT_diag{end}(OO) );
+                    Z_CPCT_norm(SS,TT,OO)    = log10( MyData(IDX_Mat(SS,TT)).CPCT_normalized{end}(OO) );
+                    Z_CPCT_normMax(SS,TT,OO) = log10( MyData(IDX_Mat(SS,TT)).CPCT_normMAX{end}(OO) );
+                end
+                if SS == 1 && TT == 1
+                    Z_CPCT_norm(SS,TT,1) = 1.00000000000000000000000000001;
+                end
             end
         end
     end
@@ -232,7 +258,7 @@ if localFLAG.Plot.NotNormalized
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_phi     && isfield(P,'delta_phi')
@@ -243,7 +269,7 @@ if localFLAG.Plot.NotNormalized
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.i_Far         && isfield(P,'i_Far')
@@ -254,7 +280,7 @@ if localFLAG.Plot.NotNormalized
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.eta           && isfield(P,'eta')
@@ -265,7 +291,7 @@ if localFLAG.Plot.NotNormalized
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Liion       && isfield(P,'C_Liion')
@@ -276,7 +302,7 @@ if localFLAG.Plot.NotNormalized
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Li          && isfield(P,'C_Li')
@@ -287,7 +313,7 @@ if localFLAG.Plot.NotNormalized
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_C_Li    && isfield(P,'delta_C_Li')
@@ -298,7 +324,7 @@ if localFLAG.Plot.NotNormalized
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.T             && isfield(P,'T')
@@ -309,7 +335,7 @@ if localFLAG.Plot.NotNormalized
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
 end
@@ -326,7 +352,7 @@ if localFLAG.Plot.Normalized2CellVoltage
         colorbar
         colormap(f, flipud(colormap(colormapping)))
 %         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_phi     && isfield(P,'delta_phi')
@@ -337,7 +363,7 @@ if localFLAG.Plot.Normalized2CellVoltage
         ylabel('SOC [%]')
         colorbar
 %         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         colormap(f, flipud(colormap(colormapping)))
         h.LineStyle = 'none';
     end
@@ -349,7 +375,7 @@ if localFLAG.Plot.Normalized2CellVoltage
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.eta           && isfield(P,'eta')
@@ -360,7 +386,7 @@ if localFLAG.Plot.Normalized2CellVoltage
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Liion       && isfield(P,'C_Liion')
@@ -371,7 +397,7 @@ if localFLAG.Plot.Normalized2CellVoltage
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Li          && isfield(P,'C_Li')
@@ -382,7 +408,7 @@ if localFLAG.Plot.Normalized2CellVoltage
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_C_Li    && isfield(P,'delta_C_Li')
@@ -393,7 +419,7 @@ if localFLAG.Plot.Normalized2CellVoltage
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.T             && isfield(P,'T')
@@ -404,7 +430,7 @@ if localFLAG.Plot.Normalized2CellVoltage
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
 end
@@ -420,7 +446,7 @@ if localFLAG.Plot.Normalized2MaxCPCT
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_phi     && isfield(P,'delta_phi')
@@ -431,7 +457,7 @@ if localFLAG.Plot.Normalized2MaxCPCT
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.i_Far         && isfield(P,'i_Far')
@@ -442,7 +468,7 @@ if localFLAG.Plot.Normalized2MaxCPCT
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.eta           && isfield(P,'eta')
@@ -453,7 +479,7 @@ if localFLAG.Plot.Normalized2MaxCPCT
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Liion       && isfield(P,'C_Liion')
@@ -464,7 +490,7 @@ if localFLAG.Plot.Normalized2MaxCPCT
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Li          && isfield(P,'C_Li')
@@ -475,7 +501,7 @@ if localFLAG.Plot.Normalized2MaxCPCT
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_C_Li    && isfield(P,'delta_C_Li')
@@ -486,7 +512,7 @@ if localFLAG.Plot.Normalized2MaxCPCT
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.T             && isfield(P,'T')
@@ -497,7 +523,7 @@ if localFLAG.Plot.Normalized2MaxCPCT
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        clim([cmin cmax])
+        % clim([cmin cmax])
         h.LineStyle = 'none';
     end
 end

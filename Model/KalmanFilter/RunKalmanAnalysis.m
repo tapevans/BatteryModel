@@ -15,14 +15,14 @@ clear all; close all; clc
 
 
 %% Analysis to Perform
-    FLAG.Analysis.NoNoiseCompare        = 1; 
-        FLAG.Analysis.ode           = 0;
+    FLAG.Analysis.NoNoiseCompare        = 0; 
+        FLAG.Analysis.ode           = 1;
         FLAG.Analysis.SS_CT         = 0;
         FLAG.Analysis.SS_DT         = 0;
-        FLAG.Analysis.OptimalHK     = 1;
-            FLAG.r_max = 50;
+        FLAG.Analysis.OptimalHK     = 0;
+            FLAG.r_max = 20;
             FLAG.UseInput_r = 0;
-        FLAG.Analysis.ROM_HoKal     = 0;
+        FLAG.Analysis.ROM_HoKal     = 1;
             FLAG.EST.SepHK        = 1; % 1 if calculate a ROM for each desired output
             FLAG.UseOptimal       = 0;
     FLAG.Analysis.getDARE               = 0;
@@ -36,9 +36,9 @@ clear all; close all; clc
         FLAG.DoAsy                  = 1;
         FLAG.DoVar                  = 1;
     FLAG.Analysis.Est_Error_calc        = 0; %%##
-        FLAG.FractionOfData         = 3/4;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating erro with last 1/4 of the data)
+        FLAG.FractionOfData         = 3/4;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating error with last 1/4 of the data)
         FLAG.Analysis.dispResults   = 1;        
-    FLAG.Analysis.GenComparData         = 0;
+    FLAG.Analysis.GenComparData         = 1;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
         % FLAG.CompareQMode
         %  1) Input Q
@@ -88,7 +88,7 @@ clear all; close all; clc
     %FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestTimeMinus';
 
     % LongerImpulse
-    FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerImpulse';
+    % FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerImpulse';
 
     % zeroMean PRBS
     FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims';
@@ -113,15 +113,16 @@ clear all; close all; clc
     
 %% Conditions to Run
     % Q_0_vec = [1e-6];
-    % Q_0_vec = [1e-5];
-    % Q_0_vec = [1e-4];
-    Q_0_vec = [1e-3];
-    % Q_0_vec = [1e-2];
+    % Q_0_vec = [1e-5]; % ROM as Plant Only
+    % Q_0_vec = [1e-4]; % ROM as Plant Only
+    Q_0_vec = [1e-3]; % ROM as Plant Only
+    % Q_0_vec = [1e-2]; % ROM as Plant Only
+    % Q_0_vec = [1e1]; % ROM as Plant Only
 
-    R_0_vec = [1e-6];
+    % R_0_vec = [1e-6];
     % R_0_vec = [1e-5];
     % R_0_vec = [1e-4];
-    % R_0_vec = [1e-3];
+    R_0_vec = [1e-3];
     % R_0_vec = [1e-2];
     % R_0_vec = [1e-1];
     % R_0_vec = [1e0];
@@ -131,12 +132,13 @@ clear all; close all; clc
         N_t_s   = 25;   % **Keep this fix for now
         T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
         T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
-%         Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-        Ts_vec  = [1];
+        Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
+        % Ts_vec  = [1];
+        % Ts_vec = Ts_vec(12);
     
-    % SOC_vec = [20];
-    % SOC_vec = 0:1:100;    
-    SOC_vec = 0:5:100;
+    % SOC_vec = [50 55];
+    SOC_vec = 0:1:100;    
+    % SOC_vec = 0:5:100;
 
     FLAG.N_samples = 600;
 
@@ -175,6 +177,7 @@ end
         FLAG.offsetROM = 1e0;
     end
 
+
 %% Save my computer
 if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
     disp("Hey idiot, don't do that")
@@ -182,6 +185,7 @@ if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
     FLAG.DoPreCalc              = 0;
     FLAG.DoAsy                  = 0;
 end
+
 
 %% Call Analysis Main
     for QQ = Q_0_vec

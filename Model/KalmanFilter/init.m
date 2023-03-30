@@ -200,35 +200,36 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
 %            ramp. This is the time over which the input source ramps up
 % t_final_sim: Overall time for the simulation to fun for. It includes t_final and rest and ramp times
 % t_vec: The discretized time vector to return the solution
+if ~FLAG.Analysis.GenComparData %%%%%%%Delete Later
+    if FLAG.InputMode == 5
+        filename = getPRBSFilename(FLAG);
+        sysSIM   = load(filename,'SIM');
 
-if FLAG.InputMode == 5
-    filename = getPRBSFilename(FLAG);
-    sysSIM   = load(filename,'SIM');
-    
-    t_vec  = (0:SIM.Ts:sysSIM.SIM.profile_time(end))';
-    i_user = interp1(sysSIM.SIM.profile_time , sysSIM.SIM.profile_current , t_vec);
-    
-    %SIM.InputSignal = [t_vec , i_user];
-    SIM.InputSignal = [t_vec , [i_user(2:end);i_user(end)]]; % Proper ZOH
-else
-    %%%%%%%%%%%%%%%%%%!!!!!!!!!!! Fix else for proper ZOH
-    SIM.t_final_Relax_Step = (FLAG.N_samples+2)*SIM.Ts;
-    SIM.t_vec_Relax_Step = 0:SIM.Ts:SIM.t_final_Relax_Step;
-    
+        t_vec  = (0:SIM.Ts:sysSIM.SIM.profile_time(end))';
+        i_user = interp1(sysSIM.SIM.profile_time , sysSIM.SIM.profile_current , t_vec);
 
-    % Add a time right after the step
-    SIM.t_vec_Relax_Step = [SIM.t_vec_Relax_Step(1:3) , SIM.t_vec_Relax_Step(3)+SIM.Ts/10 , SIM.t_vec_Relax_Step(4:end)];
-    
-    input_load = ones(size(SIM.t_vec_Relax_Step));
-    input_load(1) = 0;
-    input_load(2) = 0;
-    input_load(3) = 0;
+        %SIM.InputSignal = [t_vec , i_user];
+        SIM.InputSignal = [t_vec , [i_user(2:end);i_user(end)]]; % Proper ZOH
+    else
+        %%%%%%%%%%%%%%%%%%!!!!!!!!!!! Fix else for proper ZOH
+        SIM.t_final_Relax_Step = (FLAG.N_samples+2)*SIM.Ts;
+        SIM.t_vec_Relax_Step = 0:SIM.Ts:SIM.t_final_Relax_Step;
 
-    if FLAG.SOC < 91
-        input_load = -1*input_load;
+
+        % Add a time right after the step
+        SIM.t_vec_Relax_Step = [SIM.t_vec_Relax_Step(1:3) , SIM.t_vec_Relax_Step(3)+SIM.Ts/10 , SIM.t_vec_Relax_Step(4:end)];
+
+        input_load = ones(size(SIM.t_vec_Relax_Step));
+        input_load(1) = 0;
+        input_load(2) = 0;
+        input_load(3) = 0;
+
+        if FLAG.SOC < 91
+            input_load = -1*input_load;
+        end
+
+        SIM.InputSignal = [SIM.t_vec_Relax_Step' input_load'];
     end
-    
-    SIM.InputSignal = [SIM.t_vec_Relax_Step' input_load'];
 end
 end
 

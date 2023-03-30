@@ -64,7 +64,7 @@ clc;
 clear all;
 close all;
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\PRBSTest\PRBSTest_PRBS_Amp1_SOC50_SwitchingTime1.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC95_SwitchingTime10.mat';
 
 plotfcn(filename)
 
