@@ -1,6 +1,4 @@
 function [ERROR_CALC,RESULTS] = getErrorCalculations(SIM,FLAG,N,P,RESULTS,ESTIMATOR)
-%idx = floor((1/2)*FLAG.N_samples)+2;
-%idx = 500; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Fix this !!!!!!!!!!!!!!!!!!!!!!!!!!!
 N_samples = length(RESULTS.EST.VAR.t_soln);
 idx = floor(FLAG.FractionOfData*N_samples);
 
@@ -10,6 +8,7 @@ if NumFig == 1
     close(1)
     NumFig = 0;
 end
+
 
 %% From DARE
 for OO = 1:length(RESULTS.EST.PLANT.z_soln_ALL)
@@ -127,6 +126,7 @@ if isfield(RESULTS.EST.VAR,'z_soln_ALL')
     end
 end
 
+
 %% Some Calcs
 CPCT_DARE_allROM_diag  = diag(CPCT_DARE_allROM)';
 if exist('CPCT_calc_asy_allROM','var')
@@ -135,6 +135,7 @@ end
 if exist('CPCT_calc_var_allROM','var')
     CPCT_calc_var_allROM_diag = diag(CPCT_calc_var_allROM)';
 end
+
 
 %% Display Results to Command Window
     if FLAG.Analysis.dispResults
@@ -287,117 +288,3 @@ end
 function [Covar] = calcSampleCovar(error_x, error_y)
     Covar = (error_x*error_y')/(length(error_x)-1);
 end
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   OLD   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Initialize Variables
-%     plant_states = RESULTS.Slink_plant.xNR.x_soln;
-%     est_states   = RESULTS.EST.ASY.x_soln;
-%     
-%     [N_states, N_samples] = size(plant_states);
-      
-%     idx = floor(N_samples/2);
-
-% % Calculate the suspected error in the states
-%     error_states = est_states(:,idx:end) - plant_states(:,idx:end);
-%     
-%     covar_states = nan(N_states);
-%     for i = 1:N_states
-%         for j = 1:N_states
-%             [covar_states(i,j)] = calcPopCovar(error_states(i,:), error_states(j,:));
-%         end
-%     end
-
-% % Compare Calculated to Expected
-%     P_calc = covar_states;
-%     P_exp = ESTIMATOR.P_infty;
-% 
-%     if FLAG.Analysis.dispResults
-%         disp(newline)
-%         disp('Cov(states) calc is')
-%         disp(num2str(covar_states))
-%         disp('P_\infty is ')
-%         disp(num2str(P_exp))
-%         disp('With difference of')
-%         disp(num2str(P_calc-P_exp))
-%         disp('Ratio of error')
-%         disp(num2str(abs((P_calc-P_exp)./P_exp)))
-%     end
-    
-% ERROR_CALC.P_calc = P_calc;
-% ERROR_CALC.P_infty = P_exp;
-
-
-
-%         for OO = 1:length(ESTIMATOR.P_infty)
-%         CPCT_exp(OO,OO) = CPCT_exp_temp(2,2);
-%         end
-
-
-
-
-
-%         disp('Cov(outputs) calc is')
-%         disp(num2str(covar_outputs))
-%         disp("CP_\inftyC' is ")
-%         disp(num2str(CPCT_exp))
-%         disp('With difference of')
-%         disp(num2str(CPCT_calc-CPCT_exp))
-%         disp('Ratio of error')
-%         disp(num2str(abs((CPCT_calc-CPCT_exp)./CPCT_exp)))
-    
-%     CPCT_exp_diag  = diag(CPCT_DARE)';
-%     CPCT_calc_diag = diag(CPCT_calc)';
-
-    
-%         disp(newline)
-%         disp(newline)
-%         disp('CPC^T diagonal Estimator')
-%         disp(num2str(CPCT_exp_diag))
-%         disp(newline)
-%         disp('CPC^T diagonal Calculated')
-%         disp(num2str(CPCT_calc_diag))
-
-%     for i = 1:N_outputs
-%         CPCT_exp_diag(i) = ESTIMATOR.C_des_ROM(i,:) * ESTIMATOR.P_infty * ESTIMATOR.C_des_ROM(i,:)';
-%     end
-
-
-
-
-
-
-%         disp(newline)
-%         disp(newline)
-%         disp('Variable Estimator')
-%         disp('Cov(outputs) calc is')
-%         disp(num2str(covar_outputs))
-%         disp("CP_\inftyC' is ")
-%         disp(num2str(CPCT_exp))
-%         disp('With difference of')
-%         disp(num2str(CPCT_calc-CPCT_exp))
-%         disp('Ratio of error')
-%         disp(num2str(abs((CPCT_calc-CPCT_exp)./CPCT_exp)))
-    
-
-
-%     for i = 1:N_outputs
-%         CPCT_exp_diag(i) = ESTIMATOR.C_des_ROM(i,:) * ESTIMATOR.P_infty * ESTIMATOR.C_des_ROM(i,:)';
-%     end
-%     CPCT_exp_diag  = diag(CPCT_DARE)';
-%     CPCT_calc_diag = diag(CPCT_calc)';
-
-    
-%         disp(newline)
-%         disp(newline)
-%         disp('CPC^T diagonal Estimator')
-%         disp(num2str(CPCT_exp_diag))
-%         disp(newline)
-%         disp('CPC^T diagonal Calculated')
-%         disp(num2str(CPCT_calc_diag))
-
-
-        %error_outputs = est_outputs(:,idx+1:end) - plant_outputs(:,idx:end-1);
-        %error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);
-        %error_outputs = est_outputs(:,idx+1:end) - plant_outputs(:,idx:end-1);
-        %error_outputs = est_outputs(:,idx+2:end) - plant_outputs(:,idx:end-2);

@@ -273,22 +273,3 @@ if FigArrange == 1
     end
 end
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%             [r,~] = size(RESULTS.EST.ASY.z_soln_ALL);
-%             for i = 1:r
-%                 figure
-%                 hold on
-%                 plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL(i,:),'o','LineWidth',2,'DisplayName',['Est ASY'])
-%                 if FLAG.PLOT.PlantComparZ && isfield(RESULTS.EST,'PLANT')
-%                     plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL(i,:),'k','LineWidth',2,'DisplayName',['Est Plant'])
-%                     title([RESULTS.Labels.title{i} ' Compare Plant and Asymptotic Estimator Outputs'])
-%                 else
-%                     title([RESULTS.Labels.title{i} ' Asymptotic Estimator Outputs'])
-%                 end
-%                 xlabel('Time [s]')
-%                 ylabel(RESULTS.Labels.unit{i})
-%                 lgn = legend;
-%                 lgn.Location = 'best';
-%             end

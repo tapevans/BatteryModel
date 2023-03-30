@@ -234,64 +234,6 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% OOOOOOOOOOOLD %%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-        %SIM.SamplesPerSwitch = SIM.Tswitch/SIM.Ts;
-        %SIM.Ts = SIM.Tswitch / SIM.SamplesPerSwitch;
-        %FLAG.Ts = SIM.Ts;
-        %SIM.tc = SIM.Ts;
-
-
-%% Set All Functions to Incomplete
-%     SIM.AnalysisComplete.Initialization             = 0;
-%     SIM.AnalysisComplete.NoNoiseCompare.ode         = 0;
-%     SIM.AnalysisComplete.NoNoiseCompare.SS_CT       = 0;
-%     SIM.AnalysisComplete.NoNoiseCompare.SS_DT       = 0;
-%     SIM.AnalysisComplete.NoNoiseCompare.ROM_Mlab    = 0;
-%     SIM.AnalysisComplete.NoNoiseCompare.ROM_HoKal   = 0;
-%     SIM.AnalysisComplete.NoisyPlant                 = 0;
-%     SIM.AnalysisComplete.Estimator                  = 0;
-%     SIM.AnalysisComplete.Est_Error_calc             = 0;
-%     SIM.AnalysisComplete.GenComparData              = 0;
-%     SIM.AnalysisComplete.ComparSVD2Pinf             = 0;
-
-%%
-% 
-% F_step: Force after the step has taken place
-%     SIM.F_step = SIM.F_init + SIM.F_step_height;
-
-% SIM.time_rest = 8*SIM.tc+SIM.Ts;
-%     if FLAG.InputMode == 2
-%         SIM.omega = 2*pi*SIM.fq; % [rad/s], Frequency for the sinusoidal input
-%     end
-
-
-
-
-%% Mass Matrix
-%     SIM.Mass = eye(N.states);
-
-
-%% Initial Conditions
-%     SIM.x_0 = [0 ,0 ,0 ,0 ]';
-
-    
-%% Initialize results struct
-%     RESULTS = struct();
-
-
-
-
-%     SIM.time_rest = 2*SIM.Ts;
-%     SIM.time_ramp = SIM.tc/10;
-%     
-%     SIM.t_final_sim = SIM.t_final + SIM.time_rest + SIM.time_ramp;
-%     SIM.t_vec = 0:SIM.tc:SIM.t_final_sim;
-
-
-
-
-
-
 % if 0
 %     figure
 %     hold on
