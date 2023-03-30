@@ -2,15 +2,11 @@
 % Plot the sum of the squared error for each desired output across all
 % ranks. Do this for a given simulation, SOC, and sampling rate
 
-% NOTES:
-% Tswitch10, Ts=1, 
-%    SOC 90,100 didn't run
-%    Voltage looks bad on all individual plots
 %%
 clear all; close all; clc
 
 %% Parameters to Run
-SOC_vec = 20;
+SOC_vec = 35;
 % SOC_vec = 35:5:100;
 Ts_vec  = 1;
 

@@ -1,10 +1,10 @@
 %% Plot rank across SOC
 % Plot the rank at which a minimum occured for a desired variable for a
 % range of SOC.
+%%%%% Notes: Check the adjusted implementation
 
 clear all; close all; clc
 %% Parameters to Run
-% SOC_vec = [50,55];
 SOC_vec = 0:5:100;
 Ts_vec  = 1;
 
@@ -56,6 +56,20 @@ for SS = 1:length(SOC_vec)
             MyData(i).ind_idx_voltage = ind_idx_voltage;
             MyData(i).ind_idx_output  = ind_idx_output;
             MyData(i).com_idx_output  = com_idx_output;
+            if isfield(data,'adjusted')
+                if data.adjusted
+                    for OO = 1:col-1
+                        ind_idx_volt(OO) = data.adjustedData{OO}.idx_volt;
+                        ind_idx_outp(OO) = data.adjustedData{OO}.idx_othe;
+                    end
+                    for OO = col
+                        com_idx_output   = data.adjustedData{OO}.idx_outp;
+                    end
+                    MyData(i).adjusted_ind_idx_voltage = ind_idx_volt;
+                    MyData(i).adjusted_ind_idx_output  = ind_idx_outp;
+                    MyData(i).adjusted_com_idx_output  = com_idx_output;
+                end
+            end
         else
             disp("This simulation doesn't exist")
         end
@@ -63,7 +77,7 @@ for SS = 1:length(SOC_vec)
 end
 
 %% Plot Results
-    % Plot SOC vs Rank for Each Output using Individual ROM
+    %% Plot SOC vs Rank for Each Output using Individual ROM
     if FLAG.PlotSOCVsRank_Ind
         for i = 1:length(MyData)
             % Create SOC Vector
@@ -72,12 +86,22 @@ end
             % Create idx Vector
             idx_vec_volt(:,i) = MyData(i).ind_idx_voltage';
             idx_vec_outp(:,i) = MyData(i).ind_idx_output';
+
+            % Adjusted
+            if isfield(MyData,'adjusted_ind_idx_voltage')
+                adjusted_ind_idx_voltage(:,i) = MyData(i).adjusted_ind_idx_voltage;
+                adjusted_ind_idx_output(:,i)  = MyData(i).adjusted_ind_idx_output;
+            end
         end
         for OO = 1:N.DesOut
             figure
             hold on
-            plot(SOC_vec_new , idx_vec_volt(OO,:),'-ko','Linewidth',2,'MarkerSize',5,'DisplayName',[RESULTS.Labels.title{1}  ' Rank'])
-            plot(SOC_vec_new , idx_vec_outp(OO,:),'-ro','Linewidth',2,'MarkerSize',2,'DisplayName',[RESULTS.Labels.title{OO} ' Rank'])
+            plot(SOC_vec_new , idx_vec_volt(OO,:),'-ko','Linewidth',2,'MarkerSize',2,'DisplayName',[RESULTS.Labels.title{1}  ' Rank'])
+            plot(SOC_vec_new , idx_vec_outp(OO,:),'-ro','Linewidth',2,'MarkerSize',4,'DisplayName',[RESULTS.Labels.title{OO} ' Rank'])
+            if exist('adjusted_ind_idx_voltage')
+                plot(SOC_vec_new , adjusted_ind_idx_voltage(OO,:),'-bo','Linewidth',2,'MarkerSize',7,'DisplayName',[RESULTS.Labels.title{1}  ' Adjusted Rank'])
+                plot(SOC_vec_new , adjusted_ind_idx_output(OO,:) ,'-go','Linewidth',2,'MarkerSize',10,'DisplayName',[RESULTS.Labels.title{OO} ' Adjusted Rank'])
+            end
             yline(10,'--')
             xlabel('State of Charge')
             ylabel('Minimum Rank')
@@ -88,7 +112,7 @@ end
         end
     end
     
-    % Plot SOC vs Rank for Each Output using Combined ROM
+    %% Plot SOC vs Rank for Each Output using Combined ROM
     if FLAG.PlotSOCVsRank_Com
         for i = 1:length(MyData)
             % Create SOC Vector
@@ -96,11 +120,19 @@ end
     
             % Create idx Vector
             idx_vec_outp(:,i) = MyData(i).com_idx_output';
+
+            % Adjusted
+            if isfield(MyData,'adjusted_com_idx_output')
+                adjusted_com_idx_output(:,i) = MyData(i).adjusted_com_idx_output';
+            end
         end
         for OO = 1:N.DesOut
             figure
             hold on
             plot(SOC_vec_new , idx_vec_outp(OO,:),'-ro','Linewidth',2,'MarkerSize',2,'DisplayName',[RESULTS.Labels.title{OO} ' Rank'])
+            if exist('adjusted_com_idx_output')
+                plot(SOC_vec_new , adjusted_com_idx_output(OO,:),'-bo','Linewidth',2,'MarkerSize',2,'DisplayName',[RESULTS.Labels.title{OO} ' Adjusted Rank'])
+            end
             yline(10,'--')
             xlabel('State of Charge')
             ylabel('Minimum Rank')
@@ -111,7 +143,7 @@ end
         end
     end
 
-    % All Combined on the same plot
+    %% All Combined on the same plot
     if FLAG.PlotSOCVsRank_Com_All
         figure
         hold on
