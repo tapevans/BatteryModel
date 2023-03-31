@@ -331,12 +331,40 @@ for i = 1:num_sim_files
 
             options = odeset('RelTol' ,Tol.Rel,      ...
                              'AbsTol' ,Tol.Abs,      ...
-                             'Mass'   ,SIM.M);%,        ...
+                             'Mass'   ,SIM.M,        ...
+                             'MaxStep',0.99*SIM.Tswitch);
                              %'Events' ,events);%,       ...
-                             %'MaxStep',1e2);
-            
+
             i_user = 0;
             SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
+
+            % %%%%% When having to run smaller time steps %%%%%%%%%%%Testing!!!!!!!!!!!!!!!!!!!!!!!!!!
+            %     old_tFinal = SIM.profile_time(end);
+            %     t_intermed = 0.99*SIM.Tswitch;
+            % 
+            %     %Run first step
+            %         options = odeset('RelTol' ,Tol.Rel,      ...
+            %                          'AbsTol' ,Tol.Abs,      ...
+            %                          'Mass'   ,SIM.M,        ...
+            %                          'MaxStep',0.01*SIM.Tswitch);
+            %                          %'Events' ,events);%,       ...
+            % 
+            %         SIM.tspan = [0,t_intermed]; 
+            %         i_user = 0;
+            %         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
+            % 
+            %     %Run the rest
+            %         IC_new = SOLN.y(:,end);
+            %         options = odeset('RelTol' ,Tol.Rel,      ...
+            %                          'AbsTol' ,Tol.Abs,      ...
+            %                          'Mass'   ,SIM.M,        ...
+            %                          'MaxStep',0.99*SIM.Tswitch);
+            %                          %'Events' ,events);%,       ...
+            % 
+            %         % SIM.tspan = [0,t_intermed]; 
+            %         % i_user = 0;
+            % 
+            %         SOLN = odextend(SOLN, @(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user) , old_tFinal , IC_new , options);
 
             if FLAG.SaveSolnDiscreteTime
                 new_tfinal = SOLN.x(end);

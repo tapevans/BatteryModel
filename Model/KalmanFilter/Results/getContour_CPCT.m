@@ -1,5 +1,7 @@
 %% Magnitude of CPCT vs SOC and Ts
-clear all; close all; clc;
+clear all; 
+% close all; 
+clc;
 
 
 %% Define Noise to compare
@@ -7,8 +9,8 @@ clear all; close all; clc;
     % Q_0 = 1e-6; R_0 = 1e1;  % BL
     % Q_0 = 1e1;  R_0 = 1e1;  % BR
     % Q_0 = 1e1;  R_0 = 1e-6; % TR
-    Q_0 = 1e-3; R_0 = 1e-3; % Middle
-    % Q_0 = 1e-3; R_0 = 1e-6; % 
+    % Q_0 = 1e-3; R_0 = 1e-3; % Middle %%%!!!
+    Q_0 = 1e-3; R_0 = 1e-6; % %%%!!!
 
     FLAG.QMode = 1; % 1) Input Q   2) State Q
 
@@ -17,9 +19,13 @@ clear all; close all; clc;
     localFLAG.Overwrite.MyData   = 0;
     
     localFLAG.IDVorCOM                    = 0; % 1 if individual (IDV), 0 if combined (COM)
-    localFLAG.Plot.NotNormalized          = 0;
+    localFLAG.Plot.UseLimits              = 0;
+    
+    localFLAG.Plot.NotNormalized          = 1;
     localFLAG.Plot.Normalized2CellVoltage = 0;
-    localFLAG.Plot.Normalized2MaxCPCT     = 1;
+    localFLAG.Plot.Normalized2MaxCPCT     = 0;
+    
+
     
     localFLAG.Plot.cell_voltage  = 1; % Terminal Voltage
     localFLAG.Plot.delta_phi     = 1; % Electrostatic potential difference between active material and electrolyte @AN/SEP interface
@@ -31,17 +37,34 @@ clear all; close all; clc;
     localFLAG.Plot.T             = 0; % Temperature
     
     if localFLAG.Plot.NotNormalized
-        cmin = -14;
+        cmin = -12;
         cmax = -7;
     elseif localFLAG.Plot.Normalized2CellVoltage
         cmin = 0;
-        cmax = 3;
+        cmax = 1;
     elseif localFLAG.Plot.Normalized2MaxCPCT 
         cmin = -6;
         cmax =  0;
     end
     
     colormapping = 'jet';
+    c_levels = 100;
+
+
+%% Axis Variables
+% State of Charge
+    SOC_vec = 0:1:100;
+    % SOC_vec = 0:5:100;
+
+% Desired Sampling Rate
+    N_t_s   = 25;   % **Keep this fix for now
+    T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
+    
+    % N_t_s   = 13;   % **Keep this fix for now
+    % T_s_min =  0; % T_s = 10^(T_s_min), **Keep this fix for now
+    
+    T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
+    Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
 
 
 %% Make string for filenames to read in
@@ -130,20 +153,6 @@ clear all; close all; clc;
     end
 
 
-%% Axis Variables
-% State of Charge
-    SOC_vec = 0:1:100;
-    % SOC_vec = 0:5:100;
-
-% Desired Sampling Rate
-    N_t_s   = 25;   % **Keep this fix for now
-    T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
-    T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
-    Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-
-    % SOC_vec = [50,55];
-    % Ts_vec  = Ts_vec([12,13]);
-
 
 %% Initialize variables for Contour plots
     T_s_linear = log10(Ts_vec);
@@ -157,7 +166,8 @@ clear all; close all; clc;
             SOC = SOC_vec(SS);
             Ts  = Ts_vec(TT);
             for i = 1:N_sims
-                if MyData(i).SOC == SOC && MyData(i).Ts == Ts
+                % if MyData(i).SOC == SOC && MyData(i).Ts == Ts
+                if abs(MyData(i).SOC - SOC)<0.5 && abs(MyData(i).Ts - Ts)<0.1
                     IDX_Mat(SS,TT) = i;
                 end
             end
@@ -252,90 +262,106 @@ n_Outs = length(fieldnames(MyData(1).P));
 if localFLAG.Plot.NotNormalized
     if localFLAG.Plot.cell_voltage  && isfield(P,'cell_voltage')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.cell_voltage));
+        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.cell_voltage) , c_levels);
         title([RESULTS.Labels.title{P.cell_voltage} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_phi     && isfield(P,'delta_phi')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.delta_phi));
+        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.delta_phi) , c_levels);
         title([RESULTS.Labels.title{P.delta_phi} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.i_Far         && isfield(P,'i_Far')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.i_Far));
+        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.i_Far) , c_levels);
         title([RESULTS.Labels.title{P.i_Far} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.eta           && isfield(P,'eta')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.eta));
+        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.eta) , c_levels);
         title([RESULTS.Labels.title{P.eta} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Liion       && isfield(P,'C_Liion')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.C_Liion));
+        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.C_Liion) , c_levels);
         title([RESULTS.Labels.title{P.C_Liion} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Li          && isfield(P,'C_Li')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.C_Li));
+        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.C_Li) , c_levels);
         title([RESULTS.Labels.title{P.C_Li} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_C_Li    && isfield(P,'delta_C_Li')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.delta_C_Li));
+        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.delta_C_Li) , c_levels);
         title([RESULTS.Labels.title{P.delta_C_Li} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.T             && isfield(P,'T')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.T));
+        [~,h] = contourf(X,Y,Z_CPCT(:,:,P.T) , c_levels);
         title([RESULTS.Labels.title{P.T} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
 end
@@ -345,92 +371,106 @@ end
 if localFLAG.Plot.Normalized2CellVoltage
     if localFLAG.Plot.cell_voltage  && isfield(P,'cell_voltage')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.cell_voltage));
+        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.cell_voltage) , c_levels);
         title([RESULTS.Labels.title{P.cell_voltage} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
-        colorbar
+        c = colorbar;
         colormap(f, flipud(colormap(colormapping)))
-%         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_phi     && isfield(P,'delta_phi')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.delta_phi));
+        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.delta_phi) , c_levels);
         title([RESULTS.Labels.title{P.delta_phi} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
-        colorbar
-%         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        c = colorbar;
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         colormap(f, flipud(colormap(colormapping)))
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.i_Far         && isfield(P,'i_Far')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.i_Far));
+        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.i_Far) , c_levels);
         title([RESULTS.Labels.title{P.i_Far} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.eta           && isfield(P,'eta')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.eta));
+        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.eta) , c_levels);
         title([RESULTS.Labels.title{P.eta} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Liion       && isfield(P,'C_Liion')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.C_Liion));
+        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.C_Liion) , c_levels);
         title([RESULTS.Labels.title{P.C_Liion} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Li          && isfield(P,'C_Li')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.C_Li));
+        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.C_Li) , c_levels );
         title([RESULTS.Labels.title{P.C_Li} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_C_Li    && isfield(P,'delta_C_Li')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.delta_C_Li));
+        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.delta_C_Li) , c_levels);
         title([RESULTS.Labels.title{P.delta_C_Li} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.T             && isfield(P,'T')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.T));
+        [~,h] = contourf(X,Y,Z_CPCT_norm(:,:,P.T) , c_levels);
         title([RESULTS.Labels.title{P.T} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
 end
@@ -440,90 +480,106 @@ end
 if localFLAG.Plot.Normalized2MaxCPCT
     if localFLAG.Plot.cell_voltage  && isfield(P,'cell_voltage')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.cell_voltage));
+        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.cell_voltage) , c_levels);
         title([RESULTS.Labels.title{P.cell_voltage} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_phi     && isfield(P,'delta_phi')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.delta_phi));
+        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.delta_phi) , c_levels);
         title([RESULTS.Labels.title{P.delta_phi} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.i_Far         && isfield(P,'i_Far')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.i_Far));
+        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.i_Far) , c_levels);
         title([RESULTS.Labels.title{P.i_Far} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.eta           && isfield(P,'eta')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.eta));
+        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.eta) , c_levels);
         title([RESULTS.Labels.title{P.eta} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Liion       && isfield(P,'C_Liion')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.C_Liion));
+        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.C_Liion) , c_levels);
         title([RESULTS.Labels.title{P.C_Liion} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.C_Li          && isfield(P,'C_Li')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.C_Li));
+        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.C_Li) , c_levels);
         title([RESULTS.Labels.title{P.C_Li} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.delta_C_Li    && isfield(P,'delta_C_Li')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.delta_C_Li));
+        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.delta_C_Li) , c_levels);
         title([RESULTS.Labels.title{P.delta_C_Li} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
     if localFLAG.Plot.T             && isfield(P,'T')
         f = figure;
-        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.T));
+        [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.T) , c_levels);
         title([RESULTS.Labels.title{P.T} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
         colorbar
         colormap(f, flipud(colormap(colormapping)))
-        % clim([cmin cmax])
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
         h.LineStyle = 'none';
     end
 end

@@ -514,19 +514,20 @@ elseif SIM.SimMode == 7
     SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap*SIM.ChargeOrDischarge;
     SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
     SIM.i_user_OG  = SIM.i_user_amp;
+% ---- PRBS ----
 elseif SIM.SimMode == 8
     SIM.A_c        = min( AN.A_c, CA.A_c );
     SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
     % N_PRBS  = 255;                      % Length of the input           [-]
-    N_PRBS  = 2^9 - 1;                  % Length of the input           [-] % New PRBS
+    N_PRBS  = 2^9 - 1;                  % Length of the input           [-] % New PRBS (zero-mean)
     TYPE    = 'PRBS';                   % Create a PRBS signal          [-]
     BAND    = [0 1];                    % Freq. band                    [s]
     LEVELS  = [-1 1];                   % PRBS limits                   [-]
     PRBS_gen= idinput(N_PRBS,TYPE,BAND,LEVELS);         % PRBS Demand   [A/m^2]
     % t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
     % C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
-    t_Demand = ((0:1:SIM.PRBSLength-9)*(SIM.Tswitch))'; % PRBS Demand t [s]
-    C_Demand = PRBS_gen(9:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
+    t_Demand = ((0:1:SIM.PRBSLength-9)*(SIM.Tswitch))'; % PRBS Demand t [s]     % New PRBS (zero-mean)
+    C_Demand = PRBS_gen(9:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2] % New PRBS (zero-mean)
     
     % Append a no-current entry
     if SIM.initial_offset > 0
@@ -534,7 +535,7 @@ elseif SIM.SimMode == 8
         C_Demand = [0; C_Demand];                    % PRBS & entry [A/m^2]
     end
 
-    % Add Rest
+    % Add Rest between some switches to help with stability
         if SIM.AddIntermediateRelaxTime
             % Find Zero-Crossings
                 change_idx = find( C_Demand(1:end-1)~=C_Demand(2:end) ); % True when the following idx doesn't match
@@ -544,11 +545,11 @@ elseif SIM.SimMode == 8
                 change_idx = change_idx(2:end);
 
             % Find Insert index
-                mod_idx = (SIM.NumZeroCrossingUntilNextRelax : SIM.NumZeroCrossingUntilNextRelax : length(change_idx))';
+                mod_idx    = (SIM.NumZeroCrossingUntilNextRelax : SIM.NumZeroCrossingUntilNextRelax : length(change_idx))';
                 insert_idx = change_idx(mod_idx);
 
             % Create New Current Demand Vector
-                C_new = C_Demand(1:insert_idx(1)-1);
+                C_new     = C_Demand(1:insert_idx(1)-1);
                 N_changes = length(insert_idx);
                 for i = 1:N_changes-1
                     C_new = [C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(i):insert_idx(i+1)-1)];
@@ -579,29 +580,15 @@ elseif SIM.SimMode == 8
     SIM.profile_time    = SIM.profile_time(1:end-1);
     SIM.profile_current = SIM.profile_current(1:end-1);
 
-%     % Step at t^-
-%     for i = 2:length(t_Demand)
-%         % Before k
-%         SIM.profile_time(end+1,1)    = t_Demand(i) - SIM.Tswitch * SIM.t_ramp_ratio;
-%         SIM.profile_current(end+1,1) = C_Demand(i-1);
-% 
-%         % @ k
-%         SIM.profile_time(end+1,1)    = t_Demand(i);
-%         SIM.profile_current(end+1,1) = C_Demand(i);
-%     end
-%     SIM.profile_time    = SIM.profile_time(1:end-1);
-%     SIM.profile_current = SIM.profile_current(1:end-1);
 
-
-%     % Test Plot
-%     i_user = i_user_calc(0:0.1:SIM.profile_time(end),SIM);
-%     figure
-%     hold on
-%     %plot(SIM.profile_time           ,SIM.profile_current,'ro')
-%     plot(0:0.1:SIM.profile_time(end),i_user             ,'ro')
-%     plot(t_new                      ,C_new           ,'-k')
-
-%     t_vec_Report{i} = 0:t_Report(i):t_Demand{i}(end);
+    % % Test Plot
+    % t_test = 0 : (SIM.Tswitch/10) : SIM.profile_time(end);
+    % i_user = i_user_calc( t_test , SIM);
+    % figure
+    % hold on
+    % %plot(SIM.profile_time           ,SIM.profile_current,'ro')
+    % plot(t_test ,i_user ,'ro')
+    % plot(t_new  ,C_new  ,'-k')
 end
 
 
@@ -1048,3 +1035,18 @@ function res = XfromDesPotential(x,V_des,z,y_intcep,AN,CA)
     Eeq_cell = Eeq_ca - Eeq_an;
     res = Eeq_cell - V_des;
 end
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OOOOOLD %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     % Step at t^-
+%     for i = 2:length(t_Demand)
+%         % Before k
+%         SIM.profile_time(end+1,1)    = t_Demand(i) - SIM.Tswitch * SIM.t_ramp_ratio;
+%         SIM.profile_current(end+1,1) = C_Demand(i-1);
+% 
+%         % @ k
+%         SIM.profile_time(end+1,1)    = t_Demand(i);
+%         SIM.profile_current(end+1,1) = C_Demand(i);
+%     end
+%     SIM.profile_time    = SIM.profile_time(1:end-1);
+%     SIM.profile_current = SIM.profile_current(1:end-1);

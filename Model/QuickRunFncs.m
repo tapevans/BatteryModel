@@ -64,20 +64,48 @@ clc;
 clear all;
 close all;
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC95_SwitchingTime10.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC90_SwitchingTime10.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
 
 plotfcn(filename)
+
+
+%% Arrange Figures
+FigArrange = 1;
+if FigArrange == 1
+    fig = gcf;
+    NumFig = fig.Number;
+    
+    Ncol = 3;
+    
+    for i = 1:NumFig
+        f = figure(i);
+        k = mod(i-1,Ncol);
+        row = mod(fix((i-1)/Ncol),2);
+        if row == 0
+            r = 575;
+%             r = 540;
+        elseif row == 1
+            r = 62;
+        end
+        f.Position = [k*575+15 r 560 420];
+    end
+end
+
 
 %% Load Results
 clear all
 close all
 clc
 
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_SS_EIS_SOC50.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_DTImpulseTs1.0SOC49.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ObservabilityTest\ObservabilityTest_KPCont_Relax_StepSOC50.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC90_SwitchingTime10.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
 
 load(filename)
+
+% Resave with PostProcessingNotComplete
+    % postProcessComplete = 0;
+    % save(filename)
 
 %% Create a SS representation from a SV during a simulation
 

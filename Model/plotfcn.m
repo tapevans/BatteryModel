@@ -5,29 +5,29 @@ load(filename)
 %% Plot Flags
 % ---- Polarization ----
 FLAG.COE       = 0; % Conservation of Energy Check %%%%%%%%%%%%%These plots need to be fixed
-FLAG.COM       = 1; % Conservation of Mass Check
+FLAG.COM       = 0; % Conservation of Mass Check
 FLAG.COC       = 0; % Conservation of Charge Check
 
 FLAG.TEMP      = 0; % Cell Temperature Profile %%%%%%%%%%%%%These plots need to be fixed
 
 FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
 FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
-FLAG.X_Li_rad  = 0; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
-FLAG.s_dot     = 0; % Li_ion production rate
+FLAG.X_Li_rad  = 1; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
+FLAG.s_dot     = 1; % Li_ion production rate
 
-FLAG.phi_ed    = 0; % phi_ed
-FLAG.phi_el    = 0; % phi_el
+FLAG.phi_ed    = 1; % phi_ed
+FLAG.phi_el    = 1; % phi_el
 FLAG.del_phi   = 1; % Delta phi (phi_ed - phi_el)
 FLAG.del_phi_v_time   = 1; %@ AN/SEP
-FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
+FLAG.E_eq      = 1; % Equilibrium delta_phi based on surface concentration
 FLAG.eta       = 1; % eta
-FLAG.i_o       = 0; % exchange current density
+FLAG.i_o       = 1; % exchange current density
 FLAG.i_Far     = 1; % charge-transfer current density
-FLAG.plotV_SEI = 0; % Voltage across the SEI
+FLAG.plotV_SEI = 1; % Voltage across the SEI
 
 FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
 FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
-FLAG.V_and_A             = 0;
+FLAG.V_and_A             = 1;
 
 % ---- Harmonic Perturbation ----
 FLAG.V_and_A_EIS   = 1;

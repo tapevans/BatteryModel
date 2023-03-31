@@ -89,19 +89,19 @@ battery_name = 'PRBS_Sims';
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
     C_rates      = [];
-%     C_rates      = [0.040843474405010]; % Results in 1A/m^2
-%     C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
-%     C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
-%     C_rates      = [1]; 
-%     C_rates      = [1/20 -1/20]; 
-%     C_rates      = [-1/3];
-%     C_rates      = [1/20 1/10 1/3 1 2]; 
+    % C_rates      = [0.040843474405010]; % Results in 1A/m^2
+    % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
+    % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
+    % C_rates      = [1]; 
+    % C_rates      = [1/20 -1/20]; 
+    % C_rates      = [-1/3];
+    % C_rates      = [1/20 1/10 1/3 1 2]; 
 
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
     EIS_SIN_freq = [];
-%     EIS_SIN_freq = [2*pi*0.0666666666666667];
-%     EIS_SIN_freq = [1e2 1e-2];
+    % EIS_SIN_freq = [2*pi*0.0666666666666667];
+    % EIS_SIN_freq = [1e2 1e-2];
     % EIS_SIN_freq = logspace(-2,1,31);
 
         % [%], Initial state of charge
@@ -109,10 +109,10 @@ battery_name = 'PRBS_Sims';
 
 % ---- State Space EIS ----
     SS_SOC = [];
-%     SS_SOC = 0:1:100;
-%     SS_SOC = [5, 10, 25, 50, 75, 90, 95];
-%     SS_SOC = [80.46];
-%     SS_SOC = [50];
+    % SS_SOC = 0:1:100;
+    % SS_SOC = [5, 10, 25, 50, 75, 90, 95];
+    % SS_SOC = [80.46];
+    % SS_SOC = [50];
     
     % Desired frequency for impedance results
 %         SS_freq = [];
@@ -122,46 +122,46 @@ battery_name = 'PRBS_Sims';
 % ---- Known BC Profile Controller ----
     KBCP   = 0;
         KBCPProfileOverwrite = 1;
-%         KBCPProfileFilename = 'DTImpulseTs0.1';
-%         KBCPProfileFilename = 'DTImpulseTs0.121152765862859';
-%         KBCPProfileFilename = 'DTImpulseTs0.146779926762207';
-%         KBCPProfileFilename = 'DTImpulseTs0.177827941003892';
-%         KBCPProfileFilename = 'DTImpulseTs0.215443469003188';
-%         KBCPProfileFilename = 'DTImpulseTs0.261015721568254';
-%         KBCPProfileFilename = 'DTImpulseTs0.316227766016838';
-%         KBCPProfileFilename = 'DTImpulseTs0.383118684955729';
-%         KBCPProfileFilename = 'DTImpulseTs0.464158883361278';
-%         KBCPProfileFilename = 'DTImpulseTs0.562341325190349';
-%         KBCPProfileFilename = 'DTImpulseTs0.681292069057961';
-%         KBCPProfileFilename = 'DTImpulseTs0.825404185268018';
+        % KBCPProfileFilename = 'DTImpulseTs0.1';
+        % KBCPProfileFilename = 'DTImpulseTs0.121152765862859';
+        % KBCPProfileFilename = 'DTImpulseTs0.146779926762207';
+        % KBCPProfileFilename = 'DTImpulseTs0.177827941003892';
+        % KBCPProfileFilename = 'DTImpulseTs0.215443469003188';
+        % KBCPProfileFilename = 'DTImpulseTs0.261015721568254';
+        % KBCPProfileFilename = 'DTImpulseTs0.316227766016838';
+        % KBCPProfileFilename = 'DTImpulseTs0.383118684955729';
+        % KBCPProfileFilename = 'DTImpulseTs0.464158883361278';
+        % KBCPProfileFilename = 'DTImpulseTs0.562341325190349';
+        % KBCPProfileFilename = 'DTImpulseTs0.681292069057961';
+        % KBCPProfileFilename = 'DTImpulseTs0.825404185268018';
         KBCPProfileFilename = 'DTImpulseTs1.0';
-%         KBCPProfileFilename = 'DTImpulseTs1.21152765862859';
-%         KBCPProfileFilename = 'DTImpulseTs1.46779926762207';
-%         KBCPProfileFilename = 'DTImpulseTs1.77827941003892';
-%         KBCPProfileFilename = 'DTImpulseTs2.15443469003188';
-%         KBCPProfileFilename = 'DTImpulseTs2.61015721568254';
-%         KBCPProfileFilename = 'DTImpulseTs3.16227766016838';
-%         KBCPProfileFilename = 'DTImpulseTs3.83118684955729';
-%         KBCPProfileFilename = 'DTImpulseTs4.64158883361278';
-%         KBCPProfileFilename = 'DTImpulseTs5.62341325190349';
-%         KBCPProfileFilename = 'DTImpulseTs6.81292069057961';
-%         KBCPProfileFilename = 'DTImpulseTs8.25404185268018';
-%         KBCPProfileFilename = 'DTImpulseTs10.0';      
+        % KBCPProfileFilename = 'DTImpulseTs1.21152765862859';
+        % KBCPProfileFilename = 'DTImpulseTs1.46779926762207';
+        % KBCPProfileFilename = 'DTImpulseTs1.77827941003892';
+        % KBCPProfileFilename = 'DTImpulseTs2.15443469003188';
+        % KBCPProfileFilename = 'DTImpulseTs2.61015721568254';
+        % KBCPProfileFilename = 'DTImpulseTs3.16227766016838';
+        % KBCPProfileFilename = 'DTImpulseTs3.83118684955729';
+        % KBCPProfileFilename = 'DTImpulseTs4.64158883361278';
+        % KBCPProfileFilename = 'DTImpulseTs5.62341325190349';
+        % KBCPProfileFilename = 'DTImpulseTs6.81292069057961';
+        % KBCPProfileFilename = 'DTImpulseTs8.25404185268018';
+        % KBCPProfileFilename = 'DTImpulseTs10.0';      
+        % 
+        % KBCPProfileFilename = 'KalmanTestDTImpulseTs1.0';
+        % KBCPProfileFilename = 'KalmanTestStep';
+        % KBCPProfileFilename = 'KalmanTestStep_JustPlant_NoRelax';
+        % KBCPProfileFilename = 'Relax_Step';
 
-%         KBCPProfileFilename = 'KalmanTestDTImpulseTs1.0';
-%         KBCPProfileFilename = 'KalmanTestStep';
-%         KBCPProfileFilename = 'KalmanTestStep_JustPlant_NoRelax';
-%         KBCPProfileFilename = 'Relax_Step';
-
-        %         KBCPProfileFilename = 'CCCV_1.5C';
-%         KBCPProfileFilename = 'CCCV_2C';
-%         KBCPProfileFilename = '5minImpulseLongResponse';
-%         KBCPProfileFilename = 'LongTau_wStep';
+        % KBCPProfileFilename = 'CCCV_1.5C';
+        % KBCPProfileFilename = 'CCCV_2C';
+        % KBCPProfileFilename = '5minImpulseLongResponse';
+        % KBCPProfileFilename = 'LongTau_wStep';
 
     % Initial SOC
-    %         KBSOC = 81.93;
-    %         KBSOC = 100; 
-            % KBSOC = 50;
+        % KBSOC = 81.93;
+        % KBSOC = 100; 
+        KBSOC = 50;
 
 
 % ---- MOO Controller ----
@@ -184,8 +184,8 @@ battery_name = 'PRBS_Sims';
 % ---- PRBS ---- 
     doPRBS = 1;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
-        % PRBS_SOC     = 50; % [%],     State of Charge
-        PRBS_Tswitch = 10;  % [s],     Switching Time
+        PRBS_SOC     = 50; % [%],     State of Charge
+        % PRBS_Tswitch = 10;  % [s],     Switching Time
         AddIntermediateRelaxTime = 1;
             NumTsRelax = 2;
             NumZeroCrossingUntilNextRelax = 5;
