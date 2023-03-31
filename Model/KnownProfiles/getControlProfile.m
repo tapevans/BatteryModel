@@ -276,9 +276,17 @@ j = 0;
 % MO_File(j).C_rate_sat = 2;
 
 
-%% Impulse Simulation (steps at t^-) Didn't change anything
+%% Impulse Simulation (Longer
+% %(steps at t^-) Didn't change anything
+% Sampling Time
+    N_t_s = 25;
+    T_s_min = -1; % T_s = 10^(T_s_min)
+    T_s_max =  1; % T_s = 10^(T_s_max)
+    T_s_vec = logspace(T_s_min,T_s_max,N_t_s);
+    Ts = T_s_vec(25);   % [s], discrete time sampling rate
+    % Ts = 1.0;   % [s], discrete time sampling rate
+    
 initial_relax_samples = 2;
-Ts = 1.0;   % [s], discrete time sampling rate
 N_meas = 300-1-initial_relax_samples; % Number of discrete values to measure
 N_meas = 800;
 

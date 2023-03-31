@@ -77,11 +77,11 @@ FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one 
 % folder_name  = 'zeroMeanPRBS_Sims';
 % battery_name = 'PRBS_Sims';
 
-folder_name  = 'zeroMeanPRBS_withRelax_Sims';
-battery_name = 'PRBS_Sims';
+% folder_name  = 'zeroMeanPRBS_withRelax_Sims';
+% battery_name = 'PRBS_Sims';
 
-% folder_name  = 'LongerImpulse';
-% battery_name = 'ObservabilityTest';
+folder_name  = 'LongerImpulse';
+battery_name = 'ObservabilityTest';
 % battery_name = 'PRBS_Sims';
 
 
@@ -120,33 +120,33 @@ battery_name = 'PRBS_Sims';
 %         SS_freq = (logspace(-2,6,75) *(2*pi));
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 0;
-        KBCPProfileOverwrite = 1;
-        % KBCPProfileFilename = 'DTImpulseTs0.1';
-        % KBCPProfileFilename = 'DTImpulseTs0.121152765862859';
-        % KBCPProfileFilename = 'DTImpulseTs0.146779926762207';
-        % KBCPProfileFilename = 'DTImpulseTs0.177827941003892';
-        % KBCPProfileFilename = 'DTImpulseTs0.215443469003188';
-        % KBCPProfileFilename = 'DTImpulseTs0.261015721568254';
-        % KBCPProfileFilename = 'DTImpulseTs0.316227766016838';
-        % KBCPProfileFilename = 'DTImpulseTs0.383118684955729';
-        % KBCPProfileFilename = 'DTImpulseTs0.464158883361278';
-        % KBCPProfileFilename = 'DTImpulseTs0.562341325190349';
-        % KBCPProfileFilename = 'DTImpulseTs0.681292069057961';
-        % KBCPProfileFilename = 'DTImpulseTs0.825404185268018';
-        KBCPProfileFilename = 'DTImpulseTs1.0';
-        % KBCPProfileFilename = 'DTImpulseTs1.21152765862859';
-        % KBCPProfileFilename = 'DTImpulseTs1.46779926762207';
-        % KBCPProfileFilename = 'DTImpulseTs1.77827941003892';
-        % KBCPProfileFilename = 'DTImpulseTs2.15443469003188';
-        % KBCPProfileFilename = 'DTImpulseTs2.61015721568254';
-        % KBCPProfileFilename = 'DTImpulseTs3.16227766016838';
-        % KBCPProfileFilename = 'DTImpulseTs3.83118684955729';
-        % KBCPProfileFilename = 'DTImpulseTs4.64158883361278';
-        % KBCPProfileFilename = 'DTImpulseTs5.62341325190349';
-        % KBCPProfileFilename = 'DTImpulseTs6.81292069057961';
-        % KBCPProfileFilename = 'DTImpulseTs8.25404185268018';
-        % KBCPProfileFilename = 'DTImpulseTs10.0';      
+    KBCP   = 1;
+        KBCPProfileOverwrite = 0;
+        % KBCPProfileFilename = 'DTImpulseTs0.1';               % 1
+        % KBCPProfileFilename = 'DTImpulseTs0.121152765862859'; % 2
+        % KBCPProfileFilename = 'DTImpulseTs0.146779926762207'; % 3
+        % KBCPProfileFilename = 'DTImpulseTs0.177827941003892'; % 4
+        % KBCPProfileFilename = 'DTImpulseTs0.215443469003188'; % 5
+        % KBCPProfileFilename = 'DTImpulseTs0.261015721568254'; % 6
+        % KBCPProfileFilename = 'DTImpulseTs0.316227766016838'; % 7
+        % KBCPProfileFilename = 'DTImpulseTs0.383118684955729'; % 8
+        % KBCPProfileFilename = 'DTImpulseTs0.464158883361278'; % 9
+        % KBCPProfileFilename = 'DTImpulseTs0.562341325190349'; % 10
+        % KBCPProfileFilename = 'DTImpulseTs0.681292069057961'; % 11
+        % KBCPProfileFilename = 'DTImpulseTs0.825404185268018'; % 12
+        % KBCPProfileFilename = 'DTImpulseTs1.0';               % 13
+        % KBCPProfileFilename = 'DTImpulseTs1.21152765862859';  % 14
+        % KBCPProfileFilename = 'DTImpulseTs1.46779926762207';  % 15
+        % KBCPProfileFilename = 'DTImpulseTs1.77827941003892';  % 16
+        % KBCPProfileFilename = 'DTImpulseTs2.15443469003188';  % 17
+        % KBCPProfileFilename = 'DTImpulseTs2.61015721568254';  % 18
+        % KBCPProfileFilename = 'DTImpulseTs3.16227766016838';  % 19
+        % KBCPProfileFilename = 'DTImpulseTs3.83118684955729';  % 20
+        % KBCPProfileFilename = 'DTImpulseTs4.64158883361278';  % 21
+        % KBCPProfileFilename = 'DTImpulseTs5.62341325190349';  % 22
+        % KBCPProfileFilename = 'DTImpulseTs6.81292069057961';  % 23
+        % KBCPProfileFilename = 'DTImpulseTs8.25404185268018';  % 24
+        KBCPProfileFilename = 'DTImpulseTs10.0';              % 25
         % 
         % KBCPProfileFilename = 'KalmanTestDTImpulseTs1.0';
         % KBCPProfileFilename = 'KalmanTestStep';
@@ -161,7 +161,7 @@ battery_name = 'PRBS_Sims';
     % Initial SOC
         % KBSOC = 81.93;
         % KBSOC = 100; 
-        KBSOC = 50;
+        % KBSOC = 50;
 
 
 % ---- MOO Controller ----
@@ -182,10 +182,10 @@ battery_name = 'PRBS_Sims';
         
 
 % ---- PRBS ---- 
-    doPRBS = 1;
+    doPRBS = 0;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
         PRBS_SOC     = 50; % [%],     State of Charge
-        % PRBS_Tswitch = 10;  % [s],     Switching Time
+        PRBS_Tswitch = 10;  % [s],     Switching Time
         AddIntermediateRelaxTime = 1;
             NumTsRelax = 2;
             NumZeroCrossingUntilNextRelax = 5;
