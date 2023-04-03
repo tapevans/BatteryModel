@@ -67,7 +67,7 @@ function [t, u , x , z_all , z_cell_voltage] = ROMplantData(SIM,FLAG,N,P,RESULTS
             x{j}     = x_EST_sys;
             z_all{j} = sys_HK{j}.C * x_EST_sys + z_init([P.cell_voltage,j],1);
             % z_all{j}(1,:) = z_all{j}(P.cell_voltage,:) + v_k(1,1:end-1);
-            z_cell_voltage{j} = z_all{j}(P.cell_voltage,:) + v_k(1,1:end-1);
+            z_cell_voltage{j} = z_all{j}(P.cell_voltage,:) + v_k(1,1:length(z_all{j}(P.cell_voltage,:)));
     
         end
     

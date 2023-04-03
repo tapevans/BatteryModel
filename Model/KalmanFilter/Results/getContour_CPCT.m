@@ -1,6 +1,6 @@
 %% Magnitude of CPCT vs SOC and Ts
 clear all; 
-% close all; 
+close all; 
 clc;
 
 
@@ -18,11 +18,11 @@ clc;
 %% Local FLAGS
     localFLAG.Overwrite.MyData   = 0;
     
-    localFLAG.IDVorCOM                    = 0; % 1 if individual (IDV), 0 if combined (COM)
-    localFLAG.Plot.UseLimits              = 0;
+    localFLAG.IDVorCOM                    = 1; % 1 if individual (IDV), 0 if combined (COM)
+    localFLAG.Plot.UseLimits              = 1;
     
-    localFLAG.Plot.NotNormalized          = 1;
-    localFLAG.Plot.Normalized2CellVoltage = 0;
+    localFLAG.Plot.NotNormalized          = 0;
+    localFLAG.Plot.Normalized2CellVoltage = 1;
     localFLAG.Plot.Normalized2MaxCPCT     = 0;
     
 

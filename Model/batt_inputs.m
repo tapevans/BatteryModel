@@ -91,8 +91,15 @@ if ( FLAG.CONSTANT_PROPS_FROM_HANDLES && FLAG.VARIABLE_PROPS_FROM_HANDLES)
     warning('Both FLAG.CONSTANT_PROPS_FROM_HANDLES and FLAG.VARIABLE_PROPS_FROM_HANDLES are 1.')
 end
 
+% Sampling Time
+    N_t_s = 25;
+    T_s_min = -1; % T_s = 10^(T_s_min)
+    T_s_max =  1; % T_s = 10^(T_s_max)
+    T_s_vec = logspace(T_s_min,T_s_max,N_t_s);
+    Ts = T_s_vec(25);   % [s], discrete time sampling rate
+
 FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
-    SIM.Ts           = 1.0;                    % [s], Sampling rate of the DT system
+    SIM.Ts           = Ts;                    % [s], Sampling rate of the DT system
 	SIM.TsMultiple   = 5;                     % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
     SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple;   % [s], Sampling rate of the ode output
 

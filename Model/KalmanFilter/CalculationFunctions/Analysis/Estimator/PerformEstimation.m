@@ -15,7 +15,7 @@ function [ESTIMATOR,RESULTS] = PerformEstimation(plant_filename,SIM,FLAG,N,P,RES
         z = Plant.Plant_Data.zN.z_soln;
         t = Plant.Plant_Data.i_user.t_soln;
     else
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant && SIM.Ts < 1 % Troublesome case
             [t, u , ~ , z_all, z_cell_voltage] = ROMplantData(SIM,FLAG,N,P,RESULTS);
         else
             [t, u , x , z_all, z_cell_voltage] = ROMplantData(SIM,FLAG,N,P,RESULTS);
@@ -82,7 +82,7 @@ for OO = 1:length(est_sys_tot)
 
 %% Do Variable Estimation
     if FLAG.DoVar
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant && SIM.Ts < 1
             [x_hat_var, ~, ~] = VarEstimator(est_sys,FLAG,SIM,P,x_hat_0,u,z);
         else
             [x_hat_var, ESTIMATOR.K_k{OO}, ESTIMATOR.P_k_pre{OO}] = VarEstimator(est_sys,FLAG,SIM,P,x_hat_0,u,z);
@@ -95,7 +95,7 @@ for OO = 1:length(est_sys_tot)
         end
         y_hat_var = y_hat_var_ALL(P.cell_voltage,:);
         
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant && SIM.Ts < 1 % Troublesome case
         else
             RESULTS.EST.VAR.x_soln{OO}      = x_hat_var;
         end
@@ -108,7 +108,10 @@ for OO = 1:length(est_sys_tot)
     if FLAG.DoPreCalc
         [ESTIMATOR.K_infty{OO}, ESTIMATOR.P_infty{OO}] = AsymptoticPreCalcs(FLAG,SIM,est_sys);
     else
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant && SIM.Ts < 1 % Troublesome case
+            % ESTIMATOR.K_infty{OO} = ESTIMATOR.K_k{OO}(:,:,end);
+            % ESTIMATOR.P_infty{OO} = ESTIMATOR.P_k_pre{OO}(:,:,end);
+            % disp('Test')
         else
             ESTIMATOR.K_infty{OO} = ESTIMATOR.K_k{OO}(:,:,end);
             ESTIMATOR.P_infty{OO} = ESTIMATOR.P_k_pre{OO}(:,:,end);
@@ -146,7 +149,7 @@ end
             end
         end
     else
-        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant % Troublesome case
+        if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant && SIM.Ts < 1 % Troublesome case
         else
             RESULTS.EST.PLANT.x_soln     = x;
         end

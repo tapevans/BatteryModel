@@ -29,16 +29,16 @@ clear all; close all; clc
         FLAG.IDV                    = 1;
         FLAG.COM                    = 0;
     FLAG.Analysis.NoisyPlant            = 0; 
-    FLAG.Analysis.Estimator             = 0; %%## 
+    FLAG.Analysis.Estimator             = 1; %%## 
         FLAG.UseROMAsPlant          = 1;
         FLAG.UseWrongIC             = 1;
         FLAG.DoPreCalc              = 1;
         FLAG.DoAsy                  = 1;
         FLAG.DoVar                  = 1;
-    FLAG.Analysis.Est_Error_calc        = 0; %%##
+    FLAG.Analysis.Est_Error_calc        = 1; %%##
         FLAG.FractionOfData         = 3/4;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating error with last 1/4 of the data)
         FLAG.Analysis.dispResults   = 1;        
-    FLAG.Analysis.GenComparData         = 1;
+    FLAG.Analysis.GenComparData         = 0;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
         % FLAG.CompareQMode
         %  1) Input Q
@@ -56,7 +56,7 @@ clear all; close all; clc
     
 
 %% Plots
-    FLAG.PLOT.PlotResults = 0;
+    FLAG.PLOT.PlotResults = 1;
     FLAG.Analysis.PlotImp = 0; % Plot the impulse response for each output (HK)
     FLAG.PlotSingVal      = 0;
     FLAG.PLOT.K_k_gain    = 0; % Plots the norm of the kalman gain wrt time
@@ -88,7 +88,7 @@ clear all; close all; clc
     %FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestTimeMinus';
 
     % LongerImpulse
-    % FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerImpulse';
+    FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerImpulse';
 
     % zeroMean PRBS
     FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims';
@@ -112,17 +112,17 @@ clear all; close all; clc
 
     
 %% Conditions to Run
-    % Q_0_vec = [1e-6];
+    Q_0_vec = [1e-6];
     % Q_0_vec = [1e-5]; % ROM as Plant Only
     % Q_0_vec = [1e-4]; % ROM as Plant Only
-    Q_0_vec = [1e-3]; % ROM as Plant Only
+    % Q_0_vec = [1e-3]; % ROM as Plant Only
     % Q_0_vec = [1e-2]; % ROM as Plant Only
     % Q_0_vec = [1e1]; % ROM as Plant Only
 
-    % R_0_vec = [1e-6];
+    R_0_vec = [1e-6];
     % R_0_vec = [1e-5];
     % R_0_vec = [1e-4];
-    R_0_vec = [1e-3];
+    % R_0_vec = [1e-3];
     % R_0_vec = [1e-2];
     % R_0_vec = [1e-1];
     % R_0_vec = [1e0];
@@ -133,11 +133,12 @@ clear all; close all; clc
         T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
         T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
         Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-        % Ts_vec  = [1];
         % Ts_vec = Ts_vec(12);
+        Ts_vec  = [10];
+        
     
-    % SOC_vec = [50 55];
-    SOC_vec = 0:1:100;    
+    SOC_vec = [50];
+    % SOC_vec = 0:1:100;    
     % SOC_vec = 0:5:100;
 
     FLAG.N_samples = 600;
@@ -161,7 +162,7 @@ clear all; close all; clc
 %(Can't do Tswitch=100 when doing Ho-Kalman and using SamplesPerSwitch == 1 since I don't have Ts=100 Impulse Response)
 %!!!(Can fix these issues if I implement a DT Impulse simulation instead of calling existing simulations)
 if FLAG.InputMode == 5    FLAG.PRBSAmp = 1; 
-    FLAG.Tswitch = 10; 
+    FLAG.Tswitch = 100; 
     %FLAG.SamplesPerSwitch = 10;
     %FLAG.N_samples
 end
@@ -180,10 +181,13 @@ end
 
 %% Save my computer
 if FLAG.Tswitch == 100 && FLAG.UseROMAsPlant
-    disp("Hey idiot, don't do that")
-    return % Don't use `quit`, that closes the Matlab window entirely
-    FLAG.DoPreCalc              = 0;
-    FLAG.DoAsy                  = 0;
+    if Ts_vec == 1
+        disp("Hey idiot, don't do that")
+        return % Don't use `quit`, that closes the Matlab window entirely
+    else
+        FLAG.DoPreCalc              = 0;
+        FLAG.DoAsy                  = 0;
+    end
 end
 
 
