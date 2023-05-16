@@ -1,10 +1,10 @@
 %% 
 function Kalman_plotFnc(RESULTS,N,SIM,FLAG)
 %%
-FLAG.PLOT.NoNoiseCompare            = 1;    
+FLAG.PLOT.NoNoiseCompare            = 0;    
     FLAG.PLOT.ode        = 1;
-    FLAG.PLOT.SS_CT      = 1;
-    FLAG.PLOT.SS_DT      = 1;
+    FLAG.PLOT.SS_CT      = 0;
+    FLAG.PLOT.SS_DT      = 0;
     FLAG.PLOT.ROM_HoKal  = 1;
 
 FLAG.PLOT.NoisyPlant                = 0;

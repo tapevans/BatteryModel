@@ -200,7 +200,7 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
 %            ramp. This is the time over which the input source ramps up
 % t_final_sim: Overall time for the simulation to fun for. It includes t_final and rest and ramp times
 % t_vec: The discretized time vector to return the solution
-if ~FLAG.Analysis.GenComparData %%%%%%%Delete Later
+% if ~FLAG.Analysis.GenComparData %%%%%%%Delete Later
     if FLAG.InputMode == 5
         filename = getPRBSFilename(FLAG);
         sysSIM   = load(filename,'SIM');
@@ -230,7 +230,7 @@ if ~FLAG.Analysis.GenComparData %%%%%%%Delete Later
 
         SIM.InputSignal = [SIM.t_vec_Relax_Step' input_load'];
     end
-end
+% end
 end
 
 

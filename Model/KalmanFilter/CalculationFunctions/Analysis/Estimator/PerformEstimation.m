@@ -22,7 +22,13 @@ function [ESTIMATOR,RESULTS] = PerformEstimation(plant_filename,SIM,FLAG,N,P,RES
         end
     end
     
-    z_init = SIM.y_0_FOM;
+
+    if FLAG.UseWrongIC_y
+        z_init = SIM.y_0_FOM_Offset;
+    else
+        z_init = SIM.y_0_FOM;
+    end
+
 
 
 %% Get Estimator Model
@@ -53,7 +59,7 @@ for OO = 1:length(est_sys_tot)
     % D_m = est_sys.D(P.cell_voltage,:);
     % est_sys = ss(est_sys.A , est_sys.B , C_m , D_m , SIM.Ts);
 
-    if FLAG.UseWrongIC
+    if FLAG.UseWrongIC_x
         random = randi([-9,9],length(est_sys.A),1);
         x_hat_0 = random * FLAG.offsetROM;
     else
@@ -63,7 +69,6 @@ for OO = 1:length(est_sys_tot)
     if FLAG.UseROMAsPlant
         z = z_cell_voltage{OO}(P.cell_voltage,:);
     end
-    
 
 %% Do Asymptotic Estimation
     if FLAG.DoAsy

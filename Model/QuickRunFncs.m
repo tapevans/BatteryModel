@@ -64,7 +64,7 @@ clc;
 clear all;
 close all;
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC90_SwitchingTime10.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC25_SwitchingTime10.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
 
 plotfcn(filename)
@@ -98,8 +98,8 @@ clear all
 close all
 clc
 
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC90_SwitchingTime10.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC90_SwitchingTime10.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
 
 load(filename)
 

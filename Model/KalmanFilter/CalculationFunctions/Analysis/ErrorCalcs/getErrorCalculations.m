@@ -55,7 +55,7 @@ if isfield(RESULTS.EST.ASY,'z_soln_ALL')
         end
 
         [N_outputs, ~] = size(plant_outputs);
-        error_outputs = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
+        error_outputs  = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
 
         covar_outputs = nan(N_outputs);
         for i = 1:N_outputs

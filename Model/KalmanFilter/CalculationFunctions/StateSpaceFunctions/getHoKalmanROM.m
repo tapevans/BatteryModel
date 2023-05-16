@@ -19,7 +19,7 @@ function [sys,singVals] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS)
 
     t_imp = simsys.t_soln;
 
-
+    % save('F:\TylerFiles\~PhDWork\Presentations\Seminar\Spring2023\Pictures\HoKalmanROM\HKData.mat','simsys','z_imp','t_imp','g_k','idx_vec','pulse_idx','i_user_DT')
 %% Adjust for Order of Magnitude
     range    = (max(g_k')-min(g_k'));
     g_k      = inv(diag(range))*g_k;

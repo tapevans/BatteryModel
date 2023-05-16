@@ -1,6 +1,7 @@
 %% Run Kalman Analysis for P2D
 clear all; close all; clc
-
+%%
+tic
 %% Subdirecties to Include
     % Script's filepath
     [current_file_path,~,~] = fileparts(mfilename('fullpath'));
@@ -15,7 +16,7 @@ clear all; close all; clc
 
 
 %% Analysis to Perform
-    FLAG.Analysis.NoNoiseCompare        = 0; 
+    FLAG.Analysis.NoNoiseCompare        = 1; 
         FLAG.Analysis.ode           = 1;
         FLAG.Analysis.SS_CT         = 0;
         FLAG.Analysis.SS_DT         = 0;
@@ -23,19 +24,25 @@ clear all; close all; clc
             FLAG.r_max = 20;
             FLAG.UseInput_r = 0;
         FLAG.Analysis.ROM_HoKal     = 1;
-            FLAG.EST.SepHK        = 1; % 1 if calculate a ROM for each desired output
+            FLAG.Save_SS_DRT      = 0; % Save the ROM state-space models to be used in DRT
+            FLAG.EST.SepHK        = 0; % 1 if calculate a ROM for each desired output
             FLAG.UseOptimal       = 0;
+            FLAG.Analysis.CovarEstMat= 1;
     FLAG.Analysis.getDARE               = 0;
         FLAG.IDV                    = 1;
         FLAG.COM                    = 0;
     FLAG.Analysis.NoisyPlant            = 0; 
-    FLAG.Analysis.Estimator             = 1; %%## 
+    FLAG.Analysis.Estimator             = 0; %%## 
         FLAG.UseROMAsPlant          = 1;
-        FLAG.UseWrongIC             = 1;
+        FLAG.UseWrongIC_x           = 1;
+        FLAG.UseWrongIC_y           = 0;
         FLAG.DoPreCalc              = 1;
         FLAG.DoAsy                  = 1;
         FLAG.DoVar                  = 1;
-    FLAG.Analysis.Est_Error_calc        = 1; %%##
+        FLAG.ChangePlantVoltageMid  = 0; % Change the plant voltage midway through the simulation
+            FLAG.ShiftTime  = 800;    % Not used yet
+            FLAG.ShiftValue = -0.005; % Not used yet
+    FLAG.Analysis.Est_Error_calc        = 0; %%##
         FLAG.FractionOfData         = 3/4;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating error with last 1/4 of the data)
         FLAG.Analysis.dispResults   = 1;        
     FLAG.Analysis.GenComparData         = 0;
@@ -56,11 +63,11 @@ clear all; close all; clc
     
 
 %% Plots
-    FLAG.PLOT.PlotResults = 1;
+    FLAG.PLOT.PlotResults = 0;
     FLAG.Analysis.PlotImp = 0; % Plot the impulse response for each output (HK)
     FLAG.PlotSingVal      = 0;
-    FLAG.PLOT.K_k_gain    = 0; % Plots the norm of the kalman gain wrt time
-    FLAG.PlotError        = 0; % Plots the abs(error) between the ROM and plant
+    FLAG.PLOT.K_k_gain    = 1; % Plots the norm of the kalman gain wrt time
+    FLAG.PlotError        = 0; % Plots the abs(error) between the ROM and plant (!!!!!!! Where is this???)
 
     FLAG.TestCase = 1; % Don't think I have used this yet % Filename just becomes 'TestCase.mat'. Will still overwrite filenames for Slink and data generation
 
@@ -112,19 +119,19 @@ clear all; close all; clc
 
     
 %% Conditions to Run
-    Q_0_vec = [1e-6];
+    % Q_0_vec = [1e-6];
     % Q_0_vec = [1e-5]; % ROM as Plant Only
     % Q_0_vec = [1e-4]; % ROM as Plant Only
-    % Q_0_vec = [1e-3]; % ROM as Plant Only
+    Q_0_vec = [1e-3]; % ROM as Plant Only
     % Q_0_vec = [1e-2]; % ROM as Plant Only
     % Q_0_vec = [1e1]; % ROM as Plant Only
 
-    R_0_vec = [1e-6];
+    % R_0_vec = [1e-6];
     % R_0_vec = [1e-5];
     % R_0_vec = [1e-4];
     % R_0_vec = [1e-3];
     % R_0_vec = [1e-2];
-    % R_0_vec = [1e-1];
+    R_0_vec = [1e-1];
     % R_0_vec = [1e0];
     % R_0_vec = [1e1];
 
@@ -133,8 +140,8 @@ clear all; close all; clc
         T_s_min = -1; % T_s = 10^(T_s_min), **Keep this fix for now
         T_s_max =  1; % T_s = 10^(T_s_max), **Keep this fix for now
         Ts_vec = logspace(T_s_min,T_s_max,N_t_s);
-        % Ts_vec = Ts_vec(12);
-        Ts_vec  = [10];
+        Ts_vec = Ts_vec(13);
+        Ts_vec  = [1];
         
     
     SOC_vec = [50];
@@ -161,21 +168,22 @@ clear all; close all; clc
 %(Can't do Tswitch=0.1 when doing Ho-Kalman since I don't have Ts=0.01 Impulse Response, unless SamplesPerSwitch == 1)
 %(Can't do Tswitch=100 when doing Ho-Kalman and using SamplesPerSwitch == 1 since I don't have Ts=100 Impulse Response)
 %!!!(Can fix these issues if I implement a DT Impulse simulation instead of calling existing simulations)
-if FLAG.InputMode == 5    FLAG.PRBSAmp = 1; 
-    FLAG.Tswitch = 100; 
+if FLAG.InputMode == 5    
+    FLAG.PRBSAmp = 1; 
+    FLAG.Tswitch = 10; 
     %FLAG.SamplesPerSwitch = 10;
     %FLAG.N_samples
 end
 
 
 %% Offset IC for ROM
-    FLAG.offsetROM_IC_Rel  = 1e-3; % [%], Relative offset for the initial conditions for ROM Estimator
-    FLAG.offsetROM_IC_Abs  = 1e-6; % [%], Relative offset for the initial conditions for ROM Estimator
+    FLAG.offsetROM_IC_Rel  = 1e-2; % [%], Relative offset for the initial conditions for ROM Estimator
+    FLAG.offsetROM_IC_Abs  = 1e-4; % [%], Relative offset for the initial conditions for ROM Estimator
     FLAG.offsetROM_IC_Zero = 1e-4; % [%], Relative offset for the initial conditions for ROM Estimator
     if FLAG.EstimatorModel == 1
         FLAG.offsetROM = -1e1;
     else
-        FLAG.offsetROM = 1e0;
+        FLAG.offsetROM = 2.25e0;
     end
 
 
@@ -207,7 +215,7 @@ end
             end
         end
     end
-
+toc
 
 %% Generate Comparison Data Call Main
 %     Q_0 = 1e-6; R_0 = 1e-6; % TL % Completed

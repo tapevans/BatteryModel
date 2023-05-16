@@ -33,14 +33,15 @@ K_k       = zeros(N_states,N_measur,N_steps); % Kalman Gains
 P_k       = zeros(N_states,N_states,N_steps); % Error Covariance
 P_k_pre   = zeros(N_states,N_states,N_steps); % Error Covariance predict phase
 
-confidence = 0.5; % Range from [0,1]
+confidence = 1.0; % Range from [0,1]
 P_k_pre(:,:,1) = confidence*eye(N_states);
 P_k(:,:,1) = confidence*eye(N_states);
 % P_k(:,:,1)     = P_infty;
 % P_k_pre(:,:,1) = P_infty;
 
 % K_k(:,:,1) = K_infty;
-K_k(:,:,1) = 2*K_infty;
+% K_k(:,:,1) = 2*K_infty;
+K_k(:,:,1) = eye(size(K_infty));
 
 x_var(:,1) = x_hat_0;
 
@@ -55,11 +56,11 @@ end
 R = SIM.R_0 * eye(N_measur);
 % SIM.R = (diag(R))';
 
-% if FLAG.UseWrongIC
-%     z_init = SIM.y_0_FOM_Offset(P.cell_voltage,1);
-% else
+if FLAG.UseWrongIC_y
+    z_init = SIM.y_0_FOM_Offset(P.cell_voltage,1);
+else
     z_init = SIM.y_0_FOM(P.cell_voltage,1);
-% end
+end
 
 % z_init = SIM.y_0_FOM(P.cell_voltage,1);
 
@@ -156,4 +157,9 @@ x_hat = x_var;
 % 
 % xlabel('Number of Discrete Steps')
 % % xlim([1,NS])
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% figure
+% plot(1:1:N_steps,y_tilde_k,'Linewidth',2)
+
 end

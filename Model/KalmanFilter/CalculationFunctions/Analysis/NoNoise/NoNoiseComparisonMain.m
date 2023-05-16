@@ -65,6 +65,10 @@ function [SIM,FLAG,N,P,RESULTS] = NoNoiseComparisonMain(SIM,FLAG,N,P,RESULTS)
         FLAG.UseInput_r = 0;
         
         [sys_HK,~] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS);
+
+        if FLAG.Save_SS_DRT
+            save(['F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanFilter\Results\ROM_SS_DRT' filesep 'ROM_SS_SOC' num2str(SIM.SOC) '_Ts' num2str(SIM.Ts)],'sys_HK','RESULTS')
+        end
     
         FLAG.UseInput_r = oldFLAGUseInput_r;
     
@@ -90,5 +94,14 @@ function [SIM,FLAG,N,P,RESULTS] = NoNoiseComparisonMain(SIM,FLAG,N,P,RESULTS)
         end
         % Add Initial Offset back to SS
         RESULTS.ROM_HoKal.z_soln = RESULTS.ROM_HoKal.z_soln + SIM.y_0_FOM';
+
+
+        % Perform Estimation Covariance Matrix Analysis
+        if FLAG.Analysis.CovarEstMat
+            CovarEstimationAnalysis( SIM , FLAG , P , sys_HK , RESULTS );
+        end
+
+
     end
+    % save('F:\TylerFiles\~PhDWork\Presentations\Seminar\Spring2023\Pictures\OpenLoopComparison\OpenLoopData.mat','RESULTS','NewInputSignal')
 end

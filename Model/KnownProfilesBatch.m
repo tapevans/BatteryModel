@@ -8,12 +8,12 @@ SOC_max = 100;
 
 SOC_vec = linspace(SOC_min,SOC_max,N_SOC);
 % SOC_vec = SOC_min:5:SOC_max;
-% SOC_vec = [50];
+SOC_vec = [54];
 
 for i = 1:length(SOC_vec)
 %     i
-    KBSOC    = SOC_vec(i);
-    % PRBS_SOC = SOC_vec(i);
+    % KBSOC    = SOC_vec(i);
+    PRBS_SOC = SOC_vec(i);
     % EIS_SOC  = SOC_vec(i);
     % SS_SOC   = SOC_vec(i);
     CreateProject

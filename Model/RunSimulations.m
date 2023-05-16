@@ -8,9 +8,9 @@ cd(filepath)
 %% List of Project Folders
 i = 1;
 % Project_Folder{i} = 'zeroMeanPRBS_withRelax_Sims';   i = i+1;
-% Project_Folder{i} = 'zeroMeanPRBS_Sims';   i = i+1;
+Project_Folder{i} = 'zeroMeanPRBS_Sims';   i = i+1;
 % Project_Folder{i} = 'PRBS_Sims';   i = i+1;
-Project_Folder{i} = 'LongerImpulse';   i = i+1;
+% Project_Folder{i} = 'LongerImpulse';   i = i+1;
 % Project_Folder{i} = 'KalmanTest';   i = i+1;
 % Project_Folder{i} = 'ObservabilityTest';   i = i+1;
 % Project_Folder{i} = 'SeminarPres_Nov2022';   i = i+1;

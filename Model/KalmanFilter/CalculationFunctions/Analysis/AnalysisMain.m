@@ -36,6 +36,9 @@ if FLAG.Analysis.Estimator
     FLAG.Analysis.PlotImp = 0;
     [ESTIMATOR,RESULTS] = PerformEstimation(plant_filename,SIM,FLAG,N,P,RESULTS);
 
+    %% Save Data for plots
+        % save('F:\TylerFiles\~PhDWork\Presentations\Seminar\Spring2023\Pictures\EstimationResults\EstimationResultsData.mat','RESULTS')
+
     %% Plot Kalman Gain
     if FLAG.PLOT.K_k_gain
         [~,~,N_steps] = size(ESTIMATOR.K_k{1});

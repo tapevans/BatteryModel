@@ -95,14 +95,21 @@ function generateComparisonData(SIM,FLAG,N,P,RESULTS)
             C_des{OO}           = C_des_temp;
         end
 
+        %% PRBS Results
+            OutputMatrix = SIM.OutputMatrix;
+            [r,~] = size(RESULTS.ode.z_soln);
+            for OO = 1:r
+                ODEProfile{OO} = RESULTS.ode.z_soln(OO,:); % Can do IC and delta from max-min later
+            end
+        
 
         %% Save Results
-        Q_0 = SIM.Q_0;
-        R_0 = SIM.R_0;
-        Ts  = SIM.Ts;
-        SOC = SIM.SOC;
-    
-        save(save_filename, 'Q_0', 'R_0' , 'Ts', 'SOC', 'CPCT', 'sing_val_norm' ,'matrixOFdot_deg','matrixOFdot',"S_Orm","sing_val",'C_des','P')
+            Q_0 = SIM.Q_0;
+            R_0 = SIM.R_0;
+            Ts  = SIM.Ts;
+            SOC = SIM.SOC;
+        
+            save(save_filename, 'Q_0', 'R_0' , 'Ts', 'SOC', 'CPCT', 'sing_val_norm' ,'matrixOFdot_deg','matrixOFdot',"S_Orm","sing_val",'C_des','P','OutputMatrix','ODEProfile')
     end
 end
 
