@@ -18,13 +18,13 @@ clc;
 %% Local FLAGS
     localFLAG.Overwrite.MyData   = 0;
     
-    localFLAG.IDVorCOM                    = 1; % 1 if individual (IDV), 0 if combined (COM)
-    localFLAG.Plot.UseLimits              = 1;
+    localFLAG.IDVorCOM                    = 0; % 1 if individual (IDV), 0 if combined (COM)
+    localFLAG.Plot.UseLimits              = 0;
     
     localFLAG.Plot.NotNormalized          = 0;
-    localFLAG.Plot.Normalized2CellVoltage = 1;
+    localFLAG.Plot.Normalized2CellVoltage = 0;
     localFLAG.Plot.Normalized2MaxCPCT     = 0;
-    
+    localFLAG.Plot.Normalized2T10Delta    = 1;
 
     
     localFLAG.Plot.cell_voltage  = 1; % Terminal Voltage
@@ -45,6 +45,9 @@ clc;
     elseif localFLAG.Plot.Normalized2MaxCPCT 
         cmin = -6;
         cmax =  0;
+    elseif localFLAG.Plot.Normalized2T10Delta 
+        cmin = -12;
+        cmax = -7;
     end
     
     colormapping = 'jet';
@@ -53,8 +56,8 @@ clc;
 
 %% Axis Variables
 % State of Charge
-    SOC_vec = 0:1:100;
-    % SOC_vec = 0:5:100;
+    % SOC_vec = 0:1:100;
+    SOC_vec = 0:5:100; % This is the only set with the new Normalization to T10
 
 % Desired Sampling Rate
     N_t_s   = 25;   % **Keep this fix for now
@@ -87,7 +90,6 @@ clc;
 
 %% Check if Data has already been consolidated
     data_filename = ['MyData_' NoiseStr '.mat'];
-    % data_filename = ['MyData_' NoiseStr IDVorCOM '.mat'];
     ReadData = false;
     if isfile(data_filename)
         if localFLAG.Overwrite.MyData
@@ -97,13 +99,13 @@ clc;
     else
         ReadData = true;
     end
-    
+    % ReadData = true;
 
 %% Read in Data
     if ReadData
         % Get Comparison filenames
             list = dir(['*' NoiseStr '*']);
-            % list = dir(['*' NoiseStr IDVorCOM '*']);
+            % list = dir(['*' 'Ts1_SOC50' '*']);
             num_files = length(list);
             for j = 1:num_files % Creates a cell array with all simulations' full path name
                 if ~exist('sim_filenames')
@@ -128,6 +130,20 @@ clc;
                 MyData(i).S_Orm     = sim.S_Orm;
                 MyData(i).sing_val  = sim.sing_val;
                 MyData(i).P         = sim.P     ;
+                if isfield(sim,'ODEProfile')
+                    for OO = 1:length(sim.ODEProfile)
+                        IC = sim.ODEProfile{OO}(1);
+                        min_val = min(sim.ODEProfile{OO});
+                        max_val = max(sim.ODEProfile{OO});
+                        MyData(i).ODE_IC{OO} = IC;
+                        MyData(i).ODE_delta_minmax{OO} = max_val - min_val;
+                    end
+                else
+                    for OO = 1:length(fieldnames(sim.P))
+                        MyData(i).ODE_IC{OO} = 1;
+                        MyData(i).ODE_delta_minmax{OO} = 1;
+                    end
+                end
             end
     
         % Save struct
@@ -144,15 +160,21 @@ clc;
 
 
 %% Add Normalized Values
+n_Outs = length(fieldnames(MyData(1).P));
     for i = 1:N_sims
         for OO = 1:length(MyData(i).CPCT)
             MyData(i).CPCT_diag{OO}       = diag(MyData(i).CPCT{OO});
             MyData(i).CPCT_normalized{OO} = MyData(i).CPCT_diag{OO} / MyData(i).CPCT_diag{OO}(MyData(i).P.cell_voltage); % Normalized WRT voltage CPCT
             MyData(i).CPCT_normMAX{OO}    = MyData(i).CPCT_diag{OO} / max(MyData(i).CPCT_diag{OO}); % Normalized to the largest CPCT
+            if OO <= n_Outs
+                MyData(i).CPCT_norm2Delta{OO} = MyData(i).CPCT_diag{OO} / MyData(i).ODE_delta_minmax{OO}; % Normalized to Delta of a T10 PRBS signal
+            else
+                delta_vec = cell2mat(MyData(i).ODE_delta_minmax);
+                norm_vec = MyData(i).CPCT_diag{OO}./delta_vec';
+                MyData(i).CPCT_norm2Delta{OO} = norm_vec;
+            end
         end
     end
-
-
 
 %% Initialize variables for Contour plots
     T_s_linear = log10(Ts_vec);
@@ -176,7 +198,6 @@ clc;
 
 
 %% Save CPCT Data for plotting
-n_Outs = length(fieldnames(MyData(1).P));
     for SS = 1:length(SOC_vec)
         for TT = 1:length(Ts_vec)
             if localFLAG.IDVorCOM % Individual
@@ -184,6 +205,7 @@ n_Outs = length(fieldnames(MyData(1).P));
                     Z_CPCT(SS,TT,OO)         = log10( MyData(IDX_Mat(SS,TT)).CPCT_diag{OO}(2) );
                     Z_CPCT_norm(SS,TT,OO)    = log10( MyData(IDX_Mat(SS,TT)).CPCT_normalized{OO}(2) );
                     Z_CPCT_normMax(SS,TT,OO) = log10( MyData(IDX_Mat(SS,TT)).CPCT_normMAX{OO}(2) );
+                    Z_CPCT_norm2Delta(SS,TT,OO) = log10( MyData(IDX_Mat(SS,TT)).CPCT_norm2Delta{OO}(2) );
                 end
                 if SS == 1 && TT == 1
                     Z_CPCT_norm(SS,TT,1) = 1.00000000000000000000000000001;
@@ -193,6 +215,7 @@ n_Outs = length(fieldnames(MyData(1).P));
                     Z_CPCT(SS,TT,OO)         = log10( MyData(IDX_Mat(SS,TT)).CPCT_diag{end}(OO) );
                     Z_CPCT_norm(SS,TT,OO)    = log10( MyData(IDX_Mat(SS,TT)).CPCT_normalized{end}(OO) );
                     Z_CPCT_normMax(SS,TT,OO) = log10( MyData(IDX_Mat(SS,TT)).CPCT_normMAX{end}(OO) );
+                    Z_CPCT_norm2Delta(SS,TT,OO) = log10( MyData(IDX_Mat(SS,TT)).CPCT_norm2Delta{end}(OO) );
                 end
                 if SS == 1 && TT == 1
                     Z_CPCT_norm(SS,TT,1) = 1.00000000000000000000000000001;
@@ -572,6 +595,115 @@ if localFLAG.Plot.Normalized2MaxCPCT
     if localFLAG.Plot.T             && isfield(P,'T')
         f = figure;
         [~,h] = contourf(X,Y,Z_CPCT_normMax(:,:,P.T) , c_levels);
+        title([RESULTS.Labels.title{P.T} ' ' NoiseStr])
+        xlabel('log_{10}(T_s) [s]')
+        ylabel('SOC [%]')
+        colorbar
+        colormap(f, flipud(colormap(colormapping)))
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
+        h.LineStyle = 'none';
+    end
+end
+
+
+%% Countour normalized to Delta of T10 ODE
+if localFLAG.Plot.Normalized2T10Delta
+    if localFLAG.Plot.cell_voltage  && isfield(P,'cell_voltage')
+        f = figure;
+        [~,h] = contourf(X,Y,Z_CPCT_norm2Delta(:,:,P.cell_voltage) , c_levels);
+        title([RESULTS.Labels.title{P.cell_voltage} ' ' NoiseStr])
+        xlabel('log_{10}(T_s) [s]')
+        ylabel('SOC [%]')
+        colorbar
+        colormap(f, flipud(colormap(colormapping)))
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
+        h.LineStyle = 'none';
+    end
+    if localFLAG.Plot.delta_phi     && isfield(P,'delta_phi')
+        f = figure;
+        [~,h] = contourf(X,Y,Z_CPCT_norm2Delta(:,:,P.delta_phi) , c_levels);
+        title([RESULTS.Labels.title{P.delta_phi} ' ' NoiseStr])
+        xlabel('log_{10}(T_s) [s]')
+        ylabel('SOC [%]')
+        colorbar
+        colormap(f, flipud(colormap(colormapping)))
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
+        h.LineStyle = 'none';
+    end
+    if localFLAG.Plot.i_Far         && isfield(P,'i_Far')
+        f = figure;
+        [~,h] = contourf(X,Y,Z_CPCT_norm2Delta(:,:,P.i_Far) , c_levels);
+        title([RESULTS.Labels.title{P.i_Far} ' ' NoiseStr])
+        xlabel('log_{10}(T_s) [s]')
+        ylabel('SOC [%]')
+        colorbar
+        colormap(f, flipud(colormap(colormapping)))
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
+        h.LineStyle = 'none';
+    end
+    if localFLAG.Plot.eta           && isfield(P,'eta')
+        f = figure;
+        [~,h] = contourf(X,Y,Z_CPCT_norm2Delta(:,:,P.eta) , c_levels);
+        title([RESULTS.Labels.title{P.eta} ' ' NoiseStr])
+        xlabel('log_{10}(T_s) [s]')
+        ylabel('SOC [%]')
+        colorbar
+        colormap(f, flipud(colormap(colormapping)))
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
+        h.LineStyle = 'none';
+    end
+    if localFLAG.Plot.C_Liion       && isfield(P,'C_Liion')
+        f = figure;
+        [~,h] = contourf(X,Y,Z_CPCT_norm2Delta(:,:,P.C_Liion) , c_levels);
+        title([RESULTS.Labels.title{P.C_Liion} ' ' NoiseStr])
+        xlabel('log_{10}(T_s) [s]')
+        ylabel('SOC [%]')
+        colorbar
+        colormap(f, flipud(colormap(colormapping)))
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
+        h.LineStyle = 'none';
+    end
+    if localFLAG.Plot.C_Li          && isfield(P,'C_Li')
+        f = figure;
+        [~,h] = contourf(X,Y,Z_CPCT_norm2Delta(:,:,P.C_Li) , c_levels);
+        title([RESULTS.Labels.title{P.C_Li} ' ' NoiseStr])
+        xlabel('log_{10}(T_s) [s]')
+        ylabel('SOC [%]')
+        colorbar
+        colormap(f, flipud(colormap(colormapping)))
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
+        h.LineStyle = 'none';
+    end
+    if localFLAG.Plot.delta_C_Li    && isfield(P,'delta_C_Li')
+        f = figure;
+        [~,h] = contourf(X,Y,Z_CPCT_norm2Delta(:,:,P.delta_C_Li) , c_levels);
+        title([RESULTS.Labels.title{P.delta_C_Li} ' ' NoiseStr])
+        xlabel('log_{10}(T_s) [s]')
+        ylabel('SOC [%]')
+        colorbar
+        colormap(f, flipud(colormap(colormapping)))
+        if localFLAG.Plot.UseLimits
+            clim([cmin cmax])
+        end
+        h.LineStyle = 'none';
+    end
+    if localFLAG.Plot.T             && isfield(P,'T')
+        f = figure;
+        [~,h] = contourf(X,Y,Z_CPCT_norm2Delta(:,:,P.T) , c_levels);
         title([RESULTS.Labels.title{P.T} ' ' NoiseStr])
         xlabel('log_{10}(T_s) [s]')
         ylabel('SOC [%]')
