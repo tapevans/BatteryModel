@@ -4,7 +4,8 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 %% Other Parameters
     FLAG.folderpathCovarEst = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanFilter\Results\CovarMatrixAnalysis';
 
-    FLAG.OverwriteResults = 0;
+    FLAG.AlwaysRun        = 0;
+    FLAG.OverwriteResults = 1;
     FLAG.SAVEResults      = 1;
     FLAG.PLOT.Any         = 0;
     FLAG.PLOT.KALMAN_GAIN = 0;
@@ -25,8 +26,8 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
     % N.steps_final  = 100000; % Last sample
     N.steps_final  = 4e4; % Last sample
     N.interval     = 100;
-    N.sample_vec     = [1:1:N.steps_single , N.steps_single+N.interval : N.interval : N.steps_final];
-    N.steps = length(N.sample_vec);
+    N.sample_vec   = [1:1:N.steps_single , N.steps_single+N.interval : N.interval : N.steps_final];
+    N.steps        = length(N.sample_vec);
 
 
 %% System Variables
@@ -42,46 +43,36 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
 %% Asymptotic Calculations
-    [K_infty, P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys);
-     K_infty           = K_infty(:,P.cell_voltage);
+    [K_infty,    P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys);
+     K_infty_CV           = K_infty(:,P.cell_voltage);
 
 
 %% Noise Matrix
+    % Q_vec = 1e-3;
+    % R_vec = 1e-1;
     Q_vec = [1e-3 1e-2 1e-1 1e0 1e1];
     R_vec = [1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0 1e1];
 
 
 %% Initialize Variables
-    % S_k_0      = zeros(N.measur     , N.measur     , N.steps); % Pre-fit Error Covariance (difference between measurement and estimation)
-    % % K_k_0      = zeros(N.states     , N.measur     , N.steps); % Kalman Gains
-    % K_k_0      =  ones(N.states     , N.measur     , N.steps); % Kalman Gains
-    % P_k_0      = zeros(N.states     , N.states     , N.steps); % Error Covariance Update Phase
-    % P_k_pre_0  = zeros(N.states     , N.states     , N.steps); % Error Covariance Predict Phase
-    % CPCT_0     = zeros(N.measur_all , N.measur_all , N.steps); % Error Covariance Predict Phase
-    % CPCT_pre_0 = zeros(N.measur_all , N.measur_all , N.steps); % Error Covariance Predict Phase
-    % CK_k_0     = zeros(N.measur     , N.measur     , N.steps); % Error Covariance Predict Phase
-
+    K_k_0      = zeros(N.states     , N.measur     , N.steps_final); % Kalman Gains
     S_k_0      = zeros(N.measur     , N.measur     , N.steps_final); % Pre-fit Error Covariance (difference between measurement and estimation)
-    % K_k_0      = zeros(N.states     , N.measur     , N.steps_final); % Kalman Gains
-    K_k_0      =  ones(N.states     , N.measur     , N.steps_final); % Kalman Gains
     P_k_0      = zeros(N.states     , N.states     , N.steps_final); % Error Covariance Update Phase
     P_k_pre_0  = zeros(N.states     , N.states     , N.steps_final); % Error Covariance Predict Phase
-    CPCT_0     = zeros(N.measur_all , N.measur_all , N.steps_final); % Error Covariance Predict Phase
-    CPCT_pre_0 = zeros(N.measur_all , N.measur_all , N.steps_final); % Error Covariance Predict Phase
-    CK_k_0     = zeros(N.measur     , N.measur     , N.steps_final); % Error Covariance Predict Phase
 
-    confidence        = 1.0; % Range from [0,1]
-    P_k_0(:,:,1)      = confidence*eye(N.states);
-    P_k_pre_0(:,:,1)  = confidence*eye(N.states);
-    CPCT_0(:,:,1)     = C_DT * P_k_0(:,:,1) * C_DT'; 
-    CPCT_pre_0(:,:,1) = C_DT * P_k_pre_0(:,:,1) * C_DT'; 
-    CK_k_0(:,:,1)     = C_DT_CV * K_k_0(:,:,1);
+    % sensor_confidence = 1; % Range from [0,1]
+    sensor_confidence = 0; % Range from [0,1]
+    K_k_0     (:,:,1) = sensor_confidence * ones(N.states , N.measur);
+    % state_variance    = 1e-1; 
+    state_variance    = 1; 
+    P_k_0     (:,:,1) = state_variance*eye(N.states);
+    P_k_pre_0 (:,:,1) = state_variance*eye(N.states);
 
 
 %% Loop Through Noise Vectors
     for QQ = Q_vec
         for RR = R_vec
-            disp(['Q= ' num2str(QQ) '  R= ' num2str(RR)])
+            disp(['Q= ' num2str(QQ) ' R= ' num2str(RR)])
             %% Check if Results Exist
             RUNSIM = false;
             
@@ -95,59 +86,92 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                 RUNSIM = true;
             end
 
+            if FLAG.AlwaysRun
+                RUNSIM = true;
+            end
+
+
             %% Run Simulation
             if RUNSIM
-                Q_matrix = B_DT*QQ*B_DT';
-                S_k      = S_k_0;
-                K_k      = K_k_0;
-                P_k      = P_k_0;
-                P_k_pre  = P_k_pre_0;
-                CPCT     = CPCT_0;
-                CPCT_pre = CPCT_pre_0;
-                CK_k     = CK_k_0;
+                %% Initialize Matrices
+                    Q_matrix = B_DT*QQ*B_DT';
+                    S_k      = S_k_0;
+                    K_k      = K_k_0;
+                    P_k      = P_k_0;
+                    P_k_pre  = P_k_pre_0;
+
 
                 %% Run Estimation
                 for i = 2:N.steps_final
                     % Predict Phase
-                    P_k_pre(:,:,i)  = A_DT * P_k(:,:,i-1) * A_DT'  +  Q_matrix;
-                    CPCT_pre(:,:,i) = C_DT * P_k_pre(:,:,i) * C_DT';
+                        P_k_pre(:,:,i)  = A_DT * P_k(:,:,i-1)   * A_DT'  +  Q_matrix;
 
                     % Update (Correction) Phase
-                    S_k(:,:,i)  = C_DT_CV * P_k_pre(:,:,i) * C_DT_CV' + RR;
-                    K_k(:,:,i)  = P_k_pre(:,:,i) * C_DT_CV' * inv(S_k(:,:,i));
-                    P_k(:,:,i)  = (eye(N.states) - K_k(:,:,i) * C_DT_CV) * P_k_pre(:,:,i);
-                    CPCT(:,:,i) = C_DT * P_k(:,:,i) * C_DT';
-                    CK_k(:,:,i) = C_DT_CV * K_k(:,:,i);
+                        S_k(:,:,i)  = C_DT_CV * P_k_pre(:,:,i) * C_DT_CV' + RR;
+                        K_k(:,:,i)  = P_k_pre(:,:,i) * C_DT_CV' * inv(S_k(:,:,i));
+                        P_k(:,:,i)  = (eye(N.states) - K_k(:,:,i) * C_DT_CV) * P_k_pre(:,:,i);
                 end
 
 
                 %% Get idx of actual samples
-                S_k_red      = S_k(:,:,N.sample_vec);
-                K_k_red      = K_k(:,:,N.sample_vec);
-                P_k_red      = P_k(:,:,N.sample_vec);
-                P_k_pre_red  = P_k_pre(:,:,N.sample_vec);
-                CPCT_red     = CPCT(:,:,N.sample_vec);
-                CPCT_pre_red = CPCT_pre(:,:,N.sample_vec);
-                CK_k_red     = CK_k(:,:,N.sample_vec);
+                    P_k_pre_red = P_k_pre (:,:,N.sample_vec);
+                    S_k_red     = S_k     (:,:,N.sample_vec);
+                    K_k_red     = K_k     (:,:,N.sample_vec);
+                    P_k_red     = P_k     (:,:,N.sample_vec);
+
+
+                %% Other Save Parameters    
+                    temp     = pagemtimes(C_DT , P_k_red);
+                    CPCT_red = pagemtimes(temp , C_DT');
+
+                    temp         = pagemtimes(C_DT , P_k_pre_red);
+                    CPCT_pre_red = pagemtimes(temp , C_DT');
+
+                    CK_k_CV_red = pagemtimes(C_DT_CV , K_k_red );
+                    CK_k_red    = pagemtimes(C_DT    , K_k_red );
 
 
                 %% Get diag of CPCT
-                for i = 2:N.steps
-                    CPCT_pre_diag(:,i) = diag( CPCT_pre_red(:,:,i) );
-                    CPCT_diag(:,i)     = diag( CPCT_red(:,:,i) );
-                end
+                    for i = 2:N.steps
+                        CPCT_pre_diag(:,i) = diag( CPCT_pre_red(:,:,i) );
+                        CPCT_diag    (:,i) = diag( CPCT_red    (:,:,i) );
+                    end
 
 
                 %% Reshape CK_k
-                CK       = reshape(CK_k_red,1,[]);
-                CK_infty = C_DT_CV * K_infty;
+                    CK = reshape(CK_k_CV_red,1,[]);
 
-                CP_inftyCT = C_DT * P_infty * C_DT';
+
+                %% Asymptotic 
+                    CK_infty_CV = C_DT_CV * K_infty_CV;
+                    CK_infty    = C_DT    * K_infty;
+                    CP_inftyCT  = C_DT * P_infty * C_DT';
 
 
                 %% Save Results
                 if FLAG.SAVEResults
-                    save(save_filename, 'QQ' , 'RR' , 'SIM' , 'FLAG' , 'N' , 'P' , 'sys' , 'S_k_red' , 'K_k_red' , 'P_k_red' , 'P_k_pre_red' , 'CPCT_red' , 'CPCT_pre_red' , 'CK_k_red' , 'CPCT_pre_diag' , 'CPCT_diag' , 'CK' , 'CK_infty' , 'CP_inftyCT' )
+                    save(save_filename,  'QQ'           ,...
+                                         'RR'           ,...
+                                         'SIM'          ,...
+                                         'FLAG'         ,...
+                                         'N'            ,...
+                                         'P'            ,...
+                                         'sys'          ,...
+                                         'P_k_pre_red'  ,...
+                                         'S_k_red'      ,...
+                                         'K_k_red'      ,...
+                                         'P_k_red'      ,...
+                                         'CPCT_red'     ,...
+                                         'CPCT_pre_red' ,...
+                                         'CK_k_CV_red'     ,...
+                                         'CK_k_red' ,...
+                                         'CPCT_pre_diag',...
+                                         'CPCT_diag'    ,...
+                                         'CK'           ,...
+                                         'CK_infty_CV'  ,...
+                                         'CK_infty'     ,...
+                                         'CP_inftyCT'   ,...
+                                         'RESULTS' )
                 end
 
 
@@ -166,7 +190,7 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                         figure
                         hold on
                         plot( N.sample_vec , CK , '-k' , 'LineWidth',2 )
-                        yline(CK_infty, 'LineWidth',2,'Color','b')
+                        yline(CK_infty_CV, 'LineWidth',2,'Color','b')
                         title('Cell Voltage Kalman Gain')
                         xlabel('Samples')
                         ylabel('C K_k')
@@ -285,7 +309,7 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 %% Arrange Figures
 FigArrange = 1;
-if FigArrange == 1
+if FigArrange == 1 && FLAG.PLOT.Any
     fig = gcf;
     NumFig = fig.Number;
 
