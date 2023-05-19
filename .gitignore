@@ -8,3 +8,4 @@ Model/Simulink/slprj
 *.slxc
 Model/KalmanFilter/SimulinkFiles/slprj
 *.autosave
+Model/KalmanFilter/Results/CovarMatrixAnalysis/MyData.mat

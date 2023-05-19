@@ -7,10 +7,10 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
     FLAG.AlwaysRun        = 0;
     FLAG.OverwriteResults = 1;
     FLAG.SAVEResults      = 1;
-    FLAG.PLOT.Any         = 0;
+    FLAG.PLOT.Any               = 0;
     FLAG.PLOT.KALMAN_GAIN = 0;
     FLAG.PLOT.COVAR       = 1;
-        FLAG.PLOT.SUB     = 1;
+        FLAG.PLOT.SUB  = 1;
 
     ColorVec = [0      0.4470 0.7410
                 0.8500 0.3250 0.0980
@@ -37,9 +37,20 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
     B_DT    = sys.B;
     C_DT    = sys.C;
     C_DT_CV = sys.C(P.cell_voltage,:);
-    
+
     [N.measur, N.states] = size(C_DT_CV);
     [N.measur_all, ~]    = size(C_DT);
+
+
+%% What is the stability of A_DT
+    % [eig_vec,eig_val] = eig(A_DT);
+    % % [eig_val] = eig(A_DT);
+    % [U,S,V] = svd(A_DT);
+    % test = U*V';
+
+
+%% Save SS for Dr.Vincent
+    % save('SS_SOC50_Ts1.mat', 'sys')
 
 
 %% Asymptotic Calculations
@@ -139,7 +150,8 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
                 %% Reshape CK_k
-                    CK = reshape(CK_k_CV_red,1,[]);
+                    CK_CV = reshape(CK_k_CV_red,1,[]);
+                    CK = reshape(CK_k_red,6,[]);
 
 
                 %% Asymptotic 
@@ -163,10 +175,11 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                                          'P_k_red'      ,...
                                          'CPCT_red'     ,...
                                          'CPCT_pre_red' ,...
-                                         'CK_k_CV_red'     ,...
-                                         'CK_k_red' ,...
+                                         'CK_k_CV_red'  ,...
+                                         'CK_k_red'     ,...
                                          'CPCT_pre_diag',...
                                          'CPCT_diag'    ,...
+                                         'CK_CV'        ,...
                                          'CK'           ,...
                                          'CK_infty_CV'  ,...
                                          'CK_infty'     ,...
@@ -180,7 +193,7 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                     if FLAG.PLOT.KALMAN_GAIN
                         % Kalman Gain (CK) of just voltage
                         figure
-                        plot( N.sample_vec , CK , '-k' , 'LineWidth',2 )
+                        plot( N.sample_vec , CK_CV , '-k' , 'LineWidth',2 )
                         title('Cell Voltage Kalman Gain')
                         xlabel('Samples')
                         ylabel('C K_k')
@@ -189,7 +202,7 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                         % Kalman Gain (CK) of just voltage with Asymptotic
                         figure
                         hold on
-                        plot( N.sample_vec , CK , '-k' , 'LineWidth',2 )
+                        plot( N.sample_vec , CK_CV , '-k' , 'LineWidth',2 )
                         yline(CK_infty_CV, 'LineWidth',2,'Color','b')
                         title('Cell Voltage Kalman Gain')
                         xlabel('Samples')
@@ -197,15 +210,16 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                     end
     
                     if FLAG.PLOT.COVAR
-                        % % Plot Each CPCT with Asymptotic
-                        %     for j = 1:N.measur_all
-                        %         figure
-                        %         hold on
-                        %         plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2 )
-                        %         yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color','k');
-                        %         yL.Alpha = 1;
-                        %         title(RESULTS.Labels.title{j})
-                        %     end
+                        % Plot Each CPCT with Asymptotic
+                            for j = 1:N.measur_all
+                                figure
+                                hold on
+                                % plot( N.sample_vec , CPCT_pre_diag(j,:) , '-' , 'LineWidth',2 )
+                                plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2 )
+                                yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color','k');
+                                yL.Alpha = 1;
+                                title(RESULTS.Labels.title{j})
+                            end
     
     
                         % Covariance (CPCT) of each variable with respect to steps
