@@ -203,8 +203,12 @@ if ~postProcessComplete
     %% Calculations specific to sinusoidal pertebations
     if SIM.SimMode == 2 % ---- Harmonic Perturbation ----
         %% ID Voltage Section
-        Y = fft(cell_voltage(1:end-1));
-        L = length(cell_voltage(1:end-1));
+        if mod(length(cell_voltage),2) == 0
+            Y = fft(cell_voltage);
+        else
+            Y = fft(cell_voltage(1:end-1));
+        end
+        L = length(Y);
         P2 = abs(Y/L); % 2-sided spectrum (neg and pos frequencies)
         P1 = P2(1:L/2+1); % single-sided spectrum
         P1(2:end-1) = 2*P1(2:end-1); % Multiply everything by 2 execpt the DC (0 Hz)
