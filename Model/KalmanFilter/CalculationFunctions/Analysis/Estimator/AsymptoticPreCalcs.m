@@ -6,10 +6,11 @@
 function [K_infty, P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys)
 A_DT = sys.A;
 B_DT = sys.B;
-C_DT = sys.C;
+% C_DT = sys.C;
+C_DT = sys.C(1,:);
 
 
-[N_measur, ~] = size(sys.C);
+[N_measur, ~] = size(C_DT);
 R = SIM.R_0 * eye(N_measur);
 
 switch FLAG.QMode
