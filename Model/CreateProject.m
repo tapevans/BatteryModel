@@ -35,7 +35,7 @@
         
         
 %%
-% clear all; close all; clc;
+clear all; close all; clc;
 
 
 %% Subdirecties to Include
@@ -54,7 +54,7 @@ FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
 % if folder_overwrite and folder_add are 0, then a new name should be used
 % for the folder
 
-FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one is created
+FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
@@ -74,8 +74,8 @@ FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one 
 % folder_name  = 'PRBS_Sims';
 % battery_name = 'PRBS_Sims';
 
-folder_name  = 'zeroMeanPRBS_Sims';
-battery_name = 'PRBS_Sims';
+% folder_name  = 'zeroMeanPRBS_Sims';
+% battery_name = 'PRBS_Sims';
 
 % folder_name  = 'zeroMeanPRBS_withRelax_Sims';
 % battery_name = 'PRBS_Sims';
@@ -83,6 +83,12 @@ battery_name = 'PRBS_Sims';
 % folder_name  = 'LongerImpulse';
 % battery_name = 'ObservabilityTest';
 % battery_name = 'PRBS_Sims';
+
+% % % % folder_name  = 'zeroMeanPRBS_Sims';
+% % % % battery_name = 'PRBS_Sims_Longer';
+
+folder_name  = 'EISCompareForPeter';
+battery_name = 'EISCompareForPeter';
 
 
 %% Simulations
@@ -99,25 +105,35 @@ battery_name = 'PRBS_Sims';
 
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
-    EIS_SIN_freq = [];
+    % EIS_SIN_freq = [];
     % EIS_SIN_freq = [2*pi*0.0666666666666667];
     % EIS_SIN_freq = [1e2 1e-2];
     % EIS_SIN_freq = logspace(-2,1,31);
+
+    exp_min = -3;
+    exp_max =  5;
+    exp_diff = exp_max - exp_min;
+    EIS_SIN_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
 
         % [%], Initial state of charge
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    SS_SOC = [];
+    % SS_SOC = [];
     % SS_SOC = 0:1:100;
     % SS_SOC = [5, 10, 25, 50, 75, 90, 95];
     % SS_SOC = [80.46];
-    % SS_SOC = [50];
+    SS_SOC = [50];
     
     % Desired frequency for impedance results
-%         SS_freq = [];
-        SS_freq = logspace(-1,11,101);
-%         SS_freq = (logspace(-2,6,75) *(2*pi));
+        % SS_freq = [];
+        % SS_freq = logspace(-1,11,101);
+        % SS_freq = (logspace(-2,6,75) *(2*pi));
+        exp_min = -3;
+        exp_max =  5;
+        exp_diff = exp_max - exp_min;
+        SS_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
+        
         
 % ---- Known BC Profile Controller ----
     KBCP   = 0;
@@ -182,13 +198,16 @@ battery_name = 'PRBS_Sims';
         
 
 % ---- PRBS ---- 
-    doPRBS = 1;
+    doPRBS = 0;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
         % PRBS_SOC     = 50; % [%],     State of Charge
         PRBS_Tswitch = 10;  % [s],     Switching Time
         AddIntermediateRelaxTime = 1;
             NumTsRelax = 2;
             NumZeroCrossingUntilNextRelax = 5;
+
+
+% ---- Ho-Kalman ROM ----            
 
         
 %% Create Folder    

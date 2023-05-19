@@ -7,8 +7,9 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
+Project_Folder{i} = 'EISCompareForPeter';   i = i+1;
 % Project_Folder{i} = 'zeroMeanPRBS_withRelax_Sims';   i = i+1;
-Project_Folder{i} = 'zeroMeanPRBS_Sims';   i = i+1;
+% Project_Folder{i} = 'zeroMeanPRBS_Sims';   i = i+1;
 % Project_Folder{i} = 'PRBS_Sims';   i = i+1;
 % Project_Folder{i} = 'LongerImpulse';   i = i+1;
 % Project_Folder{i} = 'KalmanTest';   i = i+1;
@@ -43,7 +44,9 @@ num_sim_files = length(sim_filenames);
 for i = 1:num_sim_files
     disp(' ')
     disp(['Performing Simulation ' num2str(i) '/' num2str(num_sim_files)])
+    disp(['Performing Simulation ' sim_filenames{i}])
     disp(datestr(datetime));
+    simStart = tic;
     load(sim_filenames{i},'SIM')
     if ~(SIM.SimMode == 0)
         load(sim_filenames{i},'postProcessComplete')
@@ -440,6 +443,8 @@ for i = 1:num_sim_files
     else
         disp('Simulation has already been analyzed')
     end
+    simEnd = toc(simStart);
+    disp(['Simulation took:' num2str(simEnd) 's'])
     clearvars -except sim_filenames i k num_sim_files
 end
 disp('Finished all simulations')
