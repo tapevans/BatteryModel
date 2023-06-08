@@ -60,7 +60,7 @@ FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
 % if folder_overwrite and folder_add are 0, then a new name should be used
 % for the folder
 
-FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
+FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one is created
 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
@@ -121,7 +121,7 @@ battery_name = 'EISCompareForPeter';
 
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
-    % EIS_SIN_freq = [];
+    EIS_SIN_freq = [];
     % EIS_SIN_freq = [2*pi*0.0666666666666667];
     % EIS_SIN_freq = [1e2 1e-2];
     % EIS_SIN_freq = logspace(-2,1,31);
@@ -130,17 +130,17 @@ battery_name = 'EISCompareForPeter';
     exp_min = -3;
     exp_max =  5;
     exp_diff = exp_max - exp_min;
-    EIS_SIN_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
+    % EIS_SIN_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
 
         % [%], Initial state of charge
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    % SS_SOC = [];
+    SS_SOC = [];
     % SS_SOC = 0:1:100;
     % SS_SOC = [5, 10, 25, 50, 75, 90, 95];
     % SS_SOC = [80.46];
-    SS_SOC = [50];
+    % SS_SOC = [50];
     
     % Desired frequency for impedance results
         % SS_freq = [];
@@ -235,7 +235,7 @@ battery_name = 'EISCompareForPeter';
 
 
 % ---- EIS from Stiching PRBS ---- 
-    getEIS_PRBS = 1;
+    getEIS_PRBS = 0;
         EIS_PRBS.Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
         EIS_PRBS.SOC     = 50; % [%],     State of Charge
         EIS_PRBS.Tswitch = [0.1 , 1 , 10];  % [s],     Switching Time
@@ -261,7 +261,7 @@ battery_name = 'EISCompareForPeter';
 
 
 % ---- EIS Ho-Kalman ----
-    getEIS_HoKalman = 1;
+    getEIS_HoKalman = 0;
         HK_Ts  = 1;  % [s], Sampling Time
         HK_SOC = 50; % [%], State of Charge
             exp_min = -3;
