@@ -4,75 +4,87 @@ load(filename)
 
 %% Plot Flags
 % ---- Polarization ----
-FLAG.COE       = 0; % Conservation of Energy Check %%%%%%%%%%%%%These plots need to be fixed
-FLAG.COM       = 0; % Conservation of Mass Check
-FLAG.COC       = 0; % Conservation of Charge Check
-
-FLAG.TEMP      = 0; % Cell Temperature Profile %%%%%%%%%%%%%These plots need to be fixed
-
-FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
-FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
-FLAG.X_Li_rad  = 1; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
-FLAG.s_dot     = 1; % Li_ion production rate
-
-FLAG.phi_ed    = 1; % phi_ed
-FLAG.phi_el    = 1; % phi_el
-FLAG.del_phi   = 1; % Delta phi (phi_ed - phi_el)
-FLAG.del_phi_v_time   = 1; %@ AN/SEP
-FLAG.E_eq      = 1; % Equilibrium delta_phi based on surface concentration
-FLAG.eta       = 1; % eta
-FLAG.i_o       = 1; % exchange current density
-FLAG.i_Far     = 1; % charge-transfer current density
-FLAG.plotV_SEI = 1; % Voltage across the SEI
-
-FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
-FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
-FLAG.V_and_A             = 1;
+    FLAG.COE       = 0; % Conservation of Energy Check %%%%%%%%%%%%%These plots need to be fixed
+    FLAG.COM       = 0; % Conservation of Mass Check
+    FLAG.COC       = 0; % Conservation of Charge Check
+    
+    FLAG.TEMP      = 0; % Cell Temperature Profile %%%%%%%%%%%%%These plots need to be fixed
+    
+    FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
+    FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
+    FLAG.X_Li_rad  = 1; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
+    FLAG.s_dot     = 1; % Li_ion production rate
+    
+    FLAG.phi_ed    = 1; % phi_ed
+    FLAG.phi_el    = 1; % phi_el
+    FLAG.del_phi   = 1; % Delta phi (phi_ed - phi_el)
+    FLAG.del_phi_v_time   = 1; %@ AN/SEP
+    FLAG.E_eq      = 1; % Equilibrium delta_phi based on surface concentration
+    FLAG.eta       = 1; % eta
+    FLAG.i_o       = 1; % exchange current density
+    FLAG.i_Far     = 1; % charge-transfer current density
+    FLAG.plotV_SEI = 1; % Voltage across the SEI
+    
+    FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
+    FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
+    FLAG.V_and_A             = 1;
 
 % ---- Harmonic Perturbation ----
-FLAG.V_and_A_EIS   = 1;
-FLAG.X_Li_surf_EIS = 0;
+    FLAG.V_and_A_EIS   = 1;
+    FLAG.X_Li_surf_EIS = 0;
 
 % ---- State Space EIS ----
-FLAG.SS_NYQUIST  = 1;
-FLAG.SS_BODE     = 1; 
+    FLAG.SS_NYQUIST  = 1;
+    FLAG.SS_BODE     = 1; 
 
 % ---- Known Profile Controller ----
-FLAG.KPCONT_cellVoltage      = 1; % Terminal voltage of the battery vs time
-FLAG.KPCONT_i_user           = 1; 
-FLAG.KPCONT_V_and_A_norm_abs = 0;
-FLAG.KPCONT_V_and_A_norm     = 1;
-FLAG.KPCONT_VOLT_v_SOC       = 1;
-FLAG.KPCONT_X_Li_surf        = 0;
-FLAG.KPCONT_X_Li_surf_v_time = 1; %@ AN/SEP
-FLAG.KPCONT_del_phi_v_time   = 1; %@ AN/SEP
-FLAG.KPCONT_i_Far_v_time     = 1; %@ AN/SEP
+    FLAG.KPCONT_cellVoltage      = 1; % Terminal voltage of the battery vs time
+    FLAG.KPCONT_i_user           = 1; 
+    FLAG.KPCONT_V_and_A_norm_abs = 0;
+    FLAG.KPCONT_V_and_A_norm     = 1;
+    FLAG.KPCONT_VOLT_v_SOC       = 1;
+    FLAG.KPCONT_X_Li_surf        = 0;
+    FLAG.KPCONT_X_Li_surf_v_time = 1; %@ AN/SEP
+    FLAG.KPCONT_del_phi_v_time   = 1; %@ AN/SEP
+    FLAG.KPCONT_i_Far_v_time     = 1; %@ AN/SEP
 
 % ---- MOO Controller ----
-FLAG.MOOCONT_cellVoltage = 1;
+    FLAG.MOOCONT_cellVoltage = 1;
 
 % ---- Manual Current Profile ----
-FLAG.MAN_del_phi               = 1; % Delta phi vs time
-FLAG.MAN_del_phi_overlap       = 0; % Delta phi for each region plotted ontop of each other
-FLAG.MAN_current_profile       = 0; % Current Profile vs time
-FLAG.MAN_full_current_profile  = 1; % Current Profile determined by refinement (include profile past the final time needed)
-FLAG.MAN_current_profile_norm  = 1; % Normalized Current Profile wrt C-rate vs time
-FLAG.MAN_voltage_profile       = 0; % Voltage Profile vs time
-FLAG.MAN_volt_and_curr_profile = 1; % Voltage Profile and |C-rate| vs time
-FLAG.MAN_refinement            = 1; % Refinement Rate vs number of iterations
+    FLAG.MAN_del_phi               = 1; % Delta phi vs time
+    FLAG.MAN_del_phi_overlap       = 0; % Delta phi for each region plotted ontop of each other
+    FLAG.MAN_current_profile       = 0; % Current Profile vs time
+    FLAG.MAN_full_current_profile  = 1; % Current Profile determined by refinement (include profile past the final time needed)
+    FLAG.MAN_current_profile_norm  = 1; % Normalized Current Profile wrt C-rate vs time
+    FLAG.MAN_voltage_profile       = 0; % Voltage Profile vs time
+    FLAG.MAN_volt_and_curr_profile = 1; % Voltage Profile and |C-rate| vs time
+    FLAG.MAN_refinement            = 1; % Refinement Rate vs number of iterations
 
+% ---- EIS from Stiching PRBS ----
+    FLAG.EIS_PRBS_NYQUIST = 1;
+    FLAG.EIS_PRBS_BODE    = 1;
 
+% ---- EIS Ho-Kalman ----
+    FLAG.HK_cellVoltage     = 1;
+    FLAG.HK_NYQUIST_FOM     = 1;
+    FLAG.HK_BODE_FOM        = 1;
+    FLAG.HK_NYQUIST_ROM     = 1;
+    FLAG.HK_BODE_ROM        = 1;
+    FLAG.HK_NYQUIST_Compare = 1;
+    FLAG.HK_BODE_Compare    = 1; 
+
+    
 %% Inputs
 N_times = 6; % Number of times to plot
 
-% if FLAG.X_Li_rad % Which CV to plot radial mole fraction
+if ~(SIM.SimMode == 9)
     CV_vec = [N.CV_Region_AN(1) , N.CV_Region_AN(end) , N.CV_Region_CA(1) , N.CV_Region_CA(end)];
-%     CV_vec = [N.CV_Region_AN(3) , N.CV_Region_CA(3) ];
-% end
+end
     
 
 %% Make Desired Times for Plotting
-if ~(SIM.SimMode == 3)
+if ~(SIM.SimMode == 3 || SIM.SimMode == 9)
     time_des = linspace(0, t_soln(end), N_times);
 %     time_des = linspace(SIM.initial_offset, t_soln(end), N_times);
 %     time_des = SIM.initial_offset:(t_soln(end)-SIM.initial_offset)/(N_times-1):t_soln(end);
@@ -836,6 +848,157 @@ elseif SIM.SimMode == 7
         ylabel('Normal of Steps')
     end
     
+
+% ---- EIS from Stiching PRBS ----
+elseif SIM.SimMode == 9
+    %% EIS
+    if FLAG.EIS_PRBS_NYQUIST
+        figure
+        plot(Z_results(:,P.SS.Z_Re) , -Z_results(:,P.SS.Z_Im),'-ob','Linewidth',2)
+        title('EIS')
+        xlabel('Z_{Re} (Ohm)')
+        ylabel('-Z_{Im} (Ohm)')
+        axis equal
+        % xlim([0,max(Z_results_FOM(:,P.SS.Z_Re))])
+        %     ylim([0,12])    
+    end   
+
+    %% Bode
+    if FLAG.EIS_PRBS_BODE
+        figure
+        t = tiledlayout(2,1,'TileSpacing','loose','Padding','compact');
+    
+        nexttile
+        semilogx(Z_results(:,P.SS.omega) , Z_results(:,P.SS.Z_dB) , '-ob' , 'LineWidth' , 2)
+        ylabel('Magnitude (dB)')
+    
+        nexttile
+        semilogx(Z_results(:,P.SS.omega) , Z_results(:,P.SS.Z_ps_deg) , '-ob' , 'LineWidth' , 2)
+        ylabel('Phase (degrees)')
+        xlabel('Frequency (rad s^{-1})')  
+
+        t.Title.String     = 'Bode';
+        t.Title.Color      = [0,0,0];
+        t.Title.FontSize   = 11;
+        t.Title.FontWeight = 'bold';
+    end
+
+% ---- EIS Ho-Kalman ----
+elseif SIM.SimMode == 10
+    %% Cell Voltage (during impulse)
+    if FLAG.HK_cellVoltage
+        figure
+        plot(t_soln,cell_voltage,'-k','LineWidth',2)
+        title('Impulse Response: Cell Voltage')
+        xlabel('Time (s)')
+        ylabel('Voltage (V)')
+        xlim([0,t_soln(end)])
+    end
+
+
+    %% EIS FOM
+    if FLAG.HK_NYQUIST_FOM
+        figure
+        plot(Z_results_FOM(:,P.SS.Z_Re),-Z_results_FOM(:,P.SS.Z_Im),'-ob','Linewidth',2)
+        title('EIS FOM')
+        xlabel('Z_{Re} (Ohm)')
+        ylabel('-Z_{Im} (Ohm)')
+        axis equal
+        % xlim([0,max(Z_results_FOM(:,P.SS.Z_Re))])
+        %     ylim([0,12])    
+    end   
+
+    %% Bode FOM
+    if FLAG.HK_BODE_FOM
+        figure
+        t = tiledlayout(2,1,'TileSpacing','loose','Padding','compact');
+    
+        nexttile
+        semilogx(Z_results_FOM(:,P.SS.omega) , Z_results_FOM(:,P.SS.Z_dB) , '-ob' , 'LineWidth' , 2)
+        ylabel('Magnitude (dB)')
+    
+        nexttile
+        semilogx(Z_results_FOM(:,P.SS.omega) , Z_results_FOM(:,P.SS.Z_ps_deg) , '-ob' , 'LineWidth' , 2)
+        ylabel('Phase (degrees)')
+        xlabel('Frequency (rad s^{-1})')  
+
+        t.Title.String = 'Bode FOM';
+        t.Title.Color  = [0,0,0];
+        t.Title.FontSize = 11;
+        t.Title.FontWeight = 'bold';
+    end
+
+    %% EIS ROM
+    if FLAG.HK_NYQUIST_ROM
+        figure
+        plot(Z_results_ROM(:,P.SS.Z_Re),-Z_results_ROM(:,P.SS.Z_Im),'-ok','Linewidth',2)
+        title('EIS ROM')
+        xlabel('Z_{Re} (Ohm)')
+        ylabel('-Z_{Im} (Ohm)')
+        axis equal    
+        %     xlim([5,20])
+        %     ylim([0,12])    
+    end   
+
+    %% Bode ROM
+    if FLAG.HK_BODE_ROM
+        figure
+        t = tiledlayout(2,1,'TileSpacing','loose','Padding','compact');
+    
+        nexttile
+        semilogx(Z_results_ROM(:,P.SS.omega) , Z_results_ROM(:,P.SS.Z_dB) , '-ok' , 'LineWidth' , 2)
+        ylabel('Magnitude (dB)')
+    
+        nexttile
+        semilogx(Z_results_ROM(:,P.SS.omega) , Z_results_ROM(:,P.SS.Z_ps_deg) , '-ok' , 'LineWidth' , 2)
+        ylabel('Phase (degrees)')
+        xlabel('Frequency (rad s^{-1})')  
+
+        t.Title.String = 'Bode ROM';
+        t.Title.Color  = [0,0,0]; 
+        t.Title.FontSize = 11;
+        t.Title.FontWeight = 'bold';
+    end
+
+    %% EIS Compare FOM and ROM
+    if FLAG.HK_NYQUIST_Compare
+        figure
+        hold on
+        plot(Z_results_ROM(:,P.SS.Z_Re),-Z_results_ROM(:,P.SS.Z_Im),'-ok','Linewidth',2, 'DisplayName','ROM')
+        plot(Z_results_FOM(:,P.SS.Z_Re),-Z_results_FOM(:,P.SS.Z_Im),'-ob','Linewidth',2, 'DisplayName','FOM')
+        title('EIS Comparison')
+        xlabel('Z_{Re} (Ohm)')
+        ylabel('-Z_{Im} (Ohm)')
+        %     xlim([5,20])
+        %     ylim([0,12])    
+        axis equal    
+    end   
+
+    %% Bode Compare FOM and ROM
+    if FLAG.HK_BODE_Compare
+        figure
+        t = tiledlayout(2,1,'TileSpacing','loose','Padding','compact');
+    
+        nexttile
+        semilogx(Z_results_FOM(:,P.SS.omega) , Z_results_FOM(:,P.SS.Z_dB) , '-ob' , 'LineWidth' , 2 , 'DisplayName','FOM')
+        hold on
+        semilogx(Z_results_ROM(:,P.SS.omega) , Z_results_ROM(:,P.SS.Z_dB) , '-k'  , 'LineWidth' , 2 , 'DisplayName','ROM')
+        ylabel('Magnitude (dB)')
+        lgn = legend;
+    
+        nexttile
+        semilogx(Z_results_FOM(:,P.SS.omega) , Z_results_FOM(:,P.SS.Z_ps_deg) , '-ob' , 'LineWidth' , 2)
+        hold on
+        semilogx(Z_results_ROM(:,P.SS.omega) , Z_results_ROM(:,P.SS.Z_ps_deg) , '-k'  , 'LineWidth' , 2)
+        ylabel('Phase (degrees)')
+        xlabel('Frequency (rad s^{-1})')   
+
+        t.Title.String = 'Bode Comparison';
+        t.Title.Color  = [0,0,0];
+        t.Title.FontSize = 11;
+        t.Title.FontWeight = 'bold';
+    end
+
 
 end % if SIM.SimMode statement
 

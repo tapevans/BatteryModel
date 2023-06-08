@@ -64,8 +64,13 @@ clc;
 clear all;
 close all;
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC25_SwitchingTime10.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC25_SwitchingTime10.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerZeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC50_SwitchingTime10.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\EISCompareForPeter\EISCompareForPeter_EIS_HoKalman_SOC50_SamplingTime1.mat';
+% filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_PRBS_EIS_SOC50.mat';
+
+filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_EIS_SIN_w1000_SOC50.mat';
 
 plotfcn(filename)
 
@@ -98,8 +103,10 @@ clear all
 close all
 clc
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC90_SwitchingTime10.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC50_SwitchingTime10.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
+% filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_EIS_SIN_w1584.8932_SOC50.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\EISCompareForPeter\EISCompareForPeter_EIS_SIN_w6.2832_SOC50.mat';
 
 load(filename)
 

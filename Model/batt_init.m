@@ -74,7 +74,7 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
     N.N_ES_var  = 6;
 
 % Pointers for State Space EIS
-if SIM.SimMode == 3
+if SIM.SimMode == 3 || SIM.SimMode == 10 || SIM.SimMode == 9
     i = 1;
     P.SS.omega    = i; i = i + 1;
     P.SS.Z_mag    = i; i = i + 1;
@@ -85,8 +85,8 @@ if SIM.SimMode == 3
 end
 
 % Number of nonRadial SV
-    N.N_SV_nR  = 7;    
-    N.N_SV_SEP = 3;
+    N.N_SV_nR  = P.C_Liion;    
+    N.N_SV_SEP = P.SEP.C_Liion;
     
 % Pointers for properties
     i = 1;
@@ -480,164 +480,236 @@ end
     
 %% User current
 % ---- Polarization ----
-if SIM.SimMode == 1
-    SIM.A_c        = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-    SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap*SIM.ChargeOrDischarge; % [A], Load current
-    SIM.i_user_amp = SIM.I_user_amp/SIM.A_c; % [A m^-2], Load current density (flux)
+    if SIM.SimMode == 1
+        SIM.A_c        = min( AN.A_c, CA.A_c );
+        SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+        SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap*SIM.ChargeOrDischarge; % [A], Load current
+        SIM.i_user_amp = SIM.I_user_amp/SIM.A_c; % [A m^-2], Load current density (flux)
+
 % ---- Harmonic Perturbation ----
-elseif SIM.SimMode == 2
-    SIM.A_c        = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-    SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap;
-    SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
+    elseif SIM.SimMode == 2
+        SIM.A_c        = min( AN.A_c, CA.A_c );
+        SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+        SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap;
+        SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
+
 % ---- State Space EIS ----
-elseif SIM.SimMode == 3
-    SIM.A_c        = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-    SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap;
-    SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
+    elseif SIM.SimMode == 3
+        SIM.A_c        = min( AN.A_c, CA.A_c );
+        SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+        SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap;
+        SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
+
 % ---- Known BC Profile Controller ----
-elseif SIM.SimMode == 4 
-    SIM.A_c        = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+    elseif SIM.SimMode == 4 
+        SIM.A_c        = min( AN.A_c, CA.A_c );
+        SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+
 % ---- MOO Controller ----
-elseif SIM.SimMode == 5
-    SIM.A_c        = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-    %!!!!!!!! May need to do something here for SV initialization with a
-    %proper i_user value
+    elseif SIM.SimMode == 5
+        SIM.A_c        = min( AN.A_c, CA.A_c );
+        SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+        %!!!!!!!! May need to do something here for SV initialization with a
+        %proper i_user value
+
 % ---- Manual Current Profile ----
-elseif SIM.SimMode == 7 
-    SIM.A_c        = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-    SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap*SIM.ChargeOrDischarge;
-    SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
-    SIM.i_user_OG  = SIM.i_user_amp;
+    elseif SIM.SimMode == 7 
+        SIM.A_c        = min( AN.A_c, CA.A_c );
+        SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+        SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap*SIM.ChargeOrDischarge;
+        SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
+        SIM.i_user_OG  = SIM.i_user_amp;
+
 % ---- PRBS ----
-elseif SIM.SimMode == 8
-    SIM.A_c        = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-    % N_PRBS  = 255;                      % Length of the input           [-]
-    N_PRBS  = 2^9 - 1;                  % Length of the input           [-] % New PRBS (zero-mean)
-    TYPE    = 'PRBS';                   % Create a PRBS signal          [-]
-    BAND    = [0 1];                    % Freq. band                    [s]
-    LEVELS  = [-1 1];                   % PRBS limits                   [-]
-    PRBS_gen= idinput(N_PRBS,TYPE,BAND,LEVELS);         % PRBS Demand   [A/m^2]
-    % t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
-    % C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
-    t_Demand = ((0:1:SIM.PRBSLength-9)*(SIM.Tswitch))'; % PRBS Demand t [s]     % New PRBS (zero-mean)
-    C_Demand = PRBS_gen(9:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2] % New PRBS (zero-mean)
+    elseif SIM.SimMode == 8
+        SIM.A_c        = min( AN.A_c, CA.A_c );
+        SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+        % N_PRBS  = 255;                      % Length of the input           [-]
+        N_PRBS  = 2^9 - 1;                  % Length of the input           [-] % New PRBS (zero-mean)
+        TYPE    = 'PRBS';                   % Create a PRBS signal          [-]
+        BAND    = [0 1];                    % Freq. band                    [s]
+        LEVELS  = [-1 1];                   % PRBS limits                   [-]
+        PRBS_gen= idinput(N_PRBS,TYPE,BAND,LEVELS);         % PRBS Demand   [A/m^2]
+        % t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
+        % C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
+        % t_Demand = ((0:1:SIM.PRBSLength-9)*(SIM.Tswitch))'; % PRBS Demand t [s]     % New PRBS (zero-mean)
+        C_Demand = PRBS_gen(9:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2] % New PRBS (zero-mean)
     
-    % Append a no-current entry
-    if SIM.initial_offset > 0
-        t_Demand = [0; t_Demand+SIM.initial_offset]; % PRBS & entry [s]
-        C_Demand = [0; C_Demand];                    % PRBS & entry [A/m^2]
-    end
-
-    % Add Rest between some switches to help with stability
-        if SIM.AddIntermediateRelaxTime
-            % Find Zero-Crossings
-                change_idx = find( C_Demand(1:end-1)~=C_Demand(2:end) ); % True when the following idx doesn't match
-                change_idx = change_idx + 1; % Change occurs at the value now
-
-            % Drop first change
-                change_idx = change_idx(2:end);
-
-            % Find Insert index
-                mod_idx    = (SIM.NumZeroCrossingUntilNextRelax : SIM.NumZeroCrossingUntilNextRelax : length(change_idx))';
-                insert_idx = change_idx(mod_idx);
-
-            % Create New Current Demand Vector
-                C_new     = C_Demand(1:insert_idx(1)-1);
-                N_changes = length(insert_idx);
-                for i = 1:N_changes-1
-                    C_new = [C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(i):insert_idx(i+1)-1)];
+        if SIM.MakeLongPRBSSignal
+            num_repeats = ceil(SIM.DesiredLength/length(C_Demand));
+            C_Demand_single = C_Demand;
+            for i = 1:num_repeats-1
+                if mod(i,2)==1
+                    C_Demand = [C_Demand ; -C_Demand_single];
+                else
+                    C_Demand = [C_Demand ;  C_Demand_single];
                 end
-                C_new = [ C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(N_changes):end) ];
-
-            % Create New Time Vector
-                t_new = (0:1:length(C_new)-1)*SIM.Tswitch;
-        else
-            C_new = C_Demand;
-            t_new = t_Demand;
+            end
+            C_Demand = C_Demand(1:SIM.DesiredLength);
         end
+    
+        t_Demand = ( ((1:length(C_Demand))-1 )*(SIM.Tswitch))' ;
+        
+    
+        % Append a no-current entry
+        if SIM.initial_offset > 0
+            t_Demand = [0; t_Demand+SIM.initial_offset]; % PRBS & entry [s]
+            C_Demand = [0; C_Demand];                    % PRBS & entry [A/m^2]
+        end
+    
+        % Add Rest between some switches to help with stability
+            if SIM.AddIntermediateRelaxTime
+                % Find Zero-Crossings
+                    change_idx = find( C_Demand(1:end-1)~=C_Demand(2:end) ); % True when the following idx doesn't match
+                    change_idx = change_idx + 1; % Change occurs at the value now
+    
+                % Drop first change
+                    change_idx = change_idx(2:end);
+    
+                % Find Insert index
+                    mod_idx    = (SIM.NumZeroCrossingUntilNextRelax : SIM.NumZeroCrossingUntilNextRelax : length(change_idx))';
+                    insert_idx = change_idx(mod_idx);
+    
+                % Create New Current Demand Vector
+                    C_new     = C_Demand(1:insert_idx(1)-1);
+                    N_changes = length(insert_idx);
+                    for i = 1:N_changes-1
+                        C_new = [C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(i):insert_idx(i+1)-1)];
+                    end
+                    C_new = [ C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(N_changes):end) ];
+    
+                % Create New Time Vector
+                    t_new = (0:1:length(C_new)-1)*SIM.Tswitch;
+            else
+                C_new = C_Demand;
+                t_new = t_Demand;
+            end
+    
+        % Add Ramp Times
+        SIM.profile_time    = t_new(1);
+        SIM.profile_current = C_new(1);
+    
+        % Step at t^+
+        for i = 2:length(t_new)
+            % @ k
+            SIM.profile_time(end+1,1)    = t_new(i);
+            SIM.profile_current(end+1,1) = C_new(i-1);
+    
+            % After k
+            SIM.profile_time(end+1,1)    = t_new(i) + SIM.Tswitch * SIM.t_ramp_ratio;
+            SIM.profile_current(end+1,1) = C_new(i);
+        end
+        SIM.profile_time    = SIM.profile_time(1:end-1);
+        SIM.profile_current = SIM.profile_current(1:end-1);
 
-    % Add Ramp Times
-    SIM.profile_time    = t_new(1);
-    SIM.profile_current = C_new(1);
+        % % Test Plot
+        %     t_test = 0 : (SIM.Tswitch/5) : SIM.Tswitch*5;
+        %     t_test = t_test + 2* SIM.Tswitch * SIM.t_ramp_ratio; % Shift samples slightly
+        %     i_user = i_user_calc( t_test , SIM);
+        %     figure
+        %     hold on
+        %     plot(t_test           , i_user              ,'ro','Linewidth',2,'DisplayName','Sampled') % This is what the simulation will actually use
+        %     plot(SIM.profile_time , SIM.profile_current ,'-k','Linewidth',2,'DisplayName','Data Points')
+        %     lgn = legend;
+        %     xlim([0,t_test(end)+SIM.Tswitch])
+    
+% ---- EIS from Stiching PRBS ----
+    elseif SIM.SimMode == 9
 
-    % Step at t^+
-    for i = 2:length(t_new)
-        % @ k
-        SIM.profile_time(end+1,1)    = t_new(i);
-        SIM.profile_current(end+1,1) = C_new(i-1);
+% ---- EIS Ho-Kalman ----
+    elseif SIM.SimMode == 10
+        SIM.A_c        = min( AN.A_c, CA.A_c );
+        SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
+        SIM.i_user_amp = 1;
+        SIM.I_user_amp = SIM.i_user_amp * SIM.A_c;
 
-        % After k
-        SIM.profile_time(end+1,1)    = t_new(i) + SIM.Tswitch * SIM.t_ramp_ratio;
-        SIM.profile_current(end+1,1) = C_new(i);
+        t_Demand    = (0:1:SIM.HK_nSamples+3) * SIM.Tsample ; % +3 is for (2 inital relax, 1 pulse)
+        C_Demand    = zeros( size(t_Demand) );
+        C_Demand(3) = SIM.i_user_amp;
+
+        % Step at t^+
+        SIM.profile_time    = t_Demand(1);
+        SIM.profile_current = C_Demand(1);
+
+        for i = 2:length(t_Demand)
+            % @ k
+            SIM.profile_time(end+1,1)    = t_Demand(i);
+            SIM.profile_current(end+1,1) = C_Demand(i-1);
+    
+            % After k
+            SIM.profile_time(end+1,1)    = t_Demand(i) + SIM.Tsample * SIM.t_ramp_ratio;
+            SIM.profile_current(end+1,1) = C_Demand(i);
+        end
+        SIM.profile_time    = SIM.profile_time(1:end-1);
+        SIM.profile_current = SIM.profile_current(1:end-1);
+
+        % % Test Plot
+        %     t_test = 0 : (SIM.Tsample/5) : SIM.Tsample*5;
+        %     t_test = t_test + 2* SIM.Tsample * SIM.t_ramp_ratio; % Shift samples slightly
+        %     i_user = i_user_calc( t_test , SIM);
+        %     figure
+        %     hold on
+        %     plot(t_test           , i_user              ,'ro','Linewidth',2,'DisplayName','Sampled') % This is what the simulation will actually use
+        %     plot(SIM.profile_time , SIM.profile_current ,'-k','Linewidth',2,'DisplayName','Data Points')
+        %     lgn = legend;
+        %     xlim([0,t_test(end)+SIM.Tsample])
     end
-    SIM.profile_time    = SIM.profile_time(1:end-1);
-    SIM.profile_current = SIM.profile_current(1:end-1);
-
-
-    % % Test Plot
-    % t_test = 0 : (SIM.Tswitch/10) : SIM.profile_time(end);
-    % i_user = i_user_calc( t_test , SIM);
-    % figure
-    % hold on
-    % %plot(SIM.profile_time           ,SIM.profile_current,'ro')
-    % plot(t_test ,i_user ,'ro')
-    % plot(t_new  ,C_new  ,'-k')
-end
 
 
 %% Determine Simulation Time Vector
 % ---- Polarization ----
-if SIM.SimMode == 1 
-    if SIM.C_rate == 0
-        t_final = 30; % [s], Final time
-    else
-        t_final = SIM.charge_frac*3600/SIM.C_rate + SIM.initial_offset + SIM.t_ramp; % [s], Final time
-    end
-%     SIM.tspan = [0,SIM.initial_offset, t_final];
-    SIM.tspan = [0, t_final];
+    if SIM.SimMode == 1 
+        if SIM.C_rate == 0
+            t_final = 30; % [s], Final time
+        else
+            t_final = SIM.charge_frac*3600/SIM.C_rate + SIM.initial_offset + SIM.t_ramp; % [s], Final time
+        end
+    %     SIM.tspan = [0,SIM.initial_offset, t_final];
+        SIM.tspan = [0, t_final];
     
 % ---- Harmonic Perturbation ----
-elseif SIM.SimMode == 2
-    SIM.f = SIM.freq / (2*pi);    % [cycles s^-1],  Time to complete a period or a full sinusoid cycle
-    SIM.f_s = (2*SIM.f)*20;       % [samples s^-1], Based on Nyquist sampling theory (minimum is 2*f)
-    t_sim = SIM.N_cycles / SIM.f; % [s],            Time required for N_cycles of sinusoidal curves
-    N_samples = SIM.f_s*t_sim;    % [samples],      Number of samples total
-    del_time = t_sim / N_samples; % [s sample^-1],  Time between each sample %%%%%%% is this also 1/f_s??????????
-    
-    sin_time_vector = 0:del_time:t_sim;                     % Vector of time spaces
-    sin_time_vector = sin_time_vector + SIM.initial_offset; % Add the initial offset
-    if SIM.initial_offset == 0
-        SIM.tspan = sin_time_vector;                        % Overall simulation vector
-    else
-        SIM.tspan = [0, sin_time_vector];                   % Overall simulation vector
-    end
-    
+    elseif SIM.SimMode == 2
+        SIM.f     = SIM.freq / (2*pi);    % [cycles s^-1],  Time to complete a period or a full sinusoid cycle
+        SIM.f_s   = (2*SIM.f)*20;         % [samples s^-1], Based on Nyquist sampling theory (minimum is 2*f)
+        t_sim     = SIM.N_cycles / SIM.f; % [s],            Time required for N_cycles of sinusoidal curves
+        N_samples = SIM.f_s*t_sim;        % [samples],      Number of samples total
+        del_time  = t_sim / N_samples;    % [s sample^-1],  Time between each sample %%%%%%% is this also 1/f_s??????????
+        
+        sin_time_vector = 0 : del_time : (t_sim-del_time);                     % Vector of time spaces
+        sin_time_vector = sin_time_vector + SIM.initial_offset; % Add the initial offset
+        if SIM.initial_offset == 0
+            SIM.tspan = sin_time_vector;                        % Overall simulation vector
+        else
+            SIM.tspan = [0, sin_time_vector];                   % Overall simulation vector
+        end
+        
 % ---- State Space EIS ----
-    % No t_span needed for this mode
-    
+        % No t_span needed for this mode
+        
 % ---- Known BC Profile Controller ----
-elseif SIM.SimMode == 4
-    % Determine inside RunSimulation from MO_List
-    
+    elseif SIM.SimMode == 4
+        % Determine inside RunSimulation from MO_List
+        
 % ---- MOO Controller ----
-elseif SIM.SimMode == 5
-    % Determine inside RunSimulation from MO_List
-    
+    elseif SIM.SimMode == 5
+        % Determine inside RunSimulation from MO_List
+        
 % ---- Manual Current Profile ----
-elseif SIM.SimMode == 7 % Manual Current Profile
-    % Determine inside RunSimulation from MO_List
-
+    elseif SIM.SimMode == 7 % Manual Current Profile
+        % Determine inside RunSimulation from MO_List
+    
 % ---- PRBS ----
-elseif SIM.SimMode == 8 
-    SIM.tspan = [0, SIM.profile_time(end)];
-end
+    elseif SIM.SimMode == 8 
+        SIM.tspan = [0, SIM.profile_time(end)];
+    
+% ---- EIS from Stiching PRBS ----
+    elseif SIM.SimMode == 9
+        % SIM.tspan = [0, SIM.profile_time(end)];
+    
+% ---- EIS Ho-Kalman ----
+    elseif SIM.SimMode == 10
+        SIM.tspan = [0, SIM.profile_time(end)];
+    end
 
 
 %% Determine the Output Matrix 
@@ -704,63 +776,64 @@ end
 
 
 %% Determine Initial State Vector
-SV_IC = zeros(N.N_SV_tot,1);
+    SV_IC = zeros(N.N_SV_tot,1);
+
 % ---- Anode ----
-for i = 1:N.N_CV_AN
-    index_offset = (i-1)*N.N_SV_AN; 
-    % Temp
-    SV_IC(index_offset + P.T)       =  SIM.Temp_start;
-    % delta phi
-    SV_IC(index_offset + P.del_phi) =  voltage_ini_an;
-    % phi_ed
-    SV_IC(index_offset + P.phi_ed)  =  0;
-    % V_1
-    SV_IC(index_offset + P.V_1)     = -voltage_ini_an;
-    % V_2
-    SV_IC(index_offset + P.V_2)     = -voltage_ini_an;
-    % i_PS
-    SV_IC(index_offset + P.i_PS)    =  0;
-    % C_Li^+
-    SV_IC(index_offset + P.C_Liion) =  EL.C; 
-    % C_Li
-    for j = 1:N.N_R_AN
-        SV_IC(index_offset+P.C_Li+j-1)   = concen_ini_an;
+    for i = 1:N.N_CV_AN
+        index_offset = (i-1)*N.N_SV_AN; 
+        % Temp
+        SV_IC(index_offset + P.T)       =  SIM.Temp_start;
+        % delta phi
+        SV_IC(index_offset + P.del_phi) =  voltage_ini_an;
+        % phi_ed
+        SV_IC(index_offset + P.phi_ed)  =  0;
+        % V_1
+        SV_IC(index_offset + P.V_1)     = -voltage_ini_an;
+        % V_2
+        SV_IC(index_offset + P.V_2)     = -voltage_ini_an;
+        % i_PS
+        SV_IC(index_offset + P.i_PS)    =  0;
+        % C_Li^+
+        SV_IC(index_offset + P.C_Liion) =  EL.C; 
+        % C_Li
+        for j = 1:N.N_R_AN
+            SV_IC(index_offset+P.C_Li+j-1)   = concen_ini_an;
+        end
     end
-end
-
+    
 % ---- Separator ----
-for i = 1:N.N_CV_SEP
-    index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
-    % Temp
-    SV_IC(index_offset + P.SEP.T)           =  SIM.Temp_start;
-    % phi_el
-    SV_IC(index_offset + P.SEP.phi_el)      = -voltage_ini_an;
-    % C_Li^+
-    SV_IC(index_offset + P.SEP.C_Liion)     =  EL.C;
-end
-
-% ---- Cathode ----
-for i = 1:N.N_CV_CA
-    index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
-    % Temp
-    SV_IC(index_offset + P.T)       =  SIM.Temp_start;
-    % delta phi
-    SV_IC(index_offset + P.del_phi) =  voltage_ini_ca;
-    % phi_ed
-    SV_IC(index_offset + P.phi_ed)  =  voltage_ini_cell;
-    % V_1
-    SV_IC(index_offset + P.V_1)     = -voltage_ini_an;
-    % V_2
-    SV_IC(index_offset + P.V_2)     = -voltage_ini_an;
-    % i_PS
-    SV_IC(index_offset + P.i_PS)    =  0; 
-    % C_Li^+    
-    SV_IC(index_offset + P.C_Liion) =  EL.C;
-    % C_Li
-    for j = 1:N.N_R_CA
-        SV_IC(index_offset+N.N_SV_nR+j)   = concen_ini_ca;
+    for i = 1:N.N_CV_SEP
+        index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
+        % Temp
+        SV_IC(index_offset + P.SEP.T)           =  SIM.Temp_start;
+        % phi_el
+        SV_IC(index_offset + P.SEP.phi_el)      = -voltage_ini_an;
+        % C_Li^+
+        SV_IC(index_offset + P.SEP.C_Liion)     =  EL.C;
     end
-end
+    
+% ---- Cathode ----
+    for i = 1:N.N_CV_CA
+        index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+        % Temp
+        SV_IC(index_offset + P.T)       =  SIM.Temp_start;
+        % delta phi
+        SV_IC(index_offset + P.del_phi) =  voltage_ini_ca;
+        % phi_ed
+        SV_IC(index_offset + P.phi_ed)  =  voltage_ini_cell;
+        % V_1
+        SV_IC(index_offset + P.V_1)     = -voltage_ini_an;
+        % V_2
+        SV_IC(index_offset + P.V_2)     = -voltage_ini_an;
+        % i_PS
+        SV_IC(index_offset + P.i_PS)    =  0; 
+        % C_Li^+    
+        SV_IC(index_offset + P.C_Liion) =  EL.C;
+        % C_Li
+        for j = 1:N.N_R_CA
+            SV_IC(index_offset+N.N_SV_nR+j)   = concen_ini_ca;
+        end
+    end
 
 
 %% Save the Equilibrium Values of the Output
@@ -833,43 +906,43 @@ end
 
 %% Fix phi for Initial State Vector
 % ---- Anode ----
-for i = 1:N.N_CV_AN
-    index_offset = (i-1)*N.N_SV_AN; 
-    % phi_el
-    SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi,i); 
-    % phi_ed
-    SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed,i);  
-    % V_1
-    SV_IC(index_offset + P.V_1)     =  phi(P.ES.V_1   ,i);  
-    % V_2
-    SV_IC(index_offset + P.V_2)     =  phi(P.ES.V_2   ,i);  
-    % i_PS
-    SV_IC(index_offset + P.i_PS)    =  phi(P.ES.i_PS  ,i); 
-end
+    for i = 1:N.N_CV_AN
+        index_offset = (i-1)*N.N_SV_AN; 
+        % phi_el
+        SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi,i); 
+        % phi_ed
+        SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed,i);  
+        % V_1
+        SV_IC(index_offset + P.V_1)     =  phi(P.ES.V_1   ,i);  
+        % V_2
+        SV_IC(index_offset + P.V_2)     =  phi(P.ES.V_2   ,i);  
+        % i_PS
+        SV_IC(index_offset + P.i_PS)    =  phi(P.ES.i_PS  ,i); 
+    end
 
 % ---- Separator ----
-for i = 1:N.N_CV_SEP
-    index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
-    % phi_el
-    SV_IC(index_offset + P.SEP.phi_el) =  phi(P.ES.del_phi,i+N.N_CV_AN); 
-end
+    for i = 1:N.N_CV_SEP
+        index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
+        % phi_el
+        SV_IC(index_offset + P.SEP.phi_el) =  phi(P.ES.del_phi,i+N.N_CV_AN); 
+    end
 
 % ---- Cathode ----
-for i = 1:N.N_CV_CA
-    index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
-    % phi_el
-    SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi , i+N.N_CV_AN+N.N_CV_SEP); 
-    % phi_ed
-    SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed , i+N.N_CV_AN+N.N_CV_SEP);  
-    % V_1
-    SV_IC(index_offset + P.V_1   )  =  phi(P.ES.V_1    , i+N.N_CV_AN+N.N_CV_SEP);  
-    % V_2
-    SV_IC(index_offset + P.V_2   )  =  phi(P.ES.V_2    , i+N.N_CV_AN+N.N_CV_SEP);  
-    % i_PS
-    SV_IC(index_offset + P.i_PS  )  =  phi(P.ES.i_PS   , i+N.N_CV_AN+N.N_CV_SEP); 
-end
+    for i = 1:N.N_CV_CA
+        index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+        % phi_el
+        SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi , i+N.N_CV_AN+N.N_CV_SEP); 
+        % phi_ed
+        SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed , i+N.N_CV_AN+N.N_CV_SEP);  
+        % V_1
+        SV_IC(index_offset + P.V_1   )  =  phi(P.ES.V_1    , i+N.N_CV_AN+N.N_CV_SEP);  
+        % V_2
+        SV_IC(index_offset + P.V_2   )  =  phi(P.ES.V_2    , i+N.N_CV_AN+N.N_CV_SEP);  
+        % i_PS
+        SV_IC(index_offset + P.i_PS  )  =  phi(P.ES.i_PS   , i+N.N_CV_AN+N.N_CV_SEP); 
+    end
 
-SIM.SV_IC = SV_IC;
+    SIM.SV_IC = SV_IC;
 
 
 %% Mass Matrix
@@ -877,69 +950,69 @@ M = zeros(N.N_SV_tot,N.N_SV_tot);
 sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into ODEs. With solver working, this isn't needed anymore
 
 % ---- Anode ----
-for i = 1:N.N_CV_AN
-    index_offset = (i-1)*N.N_SV_AN;
-    % Temp
-    M(index_offset+P.T       , index_offset+P.T )        =  1;
-    % del_phi
-    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  AN.C_dl;
-    % phi_ed 
-    M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
-    % V_1
-    M(index_offset+P.V_1     , index_offset+P.V_1    )   =  sim_cap; 
-    % V_2
-    M(index_offset+P.V_2     , index_offset+P.V_2    )   =  sim_cap; 
-    % i_PS
-    M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
-    % C_Li^+
-    M(index_offset+P.C_Liion , index_offset+P.C_Liion)   =  AN.eps_el; 
-    % C_Li
-    for j = 1:N.N_R_AN
-        M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
+    for i = 1:N.N_CV_AN
+        index_offset = (i-1)*N.N_SV_AN;
+        % Temp
+        M(index_offset+P.T       , index_offset+P.T )        =  1;
+        % del_phi
+        M(index_offset+P.del_phi , index_offset+P.del_phi )  =  AN.C_dl;
+        % phi_ed 
+        M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
+        % V_1
+        M(index_offset+P.V_1     , index_offset+P.V_1    )   =  sim_cap; 
+        % V_2
+        M(index_offset+P.V_2     , index_offset+P.V_2    )   =  sim_cap; 
+        % i_PS
+        M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
+        % C_Li^+
+        M(index_offset+P.C_Liion , index_offset+P.C_Liion)   =  AN.eps_el; 
+        % C_Li
+        for j = 1:N.N_R_AN
+            M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
+        end
     end
-end
 
 % ---- Separator ----
-for i = 1:N.N_CV_SEP
-    index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
-    % Temp
-    M(index_offset+P.SEP.T       , index_offset+P.SEP.T )        =  1;
-    % phi_el
-    M(index_offset+P.SEP.phi_el  , index_offset+P.SEP.phi_el )   =  sim_cap;
-    % C_Li^+
-    M(index_offset+P.SEP.C_Liion , index_offset+P.SEP.C_Liion )  =  SEP.eps_el; 
-end
+    for i = 1:N.N_CV_SEP
+        index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
+        % Temp
+        M(index_offset+P.SEP.T       , index_offset+P.SEP.T )        =  1;
+        % phi_el
+        M(index_offset+P.SEP.phi_el  , index_offset+P.SEP.phi_el )   =  sim_cap;
+        % C_Li^+
+        M(index_offset+P.SEP.C_Liion , index_offset+P.SEP.C_Liion )  =  SEP.eps_el; 
+    end
 
 % ---- Cathode ----
-for i = 1:N.N_CV_CA
-    index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
-    % Temp
-    M(index_offset+P.T       , index_offset+P.T )        =  1;
-    % del_phi
-    M(index_offset+P.del_phi , index_offset+P.del_phi )  =  CA.C_dl;
-    % phi_ed
-    M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
-    % V_1
-    M(index_offset+P.V_1     , index_offset+P.V_1    )   =  sim_cap; 
-    % V_2
-    M(index_offset+P.V_2     , index_offset+P.V_2    )   =  sim_cap; 
-    % i_PS
-    M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
-    % C_Li^+
-    M(index_offset+P.C_Liion , index_offset+P.C_Liion )  =  CA.eps_el; 
-    % C_Li
-    for j = 1:N.N_R_CA
-        M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
+    for i = 1:N.N_CV_CA
+        index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+        % Temp
+        M(index_offset+P.T       , index_offset+P.T )        =  1;
+        % del_phi
+        M(index_offset+P.del_phi , index_offset+P.del_phi )  =  CA.C_dl;
+        % phi_ed
+        M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
+        % V_1
+        M(index_offset+P.V_1     , index_offset+P.V_1    )   =  sim_cap; 
+        % V_2
+        M(index_offset+P.V_2     , index_offset+P.V_2    )   =  sim_cap; 
+        % i_PS
+        M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
+        % C_Li^+
+        M(index_offset+P.C_Liion , index_offset+P.C_Liion )  =  CA.eps_el; 
+        % C_Li
+        for j = 1:N.N_R_CA
+            M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
+        end
     end
-end
 
 % Fix phi_ed BC eqn @ AN/CC
-i = 1;
-offset = N.N_SV_AN*(i-1);
-M(P.phi_ed + offset , :) = zeros(1,N.N_SV_tot);
+    i = 1;
+    offset = N.N_SV_AN*(i-1);
+    M(P.phi_ed + offset , :) = zeros(1,N.N_SV_tot);
 
 
-SIM.M = M;
+    SIM.M = M;
 
 
 %% Make Mass for just diffEq
@@ -1018,10 +1091,14 @@ SIM.M = M;
 %%%%% Later
 
 end
+
+
 %% Some functions to help with calculations
+
 function y_out = YfromX(x,z,y_intcep)
     y_out = -1/z*x + y_intcep;
 end
+
 
 function res = XfromDesPotential(x,V_des,z,y_intcep,AN,CA)
     % Solve for y
@@ -1035,18 +1112,3 @@ function res = XfromDesPotential(x,V_des,z,y_intcep,AN,CA)
     Eeq_cell = Eeq_ca - Eeq_an;
     res = Eeq_cell - V_des;
 end
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%% OOOOOLD %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     % Step at t^-
-%     for i = 2:length(t_Demand)
-%         % Before k
-%         SIM.profile_time(end+1,1)    = t_Demand(i) - SIM.Tswitch * SIM.t_ramp_ratio;
-%         SIM.profile_current(end+1,1) = C_Demand(i-1);
-% 
-%         % @ k
-%         SIM.profile_time(end+1,1)    = t_Demand(i);
-%         SIM.profile_current(end+1,1) = C_Demand(i);
-%     end
-%     SIM.profile_time    = SIM.profile_time(1:end-1);
-%     SIM.profile_current = SIM.profile_current(1:end-1);

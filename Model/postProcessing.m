@@ -203,29 +203,45 @@ if ~postProcessComplete
     %% Calculations specific to sinusoidal pertebations
     if SIM.SimMode == 2 % ---- Harmonic Perturbation ----
         %% ID Voltage Section
-        if mod(length(cell_voltage),2) == 0
-            Y = fft(cell_voltage);
-        else
-            Y = fft(cell_voltage(1:end-1));
-        end
-        L = length(Y);
-        P2 = abs(Y/L); % 2-sided spectrum (neg and pos frequencies)
-        P1 = P2(1:L/2+1); % single-sided spectrum
-        P1(2:end-1) = 2*P1(2:end-1); % Multiply everything by 2 execpt the DC (0 Hz)
-        phase = angle(Y);
+        Y           = fft(cell_voltage);   % Fourier Transform of response
+        L           = length(Y);           % Number of samples
+        P2          = abs(Y/L);            % 2-sided spectrum (neg and pos frequencies)
+        P1          = P2(1:L/2+1);         % single-sided spectrum
+        P1(2:end-1) = 2*P1(2:end-1);       % Multiply everything by 2 execpt the DC (0 Hz)
+        f           = SIM.f_s*(0:(L/2))/L; % [Hz], Frequency domain
+        phase       = angle(Y);
         
-%         V_off_fft = P1(1);
-%         freq_ID_fft = f(I+1);
-        [Amp_ID , I] = max(P1(2:end));
-        ps = phase(I+1);
-        ps = ps + pi/2 - pi; % Adds pi/2 because fft identifies cos, Subtract pi because voltage decreases when current increases
+        V_off_fft      = P1(1);
+        [Amp_ID , idx] = max(P1(2:end));
+        freq_ID_fft    = f(idx+1);
+        ps             = phase(idx+1);
+        % ps             = ps + pi/2 - pi; % Adds pi/2 because fft identifies cos, Subtract pi because voltage decreases when current increases
+        ps             = ps + pi/2; % Adds pi/2 because fft identifies cos, Subtract pi because voltage decreases when current increases
+
+        % % Test Plot
+        %     V_Id = Amp_ID * sin( 2*pi*freq_ID_fft*t_soln + ps ) + V_off_fft;
+        %     V_Id2 = Amp_ID * sin( SIM.freq*t_soln + ps ) + V_off_fft;
+        % 
+        %     figure
+        %     hold on
+        %     plot(t_soln,cell_voltage, '-k', 'LineWidth',2,'DisplayName','Simulation')
+        %     plot(t_soln,V_Id        , 'ob', 'LineWidth',2,'DisplayName','ID')
+        %     plot(t_soln,V_Id2       , 'or'               ,'DisplayName','ID2')
+        %     title('Compare ID')
+        %     xlabel('time (s)')
+        %     ylabel('V(t)')
+        %     legend
         
         %% Impedance Calculation
         Z_mag = Amp_ID / SIM.I_user_amp; % Impedance Magnitude
-        Z_Re = Z_mag * cos(ps);          % Real Impedance Component
-        Z_Im = Z_mag * sin(ps);          % Imaginary Impedance Component
+        Z_Re = -Z_mag * cos(ps);          % Real Impedance Component
+        Z_Im = -Z_mag * sin(ps);          % Imaginary Impedance Component
         Z_dB = 20*log10(Z_mag);          % Impedance Magnitude in decibel
-        Z_angle_deg = ps * 360 / (2*pi); % Phase Shift in degrees
+        Z_angle_deg = ps * 360 / (2*pi) - 180; % Phase Shift in degrees
+        % OLD
+            % Z_Re = Z_mag * cos(ps);          % Real Impedance Component
+            % Z_Im = Z_mag * sin(ps);          % Imaginary Impedance Component
+            % Z_angle_deg = ps * 360 / (2*pi); % Phase Shift in degrees
         
         if Z_angle_deg <= -358
             Z_angle_deg = Z_angle_deg + 360; % Angle wrapping
