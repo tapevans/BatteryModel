@@ -24,6 +24,7 @@ tic
             FLAG.r_max = 20;
             FLAG.UseInput_r = 0;
         FLAG.Analysis.ROM_HoKal     = 1;
+            FLAG.PLOT_HK_BodeNyquist=0;
             FLAG.Save_SS_DRT      = 0; % Save the ROM state-space models to be used in DRT
             FLAG.EST.SepHK        = 0; % 1 if calculate a ROM for each desired output
             FLAG.UseOptimal       = 0;
