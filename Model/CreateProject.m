@@ -31,7 +31,13 @@
     
     % ---- PRBS ----
         % 'battery_name'_PRBS_Amp'PRBS_Amp'_SOC'PRBS_SOC'_SwitchingTime'PRBS_Tswitch'
-            
+
+    % ---- EIS from Stiching PRBS ---- 
+        % 'battery_name'_PRBS_Amp'PRBS_Amp'_SOC'EIS_PRBS.SOC'_SwitchingTime'PRBS_Tswitch'
+        % 'battery_name'_PRBS_EIS_SOC'EIS_PRBS.SOC'
+    
+    % ---- EIS Ho-Kalman ----
+        % 'battery_name'_EIS_HoKalman_SOC'HK_SOC'_SamplingTime'HK_Ts'
         
         
 %%
@@ -84,11 +90,21 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % battery_name = 'ObservabilityTest';
 % battery_name = 'PRBS_Sims';
 
-% % % % folder_name  = 'zeroMeanPRBS_Sims';
-% % % % battery_name = 'PRBS_Sims_Longer';
+% folder_name  = 'LongerZeroMeanPRBS_Sims';
+% battery_name = 'PRBS_Sims';
 
 folder_name  = 'EISCompareForPeter';
 battery_name = 'EISCompareForPeter';
+
+% folder_name  = 'TestODExtend';
+% % % battery_name = 'TestODExtend_Baseline';
+% % % battery_name = 'TestODExtend_ODEextend_2Cuts';
+% % % battery_name = 'TestODExtend_ODEextend_3Cuts';
+% % % battery_name = 'TestODExtend_ODEextend_3Cuts_Save';
+% % % battery_name = 'TestODExtend_ODEextend_RedSoln_2Cuts';
+% % % battery_name = 'TestODExtend_ODEextend_RedSoln_3Cuts';
+% % % battery_name = 'TestODExtend_ODEextend_RedSoln_3Cuts_Save';
+% battery_name = 'TestODExtend_idata';
 
 
 %% Simulations
@@ -109,6 +125,7 @@ battery_name = 'EISCompareForPeter';
     % EIS_SIN_freq = [2*pi*0.0666666666666667];
     % EIS_SIN_freq = [1e2 1e-2];
     % EIS_SIN_freq = logspace(-2,1,31);
+    % EIS_SIN_freq = 50 * (2*pi);
 
     exp_min = -3;
     exp_max =  5;
@@ -200,15 +217,60 @@ battery_name = 'EISCompareForPeter';
 % ---- PRBS ---- 
     doPRBS = 0;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
-        % PRBS_SOC     = 50; % [%],     State of Charge
+        PRBS_SOC     = 50; % [%],     State of Charge
         PRBS_Tswitch = 10;  % [s],     Switching Time
-        AddIntermediateRelaxTime = 1;
+        PRBS_t_Report = 1/200; % Inverse of number of samples per Tswitch
+        AddIntermediateRelaxTime = 0;
             NumTsRelax = 2;
             NumZeroCrossingUntilNextRelax = 5;
 
+        MakeLongPRBSSignal = 1;
+            DesiredLength  = 4e3;
 
-% ---- Ho-Kalman ROM ----            
+        UseODEextend = 1;
+            % NumCuts          = 3;
+            NumCuts          = 40;
+            REDUCESOLN       = 1;
+            SaveIntermediate = 1;
 
+
+% ---- EIS from Stiching PRBS ---- 
+    getEIS_PRBS = 1;
+        EIS_PRBS.Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
+        EIS_PRBS.SOC     = 50; % [%],     State of Charge
+        EIS_PRBS.Tswitch = [0.1 , 1 , 10];  % [s],     Switching Time
+        EIS_PRBS.t_Report = 1/200; % Inverse of number of samples per Tswitch
+        EIS_PRBS.AddIntermediateRelaxTime = 0;
+            EIS_PRBS.NumTsRelax = 2;
+            EIS_PRBS.NumZeroCrossingUntilNextRelax = 5;
+
+        EIS_PRBS.MakeLongPRBSSignal = 1;
+            EIS_PRBS.DesiredLength  = 100;
+            % EIS_PRBS.DesiredLength  = 255;
+
+        EIS_PRBS.UseODEextend = 0;
+            % NumCuts          = 3;
+            EIS_PRBS.NumCuts          = 40;
+            EIS_PRBS.REDUCESOLN       = 1;
+            EIS_PRBS.SaveIntermediate = 1;
+
+            exp_min = -3;
+            exp_max =  5;
+            exp_diff = exp_max - exp_min;
+        EIS_PRBS.freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
+
+
+% ---- EIS Ho-Kalman ----
+    getEIS_HoKalman = 1;
+        HK_Ts  = 1;  % [s], Sampling Time
+        HK_SOC = 50; % [%], State of Charge
+            exp_min = -3;
+            exp_max =  5;
+            exp_diff = exp_max - exp_min;
+        HK_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
+        HK_nSamples = 800; % [], Number of relaxation samples (2 inital relax, 1 pulse, nSamples relax)
+        % HK_nSamples = 5; % [], Number of relaxation samples (2 inital relax, 1 pulse, nSamples relax)
+        
         
 %% Create Folder    
 % Make Folder Path
@@ -503,11 +565,19 @@ if doPRBS
         SIM.SimMode   = 8;
         SIM.SOC_start = PRBS_SOC;
         SIM.Tswitch   = PRBS_Tswitch;
+        SIM.t_Report  = PRBS_t_Report ;
         SIM.PRBSAmp   = PRBS_Amp;
 
         SIM.AddIntermediateRelaxTime      = AddIntermediateRelaxTime;
-        SIM.NumTsRelax               = NumTsRelax;
+        SIM.NumTsRelax                    = NumTsRelax;
         SIM.NumZeroCrossingUntilNextRelax = NumZeroCrossingUntilNextRelax;
+
+        SIM.MakeLongPRBSSignal = MakeLongPRBSSignal;
+        SIM.DesiredLength      = DesiredLength;
+        SIM.UseODEextend       = UseODEextend;
+        SIM.NumCuts            = NumCuts;
+        SIM.REDUCESOLN         = REDUCESOLN;
+        SIM.SaveIntermediate   = SaveIntermediate;
         
         % Call Inputs
         [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
@@ -525,9 +595,117 @@ if doPRBS
 
 end
 
-% KBSOC_vec = 0:1:90;
-% KBSOC_vec = 91:1:100; %Change Step to discharge
-% KBSOC_vec  = 50;
-% for SSS = 1:length(KBSOC_vec)
 
-% end
+%% ---- EIS PRBS ----
+if getEIS_PRBS
+    % Create PRBS Simulations
+        PRBS_desTswitch_filenames = cell([]);
+        for i = 1:length(EIS_PRBS.Tswitch)
+            Tswitch = EIS_PRBS.Tswitch(i);
+            filename = [ battery_name , '_PRBS' , '_Amp' , num2str(EIS_PRBS.Amp) , '_SOC' , num2str(EIS_PRBS.SOC) , '_SwitchingTime' , num2str(Tswitch) , '.mat'];
+            PRBS_desTswitch_filenames{i,1} = [save_file_path filesep filename];
+
+            % Check if sim already exist
+            if isfile([save_file_path filesep filename])
+                if FLAG_local.sim_overwrite
+                    disp('Deleting previous sim')% delete old file
+                    delete([save_file_path filesep filename])
+                else
+                    disp('Simulation already exists')
+                end        
+            end
+
+            % Create sim if it doesn't exist
+            if ~isfile([save_file_path filesep filename])
+                disp('Making sim')
+                SIM.results_filename = filename;
+                SIM.SimMode   = 8;
+                SIM.SOC_start = EIS_PRBS.SOC;
+                SIM.Tswitch   = Tswitch;
+                SIM.t_Report  = EIS_PRBS.t_Report;
+                SIM.PRBSAmp   = EIS_PRBS.Amp;
+
+                SIM.AddIntermediateRelaxTime      = EIS_PRBS.AddIntermediateRelaxTime;
+                SIM.NumTsRelax                    = EIS_PRBS.NumTsRelax;
+                SIM.NumZeroCrossingUntilNextRelax = EIS_PRBS.NumZeroCrossingUntilNextRelax;
+
+                SIM.MakeLongPRBSSignal = EIS_PRBS.MakeLongPRBSSignal;
+                SIM.DesiredLength      = EIS_PRBS.DesiredLength;
+                SIM.UseODEextend       = EIS_PRBS.UseODEextend;
+                SIM.NumCuts            = EIS_PRBS.NumCuts;
+                SIM.REDUCESOLN         = EIS_PRBS.REDUCESOLN;
+                SIM.SaveIntermediate   = EIS_PRBS.SaveIntermediate;
+
+                % Call Inputs
+                [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+
+                % Call Init
+                [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+
+                % Save Simulation File
+                postProcessComplete = 0;
+                save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+
+                % Clear Variables
+                clear AN CA SEP EL SIM CONS P N FLAG PROPS
+            end
+        end
+
+    % Create Stitching File
+        disp('Making Overall Sim')
+        filename = [battery_name ,'_PRBS_EIS_SOC' num2str(EIS_PRBS.SOC)];
+        postProcessComplete = 0;
+        SIM.SimMode = 9;
+        i = 1;
+        P.SS.omega    = i; i = i + 1;
+        P.SS.Z_mag    = i; i = i + 1;
+        P.SS.Z_Re     = i; i = i + 1;
+        P.SS.Z_Im     = i; i = i + 1;
+        P.SS.Z_dB     = i; i = i + 1;
+        P.SS.Z_ps_deg = i; i = i + 1;
+        FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
+            FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
+        FLAG.Plot             = 1;
+        save([save_file_path filesep filename],'PRBS_desTswitch_filenames','EIS_PRBS','SIM','FLAG','P','postProcessComplete')
+end
+
+
+%% ---- EIS Ho-Kalman ----
+if getEIS_HoKalman
+    filename = [ battery_name , '_EIS_HoKalman_SOC' , num2str(HK_SOC) , '_SamplingTime' , num2str(HK_Ts) , '.mat'];
+    
+    % Check if sim already exist
+    if isfile([save_file_path filesep filename])
+        if FLAG_local.sim_overwrite
+            disp('Deleting previous sim')% delete old file
+            delete([save_file_path filesep filename])
+        else
+            disp('Simulation already exists')
+        end        
+    end
+    
+    % Create sim if it doesn't exist
+    if ~isfile([save_file_path filesep filename])
+        disp('Making sim')
+        SIM.results_filename = filename;
+        SIM.SimMode   = 10;
+        SIM.SOC_start = HK_SOC;
+        SIM.Tsample   = HK_Ts;
+        SIM.freq      = HK_freq;
+        SIM.HK_nSamples = HK_nSamples;
+        
+        % Call Inputs
+        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+        
+        % Call Init
+        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+        
+        % Save Simulation File
+        postProcessComplete = 0;
+        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+        
+        % Clear Variables
+        clear AN CA SEP EL SIM CONS P N FLAG PROPS
+    end
+
+end

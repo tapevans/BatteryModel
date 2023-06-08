@@ -7,6 +7,8 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
+% Project_Folder{i} = 'TestODExtend';   i = i+1;
+% Project_Folder{i} = 'LongerZeroMeanPRBS_Sims';   i = i+1;
 Project_Folder{i} = 'EISCompareForPeter';   i = i+1;
 % Project_Folder{i} = 'zeroMeanPRBS_withRelax_Sims';   i = i+1;
 % Project_Folder{i} = 'zeroMeanPRBS_Sims';   i = i+1;
@@ -125,15 +127,17 @@ for i = 1:num_sim_files
             tspan = SIM.tspan;
             SV_IC = SIM.SV_IC;
             SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
-            if FLAG.SaveSolnDiscreteTime
-                new_tfinal = SOLN.x(end);
-                save_time = (0:SIM.SaveTimeStep:new_tfinal)';
-                t_soln = save_time;
-                SV_soln = (deval(SOLN,save_time))';
-            else
-                t_soln  = SOLN.x';
-                SV_soln = SOLN.y';
-            end
+            % if FLAG.SaveSolnDiscreteTime
+            %     new_tfinal = SOLN.x(end);
+            %     save_time = (0:SIM.SaveTimeStep:new_tfinal)';
+            %     t_soln = save_time;
+            %     SV_soln = (deval(SOLN,save_time))';
+            % else
+            %     t_soln  = SOLN.x';
+            %     SV_soln = SOLN.y';
+            % end
+            t_soln = tspan;
+            SV_soln = (deval(SOLN,tspan))';
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- State Space EIS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 3 
@@ -339,7 +343,70 @@ for i = 1:num_sim_files
                              %'Events' ,events);%,       ...
 
             i_user = 0;
-            SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
+            % SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
+
+
+            %%%%%%%%%% Testing splitting sim %%%%%%%%%% 
+            if SIM.UseODEextend
+                split_time = linspace(0 , SIM.profile_time(end) , SIM.NumCuts+1);
+                
+                % Save the initial parameters
+                if SIM.SaveIntermediate
+                    SIM.SimMode = 0;
+                    postProcessComplete = 1;
+                    save([sim_filenames{i}(1:end-4) '_InputParams.mat'],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+                    postProcessComplete = 0;
+                    SIM.SimMode = 8;
+                end
+
+                % Run First Cut
+                SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),split_time(1,1:2) , SIM.SV_IC , options);
+                SOLN_Next = SOLN;
+
+                % Save First Cut
+                if SIM.SaveIntermediate
+                    SIM.SimMode = 0;
+                    postProcessComplete = 1;
+                    save([sim_filenames{i}(1:end-4) '_Cut' num2str(1) '.mat'],'SOLN_Next','postProcessComplete','SIM')
+                    postProcessComplete = 0;
+                    SIM.SimMode = 8;
+                end
+
+                % Loop through the rest of the Cuts
+                for j = 2:SIM.NumCuts
+                    SOLN_temp = SOLN_Next;
+                    if SIM.REDUCESOLN
+                        n_points = length(SOLN_temp.x);
+                        y_IDX    = [n_points-1:n_points];
+                        SOLN_temp.x = SOLN_Next.x(1,y_IDX);
+                        SOLN_temp.y = SOLN_Next.y(:,y_IDX);
+                        SOLN_temp.idata.kvec = SOLN_Next.idata.kvec(1,y_IDX);
+                        SOLN_temp.idata.dif3d = SOLN_Next.idata.dif3d(:,:,y_IDX);
+                    end
+                    SOLN_Next = odextend(SOLN_temp , @(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user), split_time(1,j+1));
+                    % SOLN_Next = rmfield( SOLN_Next , 'idata' );
+                    
+                    % Save Cuts
+                    if SIM.SaveIntermediate
+                        SIM.SimMode = 0;
+                        postProcessComplete = 1;
+                        save([sim_filenames{i}(1:end-4) '_Cut' num2str(j) '.mat'],'SOLN_Next','postProcessComplete','SIM')
+                        postProcessComplete = 0;
+                        SIM.SimMode = 8;
+                    end
+
+                    % Combine SOLN
+                    if SIM.REDUCESOLN
+                        IDX = find(SOLN_Next.x> SOLN.x(end),1);
+                        SOLN.x = [SOLN.x , SOLN_Next.x(1,IDX:end) ];
+                        SOLN.y = [SOLN.y , SOLN_Next.y(:,IDX:end) ];
+                    else
+                        SOLN = SOLN_Next;
+                    end
+                end
+            else
+                SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
+            end
 
             % %%%%% When having to run smaller time steps %%%%%%%%%%%Testing!!!!!!!!!!!!!!!!!!!!!!!!!!
             %     old_tFinal = SIM.profile_time(end);
@@ -379,6 +446,159 @@ for i = 1:num_sim_files
                 SV_soln = SOLN.y';
             end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- EIS from Stiching PRBS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        elseif SIM.SimMode == 9
+            % Load in PRBS results
+                NumPRBS = length(PRBS_desTswitch_filenames);
+                % Results = struct(NumPRBS , 1);
+                for j = 1:NumPRBS
+                    data = load(PRBS_desTswitch_filenames{j});
+                    Results(j).t            = data.t_soln;
+                    Results(j).cell_voltage = data.cell_voltage;
+                    Results(j).inputCurrent = data.SIM.A_c * interp1(data.SIM.profile_time , data.SIM.profile_current, data.t_soln); % (data.SIM.A_c*) converts from A/m^2 to A
+                    Results(j).Tswitch      = data.SIM.Tswitch;
+                end
+                PRBSLength = data.SIM.DesiredLength;
+
+            % Identify initial state-space models
+                % Inititalize
+                    dofilter = 0; %%%%%%%%%Hardcoded
+                    sys                   = cell(NumPRBS , 1);
+                    info_all              = cell(NumPRBS , 1);
+                    smoothdat             = cell(NumPRBS , 1);
+                    Update_Freq_all       = cell(NumPRBS , 1);
+                    Ts_all                = cell(NumPRBS , 1);
+
+                for j = 1:NumPRBS
+                   Ts = Results(j).t(2)-Results(j).t(1);
+                   freq = 1/Ts;
+                   [sysc_out , sys_out , dat_out , structuredat_out]  = IdentificationProcess(  Results(j).cell_voltage,-Results(j).inputCurrent, Results(j).t, freq, dofilter);
+                   sys{j}                   = sys_out;
+                   info_all{j}.delayCount   = 1;
+                   smoothdat{j}             = dat_out;
+                   Update_Freq_all{j}       = freq;
+                   Ts_all{j}                = Ts;
+
+                   % Results(j).sys                 = sys_out;
+                   % Results(j).info_all.delayCount = 1;
+                   % Results(j).smoothdat           = dat_out;
+                   % Results(j).Update_Freq_all     = freq;
+                   % Results(j).Ts_all              = Ts;
+                end
+
+            % Stitch togehter state-space models
+                Tswitch_vec = nan(NumPRBS,1);
+                for j = 1:NumPRBS
+                    Tswitch_vec(j) = Results(j).Tswitch;
+                end
+                Tswitch_min = min(Tswitch_vec);
+                Tswitch_max = max(Tswitch_vec);
+
+                wtot = logspace(log10((pi/(Tswitch_min/100))) , log10((2*pi/(PRBSLength*100*Tswitch_max))) , 50)';% rad/s
+                % if isempty(EIS_PRBS.freq)
+                %     wtot = logspace(log10((pi/(Tswitch_min/100))) , log10((2*pi/(PRBSLength*100*Tswitch_max))) , 50)';% rad/s
+                % else
+                %     wtot = EIS_PRBS.freq;
+                % end
+
+                [re_est,re_est_var,im_est,im_est_var,re,im,var_re,var_im] = FrequencyEstimateProcess(sys,wtot,Update_Freq_all,PRBSLength);
+                % EISresultsdisplay
+
+            % fit of all data to continuous time model (G)
+                Iterations   = 4E+3;   % 4E+3, 500
+                [xout,np,nz] = CTSysID_EIS_Estimate(sys,info_all,smoothdat,Iterations);
+                [G,~]        = pzderiv_tot(xout,np,nz,smoothdat,sys);
+ 
+            % Extract EIS from continuous time model
+                % [re_est,re_est_var,im_est,im_est_var,nomsys] = FrequencyEstimate_tot(xout,np,nz,P,wtot);
+               
+            % Plot of continuous time results
+                % refineresultsdisplay
+
+            % Get Impedance
+                if ~isempty(EIS_PRBS.freq)
+                    [mag,phase,~] = bode(G,EIS_PRBS.freq);
+                    [re ,im   ,~] = nyquist(G,EIS_PRBS.freq);
+                    mag   = reshape(mag  ,[],1);
+                    phase = reshape(phase,[],1);
+                    re    = reshape(re   ,[],1);
+                    im    = reshape(im   ,[],1);
+                    Z_results(:,P.SS.omega)    = EIS_PRBS.freq';
+                    Z_results(:,P.SS.Z_mag)    = mag;
+                    Z_results(:,P.SS.Z_Re)     = re;
+                    Z_results(:,P.SS.Z_Im)     = im;
+                    Z_results(:,P.SS.Z_dB)     = 20*log10(mag);
+                    Z_results(:,P.SS.Z_ps_deg) = phase;
+                else
+                    Z_results = [];
+                end
+
+                postProcessComplete = 1;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- EIS Ho-Kalman ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        elseif SIM.SimMode == 10
+        % Get impulse response
+            % Simulation Parameters
+            Tol.Abs = 1E-7;
+            Tol.Rel = 1E-7;
+
+            events = @(t,SV) batt_events(t,SV,SIM,P,N,FLAG);
+
+            options = odeset('RelTol' ,Tol.Rel,      ...
+                             'AbsTol' ,Tol.Abs,      ...
+                             'Mass'   ,SIM.M,        ...
+                             'Events' ,events,       ...
+                             'MaxStep',0.5*SIM.Tsample);%
+            
+            i_user = 0;
+            tspan = SIM.tspan;
+            SV_IC = SIM.SV_IC;
+            SOLN_CT = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
+            if FLAG.SaveSolnDiscreteTime
+                new_tfinal = SOLN_CT.x(end);
+                save_time = (0:SIM.SaveTimeStep:new_tfinal)';
+                t_soln_CT = save_time;
+                SV_soln_CT = (deval(SOLN_CT,save_time))';
+            else
+                t_soln_CT  = SOLN_CT.x';
+                SV_soln_CT = SOLN_CT.y';
+            end
+
+            % DT Solution
+                SOLN       = SOLN_CT;
+                new_tfinal = SOLN.x(end);
+                save_time  = (0:SIM.SaveTimeStep:new_tfinal)';
+                t_soln     = save_time;
+                SV_soln    = (deval(SOLN,save_time))';
+
+
+        % Some how reduce the data to just cell voltage response
+            SIM.TsMultiple = 5;
+            t_test = 0 : (SIM.Tsample/SIM.TsMultiple) : SIM.profile_time(end);
+            i_user = i_user_calc( t_test , SIM);
+            z_imp = SIM.OutputMatrix * SV_soln';
+            z_imp = z_imp(P.OM.cell_volt,:);
+
+            freq    = SIM.freq;
+
+        % Get full-order state-space from Ho-Kalman
+            r = 355;
+            [sys_FOM , ~] = getHoKalman(t_soln , i_user , z_imp , r , SIM , FLAG);
+
+        % Get full-order impedence at desired frequencies
+            M = eye(size(sys_FOM.A));
+            [Z_results_FOM] = getImpedanceFromSSSystem(sys_FOM , M , freq , SIM , P);
+
+        % Get reduced-order state-space from Ho-Kalman
+            r = 10;
+            [sys_ROM , ~] = getHoKalman(t_soln , i_user , z_imp , r , SIM , FLAG);
+
+        % Get reduced-order impedence at desired frequencies
+            M = eye(size(sys_ROM.A));
+            [Z_results_ROM] = getImpedanceFromSSSystem(sys_ROM , M , freq , SIM , P);
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Data Files ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 0 
             disp('This file is not a simulation file')
@@ -392,9 +612,12 @@ for i = 1:num_sim_files
         
         %% Save results
         SIZE_SV_soln = whos('SV_soln');
+        % ---- Data Files ----
         if SIM.SimMode == 0
             % Just a data file, don't save
-        elseif SIM.SimMode == 3  % ---- State Space EIS ----
+
+        % ---- State Space EIS ----
+        elseif SIM.SimMode == 3  
             postProcessComplete = 1;
             save(sim_filenames{i},'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','A','B','C','D','Z_results','postProcessComplete') %,'sys_imp','sys_exp','sys_exp_mod'
             if FLAG.SaveSystemForEst % Save System to be used in Estimator
@@ -404,16 +627,37 @@ for i = 1:num_sim_files
                 filename = [num2str(SIM.SOC_start) 'SOC'];
                 save(filename,'sys','OutputAtEquil')
             end
-        elseif SIM.SimMode == 4 % ---- Known BC Profile Controller ----
+
+        % ---- Known BC Profile Controller ----
+        elseif SIM.SimMode == 4 
             save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','mode_soln','step_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','SOLN')
-        elseif SIM.SimMode == 5 % ---- MOO Controller ----
+
+        % ---- MOO Controller ----
+        elseif SIM.SimMode == 5 
             save(sim_filenames{i},'t_soln','SV_soln','i_user_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
-        elseif SIM.SimMode == 8 % ---- PRBS ----
+
+        % ---- PRBS ----
+        elseif SIM.SimMode == 8 
             if SIZE_SV_soln.bytes > 1e9 % 1 GB = 1e9 bytes
                 save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','SOLN','-v7.3')
             else
                 save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','SOLN')
             end
+
+        % ---- EIS PRBS ----
+        elseif SIM.SimMode == 9
+            save(sim_filenames{i},'G','Z_results','EIS_PRBS','SIM','P','PRBS_desTswitch_filenames','Results','postProcessComplete')
+            % if SIZE_SV_soln.bytes > 1e9 % 1 GB = 1e9 bytes
+            %     save(sim_filenames{i},'G','Z_results','EIS_PRBS','SIM','PRBS_desTswitch_filenames','Results','postProcessComplete','SOLN','-v7.3')
+            % else
+            %     save(sim_filenames{i},'G','Z_results','EIS_PRBS','SIM','PRBS_desTswitch_filenames','Results','postProcessComplete','SOLN')
+            % end
+
+        % ---- EIS Ho-Kalman ----
+        elseif SIM.SimMode == 10
+            % postProcessComplete = 1;
+            save(sim_filenames{i},'t_soln','SV_soln','t_soln_CT','SV_soln_CT','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','SOLN','SOLN_CT','sys_FOM','sys_ROM','Z_results_FOM','Z_results_ROM','postProcessComplete')
+            
         else
             if SIZE_SV_soln.bytes > 1e9 % 1 GB = 1e9 bytes
                 save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','-v7.3')
