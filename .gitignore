@@ -9,3 +9,4 @@ Model/Simulink/slprj
 Model/KalmanFilter/SimulinkFiles/slprj
 *.autosave
 Model/KalmanFilter/Results/CovarMatrixAnalysis/MyData.mat
+Model/KalmanFilter/Results/CovarMatrixAnalysis/CovarEst_Combined_SOC50_Ts1_Q0.001_R1e-06.mat
