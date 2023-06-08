@@ -4,9 +4,15 @@
 %
 % This version handles multivariables
 % g_k must be a row vector for each variable
+%
+% For a single set of data, a Hankel matrix is square (p x p)
+%   * 
+% For a multi  set of data, a Hankel matrix is tall (Nvar*p x p)
 
 function H = myHankel(g_k)
 [Nvar, Nk] = size(g_k);
+% Since the first column in g_k is k = 0, the first element (zero vector) will not be included
+Nk = Nk - 1;
 
 p = floor( (Nk+1)/2 );
 H = zeros(Nvar*p,p);

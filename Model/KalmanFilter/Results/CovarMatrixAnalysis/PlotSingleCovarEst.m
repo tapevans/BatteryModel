@@ -18,10 +18,10 @@
 
 
 %% Parameters
-    FLAG.PLOT.KALMAN_GAIN                   = 0;
-        FLAG.PLOT.KALMAN.CV         = 0;
+    FLAG.PLOT.KALMAN_GAIN                   = 1;
+        FLAG.PLOT.KALMAN.CV         = 1;
         FLAG.PLOT.KALMAN.AllDes     = 1;
-        FLAG.KalmanLim  = 4;
+        FLAG.KalmanLim  = 3;
             xLim_custom = 1500;
             % 1) Short
             % 2) Mid
@@ -40,7 +40,7 @@
         FLAG.PLOT.KALMAN.AllDes_olap= 1; % Overlapping
         FLAG.PLOT.KALMAN.Logy   = 0;
 
-    FLAG.PLOT.COVAR                         = 1;
+    FLAG.PLOT.COVAR                         = 0;
     % Overlapping
     FLAG.PLOT.COVAR_short           = 1;
     FLAG.PLOT.COVAR_mid             = 1;

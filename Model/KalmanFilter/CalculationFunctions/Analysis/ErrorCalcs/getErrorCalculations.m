@@ -28,31 +28,31 @@ if isfield(RESULTS.EST.ASY,'z_soln_ALL')
         plant_outputs = RESULTS.EST.PLANT.z_soln_ALL{OO};
         est_outputs   = RESULTS.EST.ASY.z_soln_ALL{OO};
 
-        if FLAG.PlotError
-            error_outputs = abs(est_outputs - plant_outputs);
-            if FLAG.EST.SepHK
-                figure(NumFig + OO)
-                hold on
-                plot(RESULTS.EST.VAR.t_soln   , error_outputs(2,:),'r','Linewidth',2,'DisplayName','Asymptotic')
-                xline(idx,'Linewidth',2)
-                xlabel('Time [s]')
-                ylabel([RESULTS.Labels.unit{OO}])
-                title([RESULTS.Labels.title{OO}  ' Output Error'])
-                lgn = legend;
-            else
-                for i = 1:N.DesOut
-                    figure(NumFig + i)
-                    hold on
-                    plot(RESULTS.EST.VAR.t_soln   , error_outputs(i,:),'r','Linewidth',2,'DisplayName','Asymptotic')
-                    xline(idx,'Linewidth',2)
-                    xlabel('Time [s]')
-                    ylabel([RESULTS.Labels.unit{i}])
-                    title([RESULTS.Labels.title{i}  ' Output Error'])
-                    lgn = legend;
-                end
-            end
-            
-        end
+        % if FLAG.PlotError
+        %     error_outputs = abs(est_outputs - plant_outputs);
+        %     if FLAG.EST.SepHK
+        %         figure(NumFig + OO)
+        %         hold on
+        %         plot(RESULTS.EST.VAR.t_soln   , error_outputs(2,:),'r','Linewidth',2,'DisplayName','Asymptotic')
+        %         xline(idx,'Linewidth',2)
+        %         xlabel('Time [s]')
+        %         ylabel([RESULTS.Labels.unit{OO}])
+        %         title([RESULTS.Labels.title{OO}  ' Output Error'])
+        %         lgn = legend;
+        %     else
+        %         for i = 1:N.DesOut
+        %             figure(NumFig + i)
+        %             hold on
+        %             plot(RESULTS.EST.VAR.t_soln   , error_outputs(i,:),'r','Linewidth',2,'DisplayName','Asymptotic')
+        %             xline(idx,'Linewidth',2)
+        %             xlabel('Time [s]')
+        %             ylabel([RESULTS.Labels.unit{i}])
+        %             title([RESULTS.Labels.title{i}  ' Output Error'])
+        %             lgn = legend;
+        %         end
+        %     end
+        % 
+        % end
 
         [N_outputs, ~] = size(plant_outputs);
         error_outputs  = est_outputs(:,idx:end)   - plant_outputs(:,idx:end);
@@ -93,17 +93,53 @@ if isfield(RESULTS.EST.VAR,'z_soln_ALL')
                 title([RESULTS.Labels.title{OO}  ' Output Error'])
                 lgn = legend;
             else
+                % for i = 1:N.DesOut
+                %     figure(NumFig + i)
+                %     hold on
+                %     plot(RESULTS.EST.VAR.t_soln   , error_outputs(i,:),'g','Linewidth',2,'DisplayName','Variable')
+                %     xline(idx,'Linewidth',2)
+                %     xlabel('Time [s]')
+                %     ylabel([RESULTS.Labels.unit{i}])
+                %     title([RESULTS.Labels.title{i}  ' Output Error'])
+                %     lgn = legend;
+                % end
+                error_outputs = error_outputs.^2;
                 for i = 1:N.DesOut
                     figure(NumFig + i)
+                    loglog(RESULTS.EST.VAR.t_soln   , error_outputs(i,:),'g','Linewidth',2,'DisplayName','Variable')
                     hold on
-                    plot(RESULTS.EST.VAR.t_soln   , error_outputs(i,:),'g','Linewidth',2,'DisplayName','Variable')
-                    xline(idx,'Linewidth',2)
+                    % plot(RESULTS.EST.VAR.t_soln   , error_outputs(i,:),'g','Linewidth',2,'DisplayName','Variable')
+                    % xline(idx,'Linewidth',2,'DisplayName','Calculation Start')
                     xlabel('Time [s]')
                     ylabel([RESULTS.Labels.unit{i}])
                     title([RESULTS.Labels.title{i}  ' Output Error'])
                     lgn = legend;
+                    xlim([2,1e5])
+                    ylim([1e-12 .100])
                 end
             end
+        %%    
+        FigArrange = 1;
+        if FigArrange == 1
+            fig = gcf;
+            NumFig = fig.Number;
+        
+            Ncol = 3;
+            
+            for i = 1:NumFig
+                f = figure(i);
+                k = mod(i-1,Ncol);
+                row = mod(fix((i-1)/Ncol),2);
+                if row == 0
+                    r = 575;
+        %             r = 540;
+                elseif row == 1
+                    r = 62;
+                end
+                f.Position = [k*575+15 r 560 420];
+            end
+        end
+
         end
 
         [N_outputs, ~] = size(plant_outputs);

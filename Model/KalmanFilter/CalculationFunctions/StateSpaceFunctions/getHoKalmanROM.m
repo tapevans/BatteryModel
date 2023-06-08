@@ -139,6 +139,10 @@ end
             r = SIM.Input_r;
         else
             r = 10;
+            % r = 9;
+            % r = 11;
+            % r = 12;
+            % r = 7;
         end
         
         singVals(end) = S(r,r);

@@ -9,7 +9,7 @@ clear all; close all; clc;
     initial_offset = Tswitch;
     t_ramp_ratio   = 1/50;
 
-    AddIntermediateRelaxTime = 1;
+    AddIntermediateRelaxTime = 0;
         NumTsRelax = 2;
         NumZeroCrossingUntilNextRelax = 5;
 

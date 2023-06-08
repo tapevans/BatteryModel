@@ -66,6 +66,14 @@ function [SIM,FLAG,N,P,RESULTS] = NoNoiseComparisonMain(SIM,FLAG,N,P,RESULTS)
         
         [sys_HK,~] = getHoKalmanROM(SIM,N,P,FLAG,RESULTS);
 
+        figure
+        % nyquist(sys_HK{end}(1))
+        nyquist(sys_HK{1}(1))
+
+        figure
+        bode(sys_HK{1}(1))
+        % bode(sys_HK{end}(1))
+
         if FLAG.Save_SS_DRT
             save(['F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanFilter\Results\ROM_SS_DRT' filesep 'ROM_SS_SOC' num2str(SIM.SOC) '_Ts' num2str(SIM.Ts)],'sys_HK','RESULTS')
         end

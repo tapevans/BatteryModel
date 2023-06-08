@@ -27,12 +27,12 @@ tic
             FLAG.Save_SS_DRT      = 0; % Save the ROM state-space models to be used in DRT
             FLAG.EST.SepHK        = 0; % 1 if calculate a ROM for each desired output
             FLAG.UseOptimal       = 0;
-            FLAG.Analysis.CovarEstMat= 1;
+            FLAG.Analysis.CovarEstMat= 0;
     FLAG.Analysis.getDARE               = 0;
         FLAG.IDV                    = 1;
         FLAG.COM                    = 0;
     FLAG.Analysis.NoisyPlant            = 0; 
-    FLAG.Analysis.Estimator             = 0; %%## 
+    FLAG.Analysis.Estimator             = 1; %%## 
         FLAG.UseROMAsPlant          = 1;
         FLAG.UseWrongIC_x           = 1;
         FLAG.UseWrongIC_y           = 0;
@@ -43,7 +43,7 @@ tic
             FLAG.ShiftTime  = 800;    % Not used yet
             FLAG.ShiftValue = -0.005; % Not used yet
     FLAG.Analysis.Est_Error_calc        = 0; %%##
-        FLAG.FractionOfData         = 3/4;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating error with last 1/4 of the data)
+        FLAG.FractionOfData         = 7/8;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating error with last 1/4 of the data)
         FLAG.Analysis.dispResults   = 1;        
     FLAG.Analysis.GenComparData         = 0;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
@@ -63,10 +63,10 @@ tic
     
 
 %% Plots
-    FLAG.PLOT.PlotResults = 0;
+    FLAG.PLOT.PlotResults = 1;
     FLAG.Analysis.PlotImp = 0; % Plot the impulse response for each output (HK)
     FLAG.PlotSingVal      = 0;
-    FLAG.PLOT.K_k_gain    = 1; % Plots the norm of the kalman gain wrt time
+    FLAG.PLOT.K_k_gain    = 0; % Plots the norm of the kalman gain wrt time
     FLAG.PlotError        = 0; % Plots the abs(error) between the ROM and plant (!!!!!!! Where is this???)
 
     FLAG.TestCase = 1; % Don't think I have used this yet % Filename just becomes 'TestCase.mat'. Will still overwrite filenames for Slink and data generation
@@ -98,7 +98,9 @@ tic
     FLAG.folderpath         = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerImpulse';
 
     % zeroMean PRBS
-    FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims';
+    % FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims';
+        % Longer
+        FLAG.folderpathPRBS     = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerZeroMeanPRBS_Sims';
 
 
 %% Noise

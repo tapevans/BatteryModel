@@ -4,11 +4,11 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 %% Other Parameters
     FLAG.folderpathCovarEst = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanFilter\Results\CovarMatrixAnalysis';
 
-    FLAG.AlwaysRun        = 0;
-    FLAG.OverwriteResults = 1;
-    FLAG.SAVEResults      = 1;
-    FLAG.PLOT.Any               = 0;
-    FLAG.PLOT.KALMAN_GAIN = 0;
+    FLAG.AlwaysRun        = 1;
+    FLAG.OverwriteResults = 0;
+    FLAG.SAVEResults      = 0;
+    FLAG.PLOT.Any               = 1;
+    FLAG.PLOT.KALMAN_GAIN = 1;
     FLAG.PLOT.COVAR       = 1;
         FLAG.PLOT.SUB  = 1;
 
@@ -23,7 +23,7 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 %% Number of Steps
     N.steps_single = 3000; % Samples plotted every 1 sample, after this only every N.interval samples are saved
     N.steps_mid    = 10000; % For plotting
-    % N.steps_final  = 100000; % Last sample
+    % N.steps_final  = 10e4; % Last sample
     N.steps_final  = 4e4; % Last sample
     N.interval     = 100;
     N.sample_vec   = [1:1:N.steps_single , N.steps_single+N.interval : N.interval : N.steps_final];
@@ -59,10 +59,10 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
 %% Noise Matrix
-    % Q_vec = 1e-3;
-    % R_vec = 1e-1;
-    Q_vec = [1e-3 1e-2 1e-1 1e0 1e1];
-    R_vec = [1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0 1e1];
+    Q_vec = 1e-3;
+    R_vec = 1e-1;
+    % Q_vec = [1e-3 1e-2 1e-1 1e0 1e1];
+    % R_vec = [1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0 1e1];
 
 
 %% Initialize Variables
@@ -71,13 +71,42 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
     P_k_0      = zeros(N.states     , N.states     , N.steps_final); % Error Covariance Update Phase
     P_k_pre_0  = zeros(N.states     , N.states     , N.steps_final); % Error Covariance Predict Phase
 
+
+%% Calculate an Initial Error Covariance
+    sigma = 3e-1;
+    % sigma = 1e-4;
+    % sigma = 1e-5;
+    % sigma = 1e-7;
+    y_des = sigma * ones(N.measur_all,1);
+    
+    % Try using inverse
+    x_hat = C_DT \ y_des;
+
+    % Calculate P_k|k
+    error = zeros(size(x_hat)) - x_hat;
+
+    P_kk = nan(length(x_hat));
+    for i = 1:length(x_hat)
+        for j = 1:length(x_hat)
+            [P_kk(i,j)] = calcPopCovar(error(i,:), error(j,:));
+        end
+    end
+
+
+%% Initialize Kalman Gain and Error Covariance
+% Kalman Gain    
     % sensor_confidence = 1; % Range from [0,1]
     sensor_confidence = 0; % Range from [0,1]
     K_k_0     (:,:,1) = sensor_confidence * ones(N.states , N.measur);
-    % state_variance    = 1e-1; 
-    state_variance    = 1; 
-    P_k_0     (:,:,1) = state_variance*eye(N.states);
-    P_k_pre_0 (:,:,1) = state_variance*eye(N.states);
+
+% Error Covariance
+    % % state_variance    = 1e-1; 
+    % state_variance    = 1; 
+    % P_k_0     (:,:,1) = state_variance*eye(N.states);
+    % P_k_pre_0 (:,:,1) = state_variance*eye(N.states);
+
+    P_k_0     (:,:,1) = P_kk;
+    P_k_pre_0 (:,:,1) = P_kk;
 
 
 %% Loop Through Noise Vectors
@@ -192,18 +221,18 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                 if FLAG.PLOT.Any
                     if FLAG.PLOT.KALMAN_GAIN
                         % Kalman Gain (CK) of just voltage
-                        figure
-                        plot( N.sample_vec , CK_CV , '-k' , 'LineWidth',2 )
-                        title('Cell Voltage Kalman Gain')
-                        xlabel('Samples')
-                        ylabel('C K_k')
+                        % figure
+                        % plot( N.sample_vec , CK_CV , '-k' , 'LineWidth',2 )
+                        % title('Cell Voltage Kalman Gain')
+                        % xlabel('Samples')
+                        % ylabel('C K_k')
     
     
                         % Kalman Gain (CK) of just voltage with Asymptotic
                         figure
                         hold on
                         plot( N.sample_vec , CK_CV , '-k' , 'LineWidth',2 )
-                        yline(CK_infty_CV, 'LineWidth',2,'Color','b')
+                        yline(CK_infty_CV,'--', 'LineWidth',2,'Color','b')
                         title('Cell Voltage Kalman Gain')
                         xlabel('Samples')
                         ylabel('C K_k')
@@ -213,96 +242,100 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                         % Plot Each CPCT with Asymptotic
                             for j = 1:N.measur_all
                                 figure
+                                loglog( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
                                 hold on
                                 % plot( N.sample_vec , CPCT_pre_diag(j,:) , '-' , 'LineWidth',2 )
-                                plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2 )
+                                % plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2 )
                                 yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color','k');
                                 yL.Alpha = 1;
                                 title(RESULTS.Labels.title{j})
+                                xlim([2,1e5])
+                                ylim([1e-12 .100])
+                                % xlim([N.sample_vec(end)-1000 , N.sample_vec(end)])
                             end
     
     
-                        % Covariance (CPCT) of each variable with respect to steps
-                        figure
-                        hold on
-                        for j = 1:N.measur_all
-                            plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                            % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
-                            % yL.Alpha = 1;
-                        end
-                        lgn = legend;
-                        title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
-                        xlabel('Samples')
-                        ylabel('Covariance')
-                        % lgn.Location = 'eastoutside';
-                        lgn.Location = 'northwest';
-                        xlim([1 , N.steps_single])
-                        if FLAG.PLOT.SUB
-                            ax2 = axes('Position',[0.5 0.2 .35 .45]);
-                            box on;
-                            hold on
-                            for j = 1:N.measur_all
-                                plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                            end
-                            xlim([1 , N.steps_single])
-                            ylim([0 , 2e-8])
-                            ax2.XTick =  ax2.XTick(1:2:5);
-                        end
-    
-    
-                        % Covariance (CPCT) of each variable with respect to steps
-                        figure
-                        hold on
-                        for j = 1:N.measur_all
-                            plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                            % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
-                            % yL.Alpha = 1;
-                        end
-                        lgn = legend;
-                        title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
-                        xlabel('Samples')
-                        ylabel('Covariance')
-                        lgn.Location = 'southwest';
-                        xlim([1 , N.steps_mid])
-                        if FLAG.PLOT.SUB
-                            ax2 = axes('Position',[0.395 0.4 .35 .45]);
-                            box on;
-                            hold on
-                            for j = 1:N.measur_all
-                                plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                            end
-                            xlim([2000 , N.steps_mid])
-                            ylim([0 , 1e-7])
-                        end
-    
-    
-                        % Covariance (CPCT) of each variable with respect to steps
-                        figure
-                        hold on
-                        for j = 1:N.measur_all
-                            plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                            % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
-                            % yL.Alpha = 1;
-                        end
-                        lgn = legend;
-                        title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
-                        xlabel('Samples')
-                        ylabel('Covariance')
-                        lgn.Location = 'east';
-                        xlim([1 , N.steps_final])
-                        if FLAG.PLOT.SUB
-                            ax2 = axes('Position',[0.2 0.22 .35 .45]);
-                            box on;
-                            hold on
-                            for j = 1:N.measur_all
-                                plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                            end
-                            ax2.YScale = 'log';
-                            ax2.XLim = [1  , N.steps_final];
-                            % ax2.XLim = [1e4  , N.steps_final];
-                            % ax2.XLim = [1e4  , 4e4];
-                            ax2.YLim = [1e-11 , 1e-4];
-                        end
+                        % % Covariance (CPCT) of each variable with respect to steps
+                        % figure
+                        % hold on
+                        % for j = 1:N.measur_all
+                        %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        %     % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
+                        %     % yL.Alpha = 1;
+                        % end
+                        % lgn = legend;
+                        % title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
+                        % xlabel('Samples')
+                        % ylabel('Covariance')
+                        % % lgn.Location = 'eastoutside';
+                        % lgn.Location = 'northwest';
+                        % xlim([1 , N.steps_single])
+                        % if FLAG.PLOT.SUB
+                        %     ax2 = axes('Position',[0.5 0.2 .35 .45]);
+                        %     box on;
+                        %     hold on
+                        %     for j = 1:N.measur_all
+                        %         plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        %     end
+                        %     xlim([1 , N.steps_single])
+                        %     ylim([0 , 2e-8])
+                        %     ax2.XTick =  ax2.XTick(1:2:5);
+                        % end
+                        % 
+                        % 
+                        % % Covariance (CPCT) of each variable with respect to steps
+                        % figure
+                        % hold on
+                        % for j = 1:N.measur_all
+                        %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        %     % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
+                        %     % yL.Alpha = 1;
+                        % end
+                        % lgn = legend;
+                        % title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
+                        % xlabel('Samples')
+                        % ylabel('Covariance')
+                        % lgn.Location = 'southwest';
+                        % xlim([1 , N.steps_mid])
+                        % if FLAG.PLOT.SUB
+                        %     ax2 = axes('Position',[0.395 0.4 .35 .45]);
+                        %     box on;
+                        %     hold on
+                        %     for j = 1:N.measur_all
+                        %         plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        %     end
+                        %     xlim([2000 , N.steps_mid])
+                        %     ylim([0 , 1e-7])
+                        % end
+                        % 
+                        % 
+                        % % Covariance (CPCT) of each variable with respect to steps
+                        % figure
+                        % hold on
+                        % for j = 1:N.measur_all
+                        %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        %     % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
+                        %     % yL.Alpha = 1;
+                        % end
+                        % lgn = legend;
+                        % title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
+                        % xlabel('Samples')
+                        % ylabel('Covariance')
+                        % lgn.Location = 'east';
+                        % xlim([1 , N.steps_final])
+                        % if FLAG.PLOT.SUB
+                        %     ax2 = axes('Position',[0.2 0.22 .35 .45]);
+                        %     box on;
+                        %     hold on
+                        %     for j = 1:N.measur_all
+                        %         plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        %     end
+                        %     ax2.YScale = 'log';
+                        %     ax2.XLim = [1  , N.steps_final];
+                        %     % ax2.XLim = [1e4  , N.steps_final];
+                        %     % ax2.XLim = [1e4  , 4e4];
+                        %     ax2.YLim = [1e-11 , 1e-4];
+                        % end
     
                         % % Covariance (CPCT) of each variable with respect to steps
                         %     figure
@@ -347,3 +380,9 @@ end
 
 
 end
+
+%% 
+function [Covar] = calcPopCovar(error_x, error_y)
+    Covar = (error_x*error_y')/length(error_x);
+end
+

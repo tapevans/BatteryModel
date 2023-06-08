@@ -212,7 +212,7 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
     end
 end
 
-% All 3
+% All 3 (Early)
 if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
     if FLAG.All3 && isfield(RESULTS.EST.VAR,'z_soln_ALL') && isfield(RESULTS.EST,'PLANT') && isfield(RESULTS.EST.ASY,'z_soln_ALL')
         if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
@@ -232,6 +232,8 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
                 ylabel(RESULTS.Labels.unit{OO})
                 lgn = legend;
                 lgn.Location = 'best';
+                % xlim([RESULTS.EST.ASY.t_soln(end)-2000, RESULTS.EST.ASY.t_soln(end)])
+                xlim([1, 2001])
             end
         else
             for OO = 1:length(RESULTS.EST.VAR.z_soln_ALL)
@@ -245,6 +247,68 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
                 ylabel(RESULTS.Labels.unit{OO})
                 lgn = legend;
                 lgn.Location = 'best';
+                % xlim([RESULTS.EST.ASY.t_soln(end)-2000, RESULTS.EST.ASY.t_soln(end)])
+            end
+        end
+    end
+end
+
+% % Save For Tyrone
+% input_signal = SIM.InputSignal;
+% time_vec = RESULTS.EST.VAR.t_soln;
+% plant_data = RESULTS.EST.PLANT.z_soln_ALL{1,1};
+% Q = SIM.Q_0;
+% R = SIM.R_0;
+% P_kk = [
+% 7207.79687899267	476.179123737702	-5359.66005715183	-16547.7576640586	-7539.72943374999	0	0	35587.0180967118	0	0
+% 476.179123737702	31.4585110666013	-354.082984356129	-1093.21847945811	-498.108064816081	0	0	2351.03671457765	0	0
+% -5359.66005715183	-354.082984356129	3985.40031170292	12304.7801258070	5606.48244758104	0	0	-26462.2217645986	0	0
+% -16547.7576640586	-1093.21847945811	12304.7801258070	37990.5660919067	17309.8129174391	0	0	-81701.1579734131	0	0
+% -7539.72943374999	-498.108064816081	5606.48244758104	17309.8129174391	7886.94810474469	0	0	-37225.8669754121	0	0
+% 0	0	0	0	0	0	0	0	0	0
+% 0	0	0	0	0	0	0	0	0	0
+% 35587.0180967118	2351.03671457765	-26462.2217645986	-81701.1579734131	-37225.8669754121	0	0	175703.599626504	0	0
+% 0	0	0	0	0	0	0	0	0	0
+% 0	0	0	0	0	0	0	0	0	0];
+% save('PlantData.mat','plant_data','time_vec','Q','R','P_kk','input_signal')
+
+
+% All 3 (Late)
+if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
+    if FLAG.All3 && isfield(RESULTS.EST.VAR,'z_soln_ALL') && isfield(RESULTS.EST,'PLANT') && isfield(RESULTS.EST.ASY,'z_soln_ALL')
+        if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
+            [r,~] = size( RESULTS.EST.VAR.z_soln_ALL{1} );
+            for OO = 1:r
+                figure
+                hold on
+                plot(RESULTS.EST.ASY.t_soln , RESULTS.EST.ASY.z_soln_ALL{1}(OO,:),'or','LineWidth',2,'DisplayName',['Asymptotic'])
+                plot(RESULTS.EST.VAR.t_soln , RESULTS.EST.VAR.z_soln_ALL{1}(OO,:),'og','LineWidth',2,'DisplayName',['Variable'])
+%                 if OO == 1
+%                     plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln{1}(OO,:),'k','LineWidth',2,'DisplayName',['Plant'])
+%                 else
+                    plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{1}(OO,:),'k','LineWidth',2,'DisplayName',['Plant'])
+%                 end
+                title([RESULTS.Labels.title{OO} ' Compare Plant to Variable and Asymptotic Estimators'])
+                xlabel('Time [s]')
+                ylabel(RESULTS.Labels.unit{OO})
+                lgn = legend;
+                lgn.Location = 'best';
+                xlim([RESULTS.EST.ASY.t_soln(end)-2000, RESULTS.EST.ASY.t_soln(end)])
+                % xlim([1, 2001])
+            end
+        else
+            for OO = 1:length(RESULTS.EST.VAR.z_soln_ALL)
+                figure
+                hold on
+                plot(RESULTS.EST.ASY.t_soln ,     RESULTS.EST.ASY.z_soln_ALL{OO}(2,:),'or','LineWidth',2,'DisplayName',['Asymptotic'])
+                plot(RESULTS.EST.VAR.t_soln ,     RESULTS.EST.VAR.z_soln_ALL{OO}(2,:),'og','LineWidth',2,'DisplayName',['Variable'])
+                plot(RESULTS.EST.PLANT.t_soln , RESULTS.EST.PLANT.z_soln_ALL{OO}(2,:),'k' ,'LineWidth',2,'DisplayName',['Plant'])
+                title([RESULTS.Labels.title{OO} ' Compare Plant to Variable and Asymptotic Estimators'])
+                xlabel('Time [s]')
+                ylabel(RESULTS.Labels.unit{OO})
+                lgn = legend;
+                lgn.Location = 'best';
+                % xlim([RESULTS.EST.ASY.t_soln(end)-2000, RESULTS.EST.ASY.t_soln(end)])
             end
         end
     end
