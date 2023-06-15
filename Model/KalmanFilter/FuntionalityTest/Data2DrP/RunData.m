@@ -11,7 +11,7 @@ clear all; close all; clc;
 %% FLAGS
 FLAG.PRBSAmp = 1;  % Amplitude of Current
 FLAG.SOC     = 50; % State of Charge
-FLAG.Tswitch = 100; % PRBS switching time
+FLAG.Tswitch = 10; % PRBS switching time
 FLAG.Ts      = 1;  % Sampling Rate
 FLAG.PlotData= 1;  % 1 if plot data, 0 if not
 FLAG.UseRelax = 1;

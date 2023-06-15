@@ -137,7 +137,7 @@ function [x_hat,K_k,P_k_pre] = VarEstimator(sys,FLAG,SIM,P,x_hat_02,u,z)
         
             % Update (Correction) Phase
                 y_tilde_k(:,i) = z_k(:,i) - C_DT_CV * x_var_pre(:,i);
-                S_k(:,:,i) = C_DT_CV * P_k_pre(:,:,i) * C' + R;
+                S_k(:,:,i) = C_DT_CV * P_k_pre(:,:,i) * C_DT_CV' + R;
                 K_k(:,:,i) = P_k_pre(:,:,i) * C_DT_CV' * inv(S_k(:,:,i));
                 x_var(:,i) = x_var_pre(:,i) + K_k(:,:,i) * y_tilde_k(:,i);
                 P_k(:,:,i) = (eye(N_states) - K_k(:,:,i) * C_DT_CV) * P_k_pre(:,:,i);
