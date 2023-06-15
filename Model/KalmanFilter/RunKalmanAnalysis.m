@@ -43,8 +43,8 @@ tic
         FLAG.ChangePlantVoltageMid  = 0; % Change the plant voltage midway through the simulation
             FLAG.ShiftTime  = 800;    % Not used yet
             FLAG.ShiftValue = -0.005; % Not used yet
-    FLAG.Analysis.Est_Error_calc        = 0; %%##
-        FLAG.FractionOfData         = 7/8;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating error with last 1/4 of the data)
+    FLAG.Analysis.Est_Error_calc        = 1; %%##
+        FLAG.FractionOfData         = 3/4;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating error with last 1/4 of the data)
         FLAG.Analysis.dispResults   = 1;        
     FLAG.Analysis.GenComparData         = 0;
     FLAG.Analysis.ComparSVD2Pinf        = 0;
@@ -123,18 +123,19 @@ tic
     
 %% Conditions to Run
     % Q_0_vec = [1e-6];
-    % Q_0_vec = [1e-5]; % ROM as Plant Only
+    Q_0_vec = [1e-5]; % ROM as Plant Only
     % Q_0_vec = [1e-4]; % ROM as Plant Only
-    Q_0_vec = [1e-3]; % ROM as Plant Only
+    % Q_0_vec = [1e-3]; % ROM as Plant Only
     % Q_0_vec = [1e-2]; % ROM as Plant Only
     % Q_0_vec = [1e1]; % ROM as Plant Only
 
+    R_0_vec = [1e-7];
     % R_0_vec = [1e-6];
     % R_0_vec = [1e-5];
     % R_0_vec = [1e-4];
     % R_0_vec = [1e-3];
     % R_0_vec = [1e-2];
-    R_0_vec = [1e-1];
+    % R_0_vec = [1e-1];
     % R_0_vec = [1e0];
     % R_0_vec = [1e1];
 

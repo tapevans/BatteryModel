@@ -60,7 +60,7 @@ FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
 % if folder_overwrite and folder_add are 0, then a new name should be used
 % for the folder
 
-FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one is created
+FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
 
 % folder_name  = 'Final_Lui_Wiley_Model';
 % battery_name = 'Final_Lui_Wiley_Model';
@@ -83,8 +83,8 @@ FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one 
 % folder_name  = 'zeroMeanPRBS_Sims';
 % battery_name = 'PRBS_Sims';
 
-% folder_name  = 'zeroMeanPRBS_withRelax_Sims';
-% battery_name = 'PRBS_Sims';
+folder_name  = 'zeroMeanPRBS_withRelax_Sims';
+battery_name = 'PRBS_Sims';
 
 % folder_name  = 'LongerImpulse';
 % battery_name = 'ObservabilityTest';
@@ -93,8 +93,8 @@ FLAG_local.sim_overwrite    = 0; % 1 if older simulation is deleted and new one 
 % folder_name  = 'LongerZeroMeanPRBS_Sims';
 % battery_name = 'PRBS_Sims';
 
-folder_name  = 'EISCompareForPeter';
-battery_name = 'EISCompareForPeter';
+% folder_name  = 'EISCompareForPeter';
+% battery_name = 'EISCompareForPeter';
 
 % folder_name  = 'TestODExtend';
 % % % battery_name = 'TestODExtend_Baseline';
@@ -220,14 +220,14 @@ battery_name = 'EISCompareForPeter';
         PRBS_SOC     = 50; % [%],     State of Charge
         PRBS_Tswitch = 10;  % [s],     Switching Time
         PRBS_t_Report = 1/200; % Inverse of number of samples per Tswitch
-        AddIntermediateRelaxTime = 0;
+        AddIntermediateRelaxTime = 1;
             NumTsRelax = 2;
             NumZeroCrossingUntilNextRelax = 5;
 
         MakeLongPRBSSignal = 1;
             DesiredLength  = 4e3;
 
-        UseODEextend = 1;
+        UseODEextend = 0;
             % NumCuts          = 3;
             NumCuts          = 40;
             REDUCESOLN       = 1;
