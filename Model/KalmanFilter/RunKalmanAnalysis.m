@@ -37,6 +37,8 @@ tic
         FLAG.UseROMAsPlant          = 1;
         FLAG.UseWrongIC_x           = 1;
         FLAG.UseWrongIC_y           = 0;
+        FLAG.UseP_infDis            = 1;
+            FLAG.IC_multiple = 1.2;
         FLAG.DoPreCalc              = 1;
         FLAG.DoAsy                  = 1;
         FLAG.DoVar                  = 1;
@@ -123,16 +125,17 @@ tic
     
 %% Conditions to Run
     % Q_0_vec = [1e-6];
-    Q_0_vec = [1e-5]; % ROM as Plant Only
+    % Q_0_vec = [1e-5]; % ROM as Plant Only
     % Q_0_vec = [1e-4]; % ROM as Plant Only
     % Q_0_vec = [1e-3]; % ROM as Plant Only
     % Q_0_vec = [1e-2]; % ROM as Plant Only
+    Q_0_vec = [1e-1]; % ROM as Plant Only
     % Q_0_vec = [1e1]; % ROM as Plant Only
 
-    R_0_vec = [1e-7];
+    % R_0_vec = [1e-7];
     % R_0_vec = [1e-6];
     % R_0_vec = [1e-5];
-    % R_0_vec = [1e-4];
+    R_0_vec = [1e-4];
     % R_0_vec = [1e-3];
     % R_0_vec = [1e-2];
     % R_0_vec = [1e-1];
@@ -147,10 +150,10 @@ tic
         Ts_vec = Ts_vec(13);
         Ts_vec  = [1];
         
-    
-    SOC_vec = [50];
-    % SOC_vec = 0:1:100;    
-    % SOC_vec = 0:5:100;
+    % Desired SOC
+        SOC_vec = [50];
+        % SOC_vec = 0:1:100;    
+        % SOC_vec = 0:5:100;
 
     FLAG.N_samples = 600;
 

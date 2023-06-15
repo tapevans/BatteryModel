@@ -4,13 +4,15 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 %% Other Parameters
     FLAG.folderpathCovarEst = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\KalmanFilter\Results\CovarMatrixAnalysis';
 
+    FLAG.InitializeEstimatorUsingMonteCarlo = 1;
+
     FLAG.AlwaysRun        = 1;
     FLAG.OverwriteResults = 0;
     FLAG.SAVEResults      = 0;
     FLAG.PLOT.Any               = 1;
-    FLAG.PLOT.KALMAN_GAIN = 1;
+    FLAG.PLOT.KALMAN_GAIN = 0;
     FLAG.PLOT.COVAR       = 1;
-        FLAG.PLOT.SUB  = 1;
+        FLAG.PLOT.SUB  = 0;
 
     ColorVec = [0      0.4470 0.7410
                 0.8500 0.3250 0.0980
@@ -19,12 +21,21 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                 0.3010 0.7450 0.9330
                 0.6350 0.0780 0.1840];
 
+    IC_multiple = 5;    % What to multiply P_infty by for the initial P_k|k-1
+
 
 %% Number of Steps
-    N.steps_single = 3000; % Samples plotted every 1 sample, after this only every N.interval samples are saved
-    N.steps_mid    = 10000; % For plotting
-    % N.steps_final  = 10e4; % Last sample
-    N.steps_final  = 4e4; % Last sample
+    % N.steps_single = 3000; % Samples plotted every 1 sample, after this only every N.interval samples are saved
+    % N.steps_mid    = 10000; % For plotting
+    % % N.steps_final  = 10e4; % Last sample
+    % N.steps_final  = 4e4; % Last sample
+    % N.interval     = 100;
+    % N.sample_vec   = [1:1:N.steps_single , N.steps_single+N.interval : N.interval : N.steps_final];
+    % N.steps        = length(N.sample_vec);
+
+    N.steps_single = 4000; % Samples plotted every 1 sample, after this only every N.interval samples are saved
+    N.steps_mid    = 5000; % For plotting
+    N.steps_final  = 6000; % Last sample
     N.interval     = 100;
     N.sample_vec   = [1:1:N.steps_single , N.steps_single+N.interval : N.interval : N.steps_final];
     N.steps        = length(N.sample_vec);
@@ -53,14 +64,9 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
     % save('SS_SOC50_Ts1.mat', 'sys')
 
 
-%% Asymptotic Calculations
-    [K_infty,    P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys);
-     K_infty_CV           = K_infty(:,P.cell_voltage);
-
-
 %% Noise Matrix
-    Q_vec = 1e-3;
-    R_vec = 1e-1;
+    Q_vec = 1e-1;
+    R_vec = 1e-3;
     % Q_vec = [1e-3 1e-2 1e-1 1e0 1e1];
     % R_vec = [1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0 1e1];
 
@@ -73,6 +79,7 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
 %% Calculate an Initial Error Covariance
+if ~FLAG.InitializeEstimatorUsingMonteCarlo
     sigma = 3e-1;
     % sigma = 1e-4;
     % sigma = 1e-5;
@@ -94,20 +101,20 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
 %% Initialize Kalman Gain and Error Covariance
-% Kalman Gain    
-    % sensor_confidence = 1; % Range from [0,1]
-    sensor_confidence = 0; % Range from [0,1]
-    K_k_0     (:,:,1) = sensor_confidence * ones(N.states , N.measur);
-
-% Error Covariance
-    % % state_variance    = 1e-1; 
-    % state_variance    = 1; 
-    % P_k_0     (:,:,1) = state_variance*eye(N.states);
-    % P_k_pre_0 (:,:,1) = state_variance*eye(N.states);
-
-    P_k_0     (:,:,1) = P_kk;
-    P_k_pre_0 (:,:,1) = P_kk;
-
+    % Kalman Gain    
+        % sensor_confidence = 1; % Range from [0,1]
+        sensor_confidence = 0; % Range from [0,1]
+        K_k_0     (:,:,1) = sensor_confidence * ones(N.states , N.measur);
+    
+    % Error Covariance
+        % % state_variance    = 1e-1; 
+        % state_variance    = 1; 
+        % P_k_0     (:,:,1) = state_variance*eye(N.states);
+        % P_k_pre_0 (:,:,1) = state_variance*eye(N.states);
+    
+        P_k_0     (:,:,1) = P_kk;
+        P_k_pre_0 (:,:,1) = P_kk;
+end
 
 %% Loop Through Noise Vectors
     for QQ = Q_vec
@@ -133,12 +140,35 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
             %% Run Simulation
             if RUNSIM
+                %% Get Asymptotic Results
+                    % !!!!!!!!!! Big issue, `AsymptoticPreCalcs` uses SIM.R_0 and SIM.Qi
+                    % to create the measurement and process noise
+                        % Needs to be corrected here?
+                    SIM.R_0 = RR;
+                    SIM.Qi  = QQ;
+                    [K_infty,    P_infty] = AsymptoticPreCalcs(FLAG,SIM,sys);
+                     K_infty_CV           = K_infty(:,P.cell_voltage);
+                     P_infty_post         = (eye(N.states) - K_infty * C_DT_CV) * P_infty;
+
+
                 %% Initialize Matrices
                     Q_matrix = B_DT*QQ*B_DT';
                     S_k      = S_k_0;
                     K_k      = K_k_0;
                     P_k      = P_k_0;
                     P_k_pre  = P_k_pre_0;
+
+                    if FLAG.InitializeEstimatorUsingMonteCarlo
+                        % Get inflated state error covariance
+                            P_0 = P_infty*IC_multiple;
+
+                        % Initialize Vectors
+                        P_k_pre(:,:,1) = P_0;
+                        S_k(:,:,1)     = C_DT_CV * P_k_pre(:,:,1) * C_DT_CV' + RR;
+                        K_k(:,:,1)     = P_k_pre(:,:,1) * C_DT_CV' * inv(S_k(:,:,1));
+                        P_k(:,:,1)     = (eye(N.states) - K_k(:,:,1) * C_DT_CV) * P_k_pre(:,:,1);
+                        % P_k(:,:,1)     = P_0;
+                    end
 
 
                 %% Run Estimation
@@ -154,10 +184,10 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
                 %% Get idx of actual samples
-                    P_k_pre_red = P_k_pre (:,:,N.sample_vec);
-                    S_k_red     = S_k     (:,:,N.sample_vec);
-                    K_k_red     = K_k     (:,:,N.sample_vec);
-                    P_k_red     = P_k     (:,:,N.sample_vec);
+                    P_k_pre_red = P_k_pre(:,:,N.sample_vec);
+                    S_k_red     = S_k    (:,:,N.sample_vec);
+                    K_k_red     = K_k    (:,:,N.sample_vec);
+                    P_k_red     = P_k    (:,:,N.sample_vec);
 
 
                 %% Other Save Parameters    
@@ -172,7 +202,7 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
                 %% Get diag of CPCT
-                    for i = 2:N.steps
+                    for i = 1:N.steps
                         CPCT_pre_diag(:,i) = diag( CPCT_pre_red(:,:,i) );
                         CPCT_diag    (:,i) = diag( CPCT_red    (:,:,i) );
                     end
@@ -184,9 +214,10 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
                 %% Asymptotic 
-                    CK_infty_CV = C_DT_CV * K_infty_CV;
-                    CK_infty    = C_DT    * K_infty;
-                    CP_inftyCT  = C_DT * P_infty * C_DT';
+                    CK_infty_CV      = C_DT_CV * K_infty_CV;
+                    CK_infty         = C_DT    * K_infty;
+                    CP_inftyCT       = C_DT * P_infty * C_DT';
+                    CP_inftyCT_post  = C_DT * P_infty_post * C_DT';
 
 
                 %% Save Results
@@ -242,27 +273,46 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                         % Plot Each CPCT with Asymptotic
                             for j = 1:N.measur_all
                                 figure
-                                loglog( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                                % % loglog( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                                % loglog( N.sample_vec , CPCT_pre_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
                                 hold on
-                                % plot( N.sample_vec , CPCT_pre_diag(j,:) , '-' , 'LineWidth',2 )
-                                % plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2 )
+                                % plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                                plot( N.sample_vec , CPCT_pre_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
                                 yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color','k');
                                 yL.Alpha = 1;
-                                title(RESULTS.Labels.title{j})
-                                xlim([2,1e5])
-                                ylim([1e-12 .100])
+                                title(['Pre-Measurement: ' RESULTS.Labels.title{j}])
+                                xlim([2,N.steps_final])
+                                % ylim([1e-12 .100])
+                                % xlim([N.sample_vec(end)-1000 , N.sample_vec(end)])
+                            end
+
+                        % Plot Each CPCT with Asymptotic (Post Measurement)
+                            for j = 1:N.measur_all
+                                figure
+                                % % loglog( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                                % loglog( N.sample_vec , CPCT_pre_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                                hold on
+                                % plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                                plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                                yL = yline(CP_inftyCT_post(j,j)     , '--', 'LineWidth',2, 'Color','k');
+                                yL.Alpha = 1;
+                                title(['Post-Measurement: ' RESULTS.Labels.title{j}])
+                                xlim([2,N.steps_final])
+                                % ylim([1e-12 .100])
                                 % xlim([N.sample_vec(end)-1000 , N.sample_vec(end)])
                             end
     
     
                         % % Covariance (CPCT) of each variable with respect to steps
                         % figure
+                        % semilogy( N.sample_vec , CPCT_diag(1,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(1,:) , 'DisplayName' , RESULTS.Labels.title{1} )
                         % hold on
-                        % for j = 1:N.measur_all
-                        %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                        %     % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
-                        %     % yL.Alpha = 1;
+                        % for j = 2:N.measur_all
+                        %     semilogy( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
                         % end
+                        % % for j = 1:N.measur_all
+                        % %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        % % end
                         % lgn = legend;
                         % title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
                         % xlabel('Samples')
@@ -285,12 +335,14 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                         % 
                         % % Covariance (CPCT) of each variable with respect to steps
                         % figure
+                        % semilogy( N.sample_vec , CPCT_diag(1,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(1,:) , 'DisplayName' , RESULTS.Labels.title{1} )
                         % hold on
-                        % for j = 1:N.measur_all
-                        %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                        %     % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
-                        %     % yL.Alpha = 1;
+                        % for j = 2:N.measur_all
+                        %     semilogy( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
                         % end
+                        % % for j = 1:N.measur_all
+                        % %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        % % end
                         % lgn = legend;
                         % title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
                         % xlabel('Samples')
@@ -311,12 +363,14 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
                         % 
                         % % Covariance (CPCT) of each variable with respect to steps
                         % figure
+                        % semilogy( N.sample_vec , CPCT_diag(1,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(1,:) , 'DisplayName' , RESULTS.Labels.title{1} )
                         % hold on
                         % for j = 1:N.measur_all
-                        %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
-                        %     % yL = yline(CP_inftyCT(j,j)       , '--', 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , [RESULTS.Labels.title{j} '_\infty']);
-                        %     % yL.Alpha = 1;
+                        %     semilogy( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
                         % end
+                        % % for j = 1:N.measur_all
+                        % %     plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) , 'DisplayName' , RESULTS.Labels.title{j} )
+                        % % end
                         % lgn = legend;
                         % title(['CP_kC^T with Asymptotic' , '  Q = ' num2str(QQ) , '  R = ' num2str(RR) ])
                         % xlabel('Samples')
