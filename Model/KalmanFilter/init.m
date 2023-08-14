@@ -8,8 +8,8 @@ function [SIM,N,P,FLAG,RESULTS] = init(FLAG)
     SIM.SOC   = FLAG.SOC;
     SIM.r_max = FLAG.r_max;
     SIM.LargeQMultiply = FLAG.LargeQMultiply;
-    SIM.ResetStep      = FLAG.ResetStep;
-    SIM.Q_Add          = FLAG.Q_Add;
+    % SIM.ResetStep      = FLAG.ResetStep;
+    % SIM.Q_Add          = FLAG.Q_Add;
 
     if FLAG.InputMode == 5
         SIM.Tswitch = FLAG.Tswitch;

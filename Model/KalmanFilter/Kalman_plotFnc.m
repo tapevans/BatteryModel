@@ -1,7 +1,7 @@
 %% 
 function Kalman_plotFnc(RESULTS,N,SIM,FLAG)
 %%
-FLAG.PLOT.NoNoiseCompare            = 0;    
+FLAG.PLOT.NoNoiseCompare            = 1;    
     FLAG.PLOT.ode        = 1;
     FLAG.PLOT.SS_CT      = 0;
     FLAG.PLOT.SS_DT      = 0;
@@ -47,7 +47,7 @@ if FLAG.PLOT.NoNoiseCompare
             title([RESULTS.Labels.title{i} ' No Noise Comparison'])
             xlabel('Time [s]')
             ylabel(RESULTS.Labels.unit{i})
-    
+            xlim([0,5000])
         end
     end
 end

@@ -17,11 +17,9 @@ switch FLAG.QMode
     case 1 % Input Q
         Q = SIM.Qi;
         Q_matrix = B_DT*Q*B_DT';
-        Q_matrix = Q_matrix + SIM.Q_Add * eye(size(Q_matrix));
-        %[P_infty  ,~,~] =  dare(A_DT', C_DT', B_DT*Q*B_DT' ,R);
+        % Q_matrix = Q_matrix + SIM.Q_Add * eye(size(Q_matrix));
     case 2 % State Q
         Q_matrix = SIM.Qs;
-        %[P_infty  ,~,~] =  dare(A_DT', C_DT', Q, R);
 end
 [P_infty  ,~,~] =  dare(A_DT', C_DT', Q_matrix, R);
 K_infty = P_infty*C_DT'*inv(C_DT*P_infty*C_DT' + R);

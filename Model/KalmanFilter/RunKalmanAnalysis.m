@@ -28,24 +28,22 @@ tic
             FLAG.Save_SS_DRT      = 0; % Save the ROM state-space models to be used in DRT
             FLAG.EST.SepHK        = 0; % 1 if calculate a ROM for each desired output
             FLAG.UseOptimal       = 0;
-            FLAG.Analysis.CovarEstMat= 0;
+            FLAG.Analysis.CovarEstMat= 1;
     FLAG.Analysis.getDARE               = 0;
         FLAG.IDV                    = 1;
         FLAG.COM                    = 0;
     FLAG.Analysis.NoisyPlant            = 0; 
-    FLAG.Analysis.Estimator             = 1; %%## 
+    FLAG.Analysis.Estimator             = 1; 
         FLAG.UseROMAsPlant          = 1;
         FLAG.UseWrongIC_x           = 1;
         FLAG.UseWrongIC_y           = 0;
         FLAG.UseP_infDis            = 1;
-            FLAG.IC_multiple = 1.2;
+            % FLAG.IC_multiple = 2;
+            FLAG.IC_multiple = 100;
         FLAG.DoPreCalc              = 1;
         FLAG.DoAsy                  = 1;
         FLAG.DoVar                  = 1;
-        FLAG.ChangePlantVoltageMid  = 0; % Change the plant voltage midway through the simulation
-            FLAG.ShiftTime  = 800;    % Not used yet
-            FLAG.ShiftValue = -0.005; % Not used yet
-    FLAG.Analysis.Est_Error_calc        = 1; %%##
+    FLAG.Analysis.Est_Error_calc        = 1; 
         FLAG.FractionOfData         = 3/4;%1/2; % Start index occurs this fraction of samples (Ex: 3/4 means calculating error with last 1/4 of the data)
         FLAG.Analysis.dispResults   = 1;        
     FLAG.Analysis.GenComparData         = 0;
@@ -73,8 +71,6 @@ tic
     FLAG.PlotError        = 0; % Plots the abs(error) between the ROM and plant (!!!!!!! Where is this???)
 
     FLAG.TestCase = 1; % Don't think I have used this yet % Filename just becomes 'TestCase.mat'. Will still overwrite filenames for Slink and data generation
-
-%     FLAG.AnalysisComplete.Initialization = 0;
 
 
 %% Desired Outputs
@@ -119,8 +115,8 @@ tic
     %  2) Ho-Kalman
     FLAG.EstimatorModel = 2;
         FLAG.LargeQMultiply = 1;%e3; % = 1 when use Q from Slink
-        FLAG.ResetStep = 10000000;
-        FLAG.Q_Add = 0e-2;
+        % FLAG.ResetStep = 10000000;
+        % FLAG.Q_Add = 0e-2;
 
     
 %% Conditions to Run
@@ -135,8 +131,8 @@ tic
     % R_0_vec = [1e-7];
     % R_0_vec = [1e-6];
     % R_0_vec = [1e-5];
-    R_0_vec = [1e-4];
-    % R_0_vec = [1e-3];
+    % R_0_vec = [1e-4];
+    R_0_vec = [1e-3];
     % R_0_vec = [1e-2];
     % R_0_vec = [1e-1];
     % R_0_vec = [1e0];
@@ -283,8 +279,11 @@ toc
 %     end
 
 
+%% OLD FLAGS
 
-
+% FLAG.ChangePlantVoltageMid  = 0; % Change the plant voltage midway through the simulation
+%     FLAG.ShiftTime  = 800;    % Not used yet
+%     FLAG.ShiftValue = -0.005; % Not used yet
 
 
 

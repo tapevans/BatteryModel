@@ -25,20 +25,20 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
 %% Number of Steps
-    % N.steps_single = 3000; % Samples plotted every 1 sample, after this only every N.interval samples are saved
-    % N.steps_mid    = 10000; % For plotting
-    % % N.steps_final  = 10e4; % Last sample
-    % N.steps_final  = 4e4; % Last sample
-    % N.interval     = 100;
-    % N.sample_vec   = [1:1:N.steps_single , N.steps_single+N.interval : N.interval : N.steps_final];
-    % N.steps        = length(N.sample_vec);
-
-    N.steps_single = 4000; % Samples plotted every 1 sample, after this only every N.interval samples are saved
-    N.steps_mid    = 5000; % For plotting
-    N.steps_final  = 6000; % Last sample
+    N.steps_single = 3000; % Samples plotted every 1 sample, after this only every N.interval samples are saved
+    N.steps_mid    = 10000; % For plotting
+    % N.steps_final  = 10e4; % Last sample
+    N.steps_final  = 4e4; % Last sample
     N.interval     = 100;
     N.sample_vec   = [1:1:N.steps_single , N.steps_single+N.interval : N.interval : N.steps_final];
     N.steps        = length(N.sample_vec);
+
+    % N.steps_single = 4000; % Samples plotted every 1 sample, after this only every N.interval samples are saved
+    % N.steps_mid    = 5000; % For plotting
+    % N.steps_final  = 6000; % Last sample
+    % N.interval     = 100;
+    % N.sample_vec   = [1:1:N.steps_single , N.steps_single+N.interval : N.interval : N.steps_final];
+    % N.steps        = length(N.sample_vec);
 
 
 %% System Variables
@@ -54,9 +54,10 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
 %% What is the stability of A_DT
-    % [eig_vec,eig_val] = eig(A_DT);
-    % % [eig_val] = eig(A_DT);
-    % [U,S,V] = svd(A_DT);
+    [eig_vec,eig_val] = eig(A_DT);
+    disp(num2str(real(eig_val)))
+    % [eig_val] = eig(A_DT);
+    [U,S,V] = svd(A_DT);
     % test = U*V';
 
 
@@ -65,8 +66,10 @@ function [] = CovarEstimationAnalysis(SIM,FLAG,P,sys_HK,RESULTS)
 
 
 %% Noise Matrix
-    Q_vec = 1e-1;
-    R_vec = 1e-3;
+    Q_vec = FLAG.Q_0;
+    R_vec = FLAG.R_0; 
+    % Q_vec = 1e-4;
+    % R_vec = 1e-6;
     % Q_vec = [1e-3 1e-2 1e-1 1e0 1e1];
     % R_vec = [1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0 1e1];
 
@@ -286,21 +289,21 @@ end
                                 % xlim([N.sample_vec(end)-1000 , N.sample_vec(end)])
                             end
 
-                        % Plot Each CPCT with Asymptotic (Post Measurement)
-                            for j = 1:N.measur_all
-                                figure
-                                % % loglog( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
-                                % loglog( N.sample_vec , CPCT_pre_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
-                                hold on
-                                % plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
-                                plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
-                                yL = yline(CP_inftyCT_post(j,j)     , '--', 'LineWidth',2, 'Color','k');
-                                yL.Alpha = 1;
-                                title(['Post-Measurement: ' RESULTS.Labels.title{j}])
-                                xlim([2,N.steps_final])
-                                % ylim([1e-12 .100])
-                                % xlim([N.sample_vec(end)-1000 , N.sample_vec(end)])
-                            end
+                        % % Plot Each CPCT with Asymptotic (Post Measurement)
+                        %     for j = 1:N.measur_all
+                        %         figure
+                        %         % % loglog( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                        %         % loglog( N.sample_vec , CPCT_pre_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                        %         hold on
+                        %         % plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                        %         plot( N.sample_vec , CPCT_diag(j,:) , '-' , 'LineWidth',2, 'Color' , ColorVec(j,:) )
+                        %         yL = yline(CP_inftyCT_post(j,j)     , '--', 'LineWidth',2, 'Color','k');
+                        %         yL.Alpha = 1;
+                        %         title(['Post-Measurement: ' RESULTS.Labels.title{j}])
+                        %         xlim([2,N.steps_final])
+                        %         % ylim([1e-12 .100])
+                        %         % xlim([N.sample_vec(end)-1000 , N.sample_vec(end)])
+                        %     end
     
     
                         % % Covariance (CPCT) of each variable with respect to steps
