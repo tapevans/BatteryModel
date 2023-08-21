@@ -1,6 +1,6 @@
 function plotfcn(filename)
 %% Load Results
-load(filename)
+    load(filename)
 
 %% Plot Flags
 % ---- Polarization ----
@@ -849,7 +849,7 @@ elseif SIM.SimMode == 7
     end
     
 
-% ---- EIS from Stiching PRBS ----
+% ---- EIS from Stitching PRBS ----
 elseif SIM.SimMode == 9
     %% EIS
     if FLAG.EIS_PRBS_NYQUIST

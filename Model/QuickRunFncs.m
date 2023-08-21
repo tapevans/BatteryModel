@@ -55,8 +55,15 @@ CreateProject
 RunSimulations
 
 
+%% Uncheck Post-Processing Complete
+clear all; close all; clc;
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise_SplitSim\Test_PRBS_Amp1_SOC50_SwitchingTime10.mat';
+load(filename)
+postProcessComplete = 0;
+save(filename)
 %% Post-Processing
-filename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\Results\Half_Cell_Test\Half_Cell_Test_halfCA_Polar_1.00C_D.mat';
+
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise_SplitSim\Test_PRBS_Amp1_SOC50_SwitchingTime10.mat';
 postProcessing(filename)
 
 %% Plot Single Results
@@ -70,8 +77,8 @@ close all;
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\EISCompareForPeter\EISCompareForPeter_EIS_HoKalman_SOC50_SamplingTime1.mat';
 % filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_PRBS_EIS_SOC50.mat';
 
-filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_EIS_SIN_w1000_SOC50.mat';
-
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_Polar_1.00C_C.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
 plotfcn(filename)
 
 
@@ -106,7 +113,9 @@ clc
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC50_SwitchingTime10.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
 % filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_EIS_SIN_w1584.8932_SOC50.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\EISCompareForPeter\EISCompareForPeter_EIS_SIN_w6.2832_SOC50.mat';
+
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\EISCompareForPeter\EISCompareForPeter_EIS_SIN_w6.2832_SOC50.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
 
 load(filename)
 
@@ -234,6 +243,8 @@ filename = 'F:\TylerFiles\GitHubRepos\p2d-model\BatteryModel\BatchMode_DAE\Resul
 load(filename)
 % t_final = 8100;
 % SIM.tspan = [0, t_final];
+
+
 
 save(filename,'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG')
 

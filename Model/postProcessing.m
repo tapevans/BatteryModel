@@ -2,7 +2,8 @@
 % Take all the data and convert into easy to read vectors
 function postProcessing(filename)
 %% Load file to workspace
-load(filename,'postProcessComplete')
+    load(filename,'postProcessComplete')
+
 
 %% do post-processing if it hasn't already
 if ~postProcessComplete 
@@ -36,6 +37,8 @@ if ~postProcessComplete
         N_t_steps = length(t_soln);
         idx = 1:1:N_t_steps;
     end
+
+
     %% Initialize variables
     max_SV = max( N.N_SV_AN , N.N_SV_CA );
 
@@ -66,18 +69,28 @@ if ~postProcessComplete
     
     total_mass   = zeros( N_t_steps , 1 );
     CoC          = zeros( N_t_steps , N.N_CV_tot );
+
+
     %% Perform calcs and save results to their variable name
     if SIM.SimMode == 4
         i_user = i_user_soln;
-        i_user = i_user(idx);
+        i_user = i_user(idx);    
     elseif SIM.SimMode == 5
         % Pull i_user from RunSimulation loop and make into a vector the
         % same size as t_soln
+    
     elseif SIM.SimMode == 6 % Simulink
         % Pull i_user from sim output
+    
+    elseif SIM.SimMode == 8 % ---- PRBS ----
+        i_user = i_user_soln;
+        i_user = i_user(idx);
+    
     else
-        i_user = (i_user_calc(t_soln,SIM))';
+        i_user_in = nan; %%%%%% Placeholder for now
+        i_user = i_user_calc(t_soln,SIM,FLAG,i_user_in);
     end
+    i_user = reshape(i_user,[],1); % Ensure it is a column vector
     
     for i = 1:N_t_steps
         % Go through the solution vector and reshape every SV to 2D (3D matrix)
@@ -232,6 +245,7 @@ if ~postProcessComplete
         %     ylabel('V(t)')
         %     legend
         
+
         %% Impedance Calculation
         Z_mag = Amp_ID / SIM.I_user_amp; % Impedance Magnitude
         Z_Re = -Z_mag * cos(ps);          % Real Impedance Component
@@ -246,6 +260,7 @@ if ~postProcessComplete
         if Z_angle_deg <= -358
             Z_angle_deg = Z_angle_deg + 360; % Angle wrapping
         end
+
     elseif SIM.SimMode == 7 % ---- Manual Profile ----
         if FLAG.Optimize_Profile && FLAG.Save_Current_Profile
             profile_save_filepath   = [filename(1:end-4), '_CurrentProfile_Output.mat'];
@@ -262,12 +277,14 @@ if ~postProcessComplete
         end
         SIM.SimMode = 7;
     end
+
     
     %% Set the variable for finished post-processing
-    postProcessComplete = 1;
+        postProcessComplete = 1;
     
+
     %% Resave data to the .mat file
-    clearvars i 
-    save(filename);
+        clearvars i 
+        save(filename);
 end
 end

@@ -62,49 +62,10 @@ FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
 
 FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
 
-% folder_name  = 'Final_Lui_Wiley_Model';
-% battery_name = 'Final_Lui_Wiley_Model';
-
-% folder_name  = 'TestingForTyrone';
-% battery_name = 'TestingForTyrone';
-
-% folder_name  = 'SeminarPres_Nov2022';
-% battery_name = 'SeminarPres_Nov2022';
-
-% % folder_name  = 'ObservabilityTest';
-% % battery_name = 'ObservabilityTest';
-
-% folder_name  = 'KalmanTest';
-% battery_name = 'KalmanTest_JustPlant';
-
-% folder_name  = 'PRBS_Sims';
-% battery_name = 'PRBS_Sims';
-
-% folder_name  = 'zeroMeanPRBS_Sims';
-% battery_name = 'PRBS_Sims';
-
-folder_name  = 'zeroMeanPRBS_withRelax_Sims';
-battery_name = 'PRBS_Sims';
-
-% folder_name  = 'LongerImpulse';
-% battery_name = 'ObservabilityTest';
-% battery_name = 'PRBS_Sims';
-
-% folder_name  = 'LongerZeroMeanPRBS_Sims';
-% battery_name = 'PRBS_Sims';
-
-% folder_name  = 'EISCompareForPeter';
-% battery_name = 'EISCompareForPeter';
-
-% folder_name  = 'TestODExtend';
-% % % battery_name = 'TestODExtend_Baseline';
-% % % battery_name = 'TestODExtend_ODEextend_2Cuts';
-% % % battery_name = 'TestODExtend_ODEextend_3Cuts';
-% % % battery_name = 'TestODExtend_ODEextend_3Cuts_Save';
-% % % battery_name = 'TestODExtend_ODEextend_RedSoln_2Cuts';
-% % % battery_name = 'TestODExtend_ODEextend_RedSoln_3Cuts';
-% % % battery_name = 'TestODExtend_ODEextend_RedSoln_3Cuts_Save';
-% battery_name = 'TestODExtend_idata';
+% folder_name  = 'TestNewInputFile';
+% folder_name  = 'TestNewInputFileNoise';
+folder_name  = 'TestNewInputFileNoise_SplitSim';
+battery_name = 'Test';
 
 
 %% Simulations
@@ -114,7 +75,7 @@ battery_name = 'PRBS_Sims';
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
-    % C_rates      = [1]; 
+    % C_rates      = [-1]; 
     % C_rates      = [1/20 -1/20]; 
     % C_rates      = [-1/3];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
@@ -143,58 +104,24 @@ battery_name = 'PRBS_Sims';
     % SS_SOC = [50];
     
     % Desired frequency for impedance results
-        % SS_freq = [];
+        SS_freq = [];
         % SS_freq = logspace(-1,11,101);
         % SS_freq = (logspace(-2,6,75) *(2*pi));
         exp_min = -3;
         exp_max =  5;
         exp_diff = exp_max - exp_min;
-        SS_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
+        % SS_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
         
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 0;
+    KBCP   = 1;
         KBCPProfileOverwrite = 0;
-        % KBCPProfileFilename = 'DTImpulseTs0.1';               % 1
-        % KBCPProfileFilename = 'DTImpulseTs0.121152765862859'; % 2
-        % KBCPProfileFilename = 'DTImpulseTs0.146779926762207'; % 3
-        % KBCPProfileFilename = 'DTImpulseTs0.177827941003892'; % 4
-        % KBCPProfileFilename = 'DTImpulseTs0.215443469003188'; % 5
-        % KBCPProfileFilename = 'DTImpulseTs0.261015721568254'; % 6
-        % KBCPProfileFilename = 'DTImpulseTs0.316227766016838'; % 7
-        % KBCPProfileFilename = 'DTImpulseTs0.383118684955729'; % 8
-        % KBCPProfileFilename = 'DTImpulseTs0.464158883361278'; % 9
-        % KBCPProfileFilename = 'DTImpulseTs0.562341325190349'; % 10
-        % KBCPProfileFilename = 'DTImpulseTs0.681292069057961'; % 11
-        % KBCPProfileFilename = 'DTImpulseTs0.825404185268018'; % 12
-        % KBCPProfileFilename = 'DTImpulseTs1.0';               % 13
-        % KBCPProfileFilename = 'DTImpulseTs1.21152765862859';  % 14
-        % KBCPProfileFilename = 'DTImpulseTs1.46779926762207';  % 15
-        % KBCPProfileFilename = 'DTImpulseTs1.77827941003892';  % 16
-        % KBCPProfileFilename = 'DTImpulseTs2.15443469003188';  % 17
-        % KBCPProfileFilename = 'DTImpulseTs2.61015721568254';  % 18
-        % KBCPProfileFilename = 'DTImpulseTs3.16227766016838';  % 19
-        % KBCPProfileFilename = 'DTImpulseTs3.83118684955729';  % 20
-        % KBCPProfileFilename = 'DTImpulseTs4.64158883361278';  % 21
-        % KBCPProfileFilename = 'DTImpulseTs5.62341325190349';  % 22
-        % KBCPProfileFilename = 'DTImpulseTs6.81292069057961';  % 23
-        % KBCPProfileFilename = 'DTImpulseTs8.25404185268018';  % 24
-        KBCPProfileFilename = 'DTImpulseTs10.0';              % 25
-        % 
-        % KBCPProfileFilename = 'KalmanTestDTImpulseTs1.0';
-        % KBCPProfileFilename = 'KalmanTestStep';
-        % KBCPProfileFilename = 'KalmanTestStep_JustPlant_NoRelax';
-        % KBCPProfileFilename = 'Relax_Step';
-
-        % KBCPProfileFilename = 'CCCV_1.5C';
-        % KBCPProfileFilename = 'CCCV_2C';
-        % KBCPProfileFilename = '5minImpulseLongResponse';
-        % KBCPProfileFilename = 'LongTau_wStep';
+        KBCPProfileFilename = 'StairStepNoRelax';
 
     % Initial SOC
         % KBSOC = 81.93;
         % KBSOC = 100; 
-        % KBSOC = 50;
+        KBSOC = 0;
 
 
 % ---- MOO Controller ----
@@ -210,7 +137,7 @@ battery_name = 'PRBS_Sims';
             MCP.tol_Delta_phi  = 0.01; % Goal for the largest delta_phi
             
         MCP.UseExistingProfile = 0; % 1 if using file found at MCP.Existing_Profile_filepath
-            MCP.Existing_Profile_filepath = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_ManCurrProf_100steps_1000Iter_0.03tol_CurrentProfile_Output.mat';
+            MCP.Existing_Profile_filepath = 'F:\TylerFiles\GitHubRepos\BatteryModelingExtras\OLD MODELS\WORKINGP2D_BeforeMovingRepos\BatteryModel\BatchMode_DAE\Results\Final_Lui_Wiley_Model\Final_Lui_Wiley_Model_ManCurrProf_100steps_1000Iter_0.03tol_CurrentProfile_Output.mat';
         MCP.ManProfileName = ''; % Use this if MCP.plating_refine = 0;
         
 
@@ -220,14 +147,16 @@ battery_name = 'PRBS_Sims';
         PRBS_SOC     = 50; % [%],     State of Charge
         PRBS_Tswitch = 10;  % [s],     Switching Time
         PRBS_t_Report = 1/200; % Inverse of number of samples per Tswitch
-        AddIntermediateRelaxTime = 1;
+        %%%%%%%%%% Do I need this^^^^
+
+        AddIntermediateRelaxTime = 0;
             NumTsRelax = 2;
             NumZeroCrossingUntilNextRelax = 5;
 
         MakeLongPRBSSignal = 1;
             DesiredLength  = 4e3;
 
-        UseODEextend = 0;
+        UseODEextend = 0; %%%%%%%% When do I need to do this?
             % NumCuts          = 3;
             NumCuts          = 40;
             REDUCESOLN       = 1;
@@ -244,7 +173,7 @@ battery_name = 'PRBS_Sims';
             EIS_PRBS.NumTsRelax = 2;
             EIS_PRBS.NumZeroCrossingUntilNextRelax = 5;
 
-        EIS_PRBS.MakeLongPRBSSignal = 1;
+        EIS_PRBS.MakeLongPRBSSignal = 0;
             EIS_PRBS.DesiredLength  = 100;
             % EIS_PRBS.DesiredLength  = 255;
 
@@ -709,3 +638,87 @@ if getEIS_HoKalman
     end
 
 end
+
+
+%% OOOOOOOLLLLLDDDD Stuff
+
+% folder_name  = 'Final_Lui_Wiley_Model';
+% battery_name = 'Final_Lui_Wiley_Model';
+
+% folder_name  = 'TestingForTyrone';
+% battery_name = 'TestingForTyrone';
+
+% folder_name  = 'SeminarPres_Nov2022';
+% battery_name = 'SeminarPres_Nov2022';
+
+% % folder_name  = 'ObservabilityTest';
+% % battery_name = 'ObservabilityTest';
+
+% folder_name  = 'KalmanTest';
+% battery_name = 'KalmanTest_JustPlant';
+
+% folder_name  = 'PRBS_Sims';
+% battery_name = 'PRBS_Sims';
+
+% folder_name  = 'zeroMeanPRBS_Sims';
+% battery_name = 'PRBS_Sims';
+
+% folder_name  = 'zeroMeanPRBS_withRelax_Sims';
+% battery_name = 'PRBS_Sims';
+
+% folder_name  = 'LongerImpulse';
+% battery_name = 'ObservabilityTest';
+% battery_name = 'PRBS_Sims';
+
+% folder_name  = 'LongerZeroMeanPRBS_Sims';
+% battery_name = 'PRBS_Sims';
+
+% folder_name  = 'EISCompareForPeter';
+% battery_name = 'EISCompareForPeter';
+
+% folder_name  = 'TestODExtend';
+% % % battery_name = 'TestODExtend_Baseline';
+% % % battery_name = 'TestODExtend_ODEextend_2Cuts';
+% % % battery_name = 'TestODExtend_ODEextend_3Cuts';
+% % % battery_name = 'TestODExtend_ODEextend_3Cuts_Save';
+% % % battery_name = 'TestODExtend_ODEextend_RedSoln_2Cuts';
+% % % battery_name = 'TestODExtend_ODEextend_RedSoln_3Cuts';
+% % % battery_name = 'TestODExtend_ODEextend_RedSoln_3Cuts_Save';
+% battery_name = 'TestODExtend_idata';
+
+
+        % KBCPProfileFilename = 'DTImpulseTs0.1';               % 1
+        % KBCPProfileFilename = 'DTImpulseTs0.121152765862859'; % 2
+        % KBCPProfileFilename = 'DTImpulseTs0.146779926762207'; % 3
+        % KBCPProfileFilename = 'DTImpulseTs0.177827941003892'; % 4
+        % KBCPProfileFilename = 'DTImpulseTs0.215443469003188'; % 5
+        % KBCPProfileFilename = 'DTImpulseTs0.261015721568254'; % 6
+        % KBCPProfileFilename = 'DTImpulseTs0.316227766016838'; % 7
+        % KBCPProfileFilename = 'DTImpulseTs0.383118684955729'; % 8
+        % KBCPProfileFilename = 'DTImpulseTs0.464158883361278'; % 9
+        % KBCPProfileFilename = 'DTImpulseTs0.562341325190349'; % 10
+        % KBCPProfileFilename = 'DTImpulseTs0.681292069057961'; % 11
+        % KBCPProfileFilename = 'DTImpulseTs0.825404185268018'; % 12
+        % KBCPProfileFilename = 'DTImpulseTs1.0';               % 13
+        % KBCPProfileFilename = 'DTImpulseTs1.21152765862859';  % 14
+        % KBCPProfileFilename = 'DTImpulseTs1.46779926762207';  % 15
+        % KBCPProfileFilename = 'DTImpulseTs1.77827941003892';  % 16
+        % KBCPProfileFilename = 'DTImpulseTs2.15443469003188';  % 17
+        % KBCPProfileFilename = 'DTImpulseTs2.61015721568254';  % 18
+        % KBCPProfileFilename = 'DTImpulseTs3.16227766016838';  % 19
+        % KBCPProfileFilename = 'DTImpulseTs3.83118684955729';  % 20
+        % KBCPProfileFilename = 'DTImpulseTs4.64158883361278';  % 21
+        % KBCPProfileFilename = 'DTImpulseTs5.62341325190349';  % 22
+        % KBCPProfileFilename = 'DTImpulseTs6.81292069057961';  % 23
+        % KBCPProfileFilename = 'DTImpulseTs8.25404185268018';  % 24
+        % KBCPProfileFilename = 'DTImpulseTs10.0';              % 25
+        % 
+        % KBCPProfileFilename = 'KalmanTestDTImpulseTs1.0';
+        % KBCPProfileFilename = 'KalmanTestStep';
+        % KBCPProfileFilename = 'KalmanTestStep_JustPlant_NoRelax';
+        % KBCPProfileFilename = 'Relax_Step';
+
+        % KBCPProfileFilename = 'CCCV_1.5C';
+        % KBCPProfileFilename = 'CCCV_2C';
+        % KBCPProfileFilename = '5minImpulseLongResponse';
+        % KBCPProfileFilename = 'LongTau_wStep';

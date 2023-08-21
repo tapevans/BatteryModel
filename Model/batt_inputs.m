@@ -28,7 +28,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     % 6)  Simulink
     % 7)  Manual Current Profile
     % 8)  PRBS
-    % 9)  EIS PRBS Stiching
+    % 9)  EIS PRBS Stitching
     % 10) EIS Ho-Kalman
     
     % 0) Files that are used strictly for data and not to run a simulation
@@ -99,14 +99,27 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     %     T_s_max =  1; % T_s = 10^(T_s_max)
     %     T_s_vec = logspace(T_s_min,T_s_max,N_t_s);
     %     Ts = T_s_vec(25);   % [s], discrete time sampling rate
+
+    FLAG.AddInputNoise = 1;
+        if FLAG.AddInputNoise
+            SIM.Ts      = 1;    % [s], Sampling rate of the DT system
+            SIM.Q_input = 1e-2; % [-], Input noise covariance matrix
+        end
     
     FLAG.SaveSolnDiscreteTime = 0; % 1 if evaluate the ode soln at a given sampling rate
-        SIM.Ts           = 1;                    % [s], Sampling rate of the DT system
+        if FLAG.AddInputNoise % Force DT save
+            FLAG.SaveSolnDiscreteTime = 1;
+        end
+        if FLAG.AddInputNoise % Don't redefine the sampling rate and force to save
+        else
+            SIM.Ts           = 10;                    % [s], Sampling rate of the DT system
+        end
         % SIM.Ts           = Ts;                    % [s], Sampling rate of the DT system
 	    SIM.TsMultiple   = 5;                     % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
         SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple;   % [s], Sampling rate of the ode output
 
-    if isfield(SIM,'t_Report') 
+    % if isfield(SIM,'t_Report') 
+    if isfield(SIM,'t_Report') && SIM.SimMode == 9
         if ~isempty(SIM.t_Report)
             FLAG.SaveSolnDiscreteTime = 1;
                 SIM.Ts           = SIM.Tswitch * SIM.t_Report;
@@ -119,7 +132,8 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     
     FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
         FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
-    FLAG.Plot             = 0;   % 1 if the results plot immediately
+    FLAG.Plot             = 1;   % 1 if the results plot immediately
+    FLAG.PlotUserCurrentProfiles = 1;
 
 
 %% Numerical Parameters
@@ -240,6 +254,7 @@ if SIM.SimMode == 8
     %SIM.t_ramp_ratio   = 1/20;        % Fraction of the switching time that is used as ramp interpolation
     SIM.t_ramp_ratio   = 1/50;        % Fraction of the switching time that is used as ramp interpolation
     SIM.initial_offset = SIM.Tswitch; % Initial zero offset
+    % SIM.initial_offset = 0; % Initial zero offset
 %%%% Input from batch mode 
     % SIM.SOC_start = 50;   % [%], Initial state of charge 
     % SIM.PRBSAmp
