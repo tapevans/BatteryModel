@@ -1,7 +1,7 @@
 %% 
 function Kalman_plotFnc(RESULTS,N,SIM,FLAG)
 %%
-FLAG.PLOT.NoNoiseCompare            = 1;    
+FLAG.PLOT.NoNoiseCompare            = 0;    
     FLAG.PLOT.ode        = 1;
     FLAG.PLOT.SS_CT      = 0;
     FLAG.PLOT.SS_DT      = 0;
@@ -212,7 +212,7 @@ if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
     end
 end
 
-% All 3 (Early)
+% All 3 (Early Time)
 if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
     if FLAG.All3 && isfield(RESULTS.EST.VAR,'z_soln_ALL') && isfield(RESULTS.EST,'PLANT') && isfield(RESULTS.EST.ASY,'z_soln_ALL')
         if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
@@ -273,7 +273,7 @@ end
 % save('PlantData.mat','plant_data','time_vec','Q','R','P_kk','input_signal')
 
 
-% All 3 (Late)
+% All 3 (Late Time)
 if FLAG.PLOT.EstimatorZ && isfield(RESULTS,'EST')
     if FLAG.All3 && isfield(RESULTS.EST.VAR,'z_soln_ALL') && isfield(RESULTS.EST,'PLANT') && isfield(RESULTS.EST.ASY,'z_soln_ALL')
         if FLAG.EstimatorModel == 1 || FLAG.EST.SepHK == 0
