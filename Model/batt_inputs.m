@@ -42,7 +42,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
     
     FLAG.COE    = 0; % Cons of Energy (Temperature). 0 if dTdt = 0
-        % T_BC
+        % Thermal Boundary Conditions
         % 1) Known Temperature  T(0,t)      = T_s
         % 2) Known Heat Flux    -k dTdx|x=0 = q''_s
         % 3) Insulated             dTdx|x=0 = 0
@@ -56,6 +56,9 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         FLAG.HEAT_GEN_ELECTRIC = 1; % Heat generation due to ohmic losses from electronic current (ed phase)
         FLAG.HEAT_GEN_RXN      = 1; % Heat generation from current across R_SEI %%% May not be accurate
         FLAG.HEAT_GEN_CHEM_RXN = 0; % Heat generation from a reaction at the SEI %%%%%%%NOT IMPLEMENTED
+
+        FLAG.InitialThermalGradient = 1;
+            
         
     FLAG.V_SEI            = 1; % 1 if the overpotential is calculated using V_SEI
     FLAG.SEI_growth       = 0; % 1 if the SEI grows over time (increased R_SEI) 
@@ -100,21 +103,21 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     %     T_s_vec = logspace(T_s_min,T_s_max,N_t_s);
     %     Ts = T_s_vec(25);   % [s], discrete time sampling rate
 
-    FLAG.AddInputNoise = 1;
+    FLAG.AddInputNoise = 0;
         if FLAG.AddInputNoise
-            SIM.Ts      = 1;    % [s], Sampling rate of the DT system
+            SIM.Ts      = 10;    % [s], Sampling rate of the DT system
             SIM.Q_input = 1e-2; % [-], Input noise covariance matrix
         end
     
-    FLAG.SaveSolnDiscreteTime = 0; % 1 if evaluate the ode soln at a given sampling rate
+    FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
         if FLAG.AddInputNoise % Force DT save
             FLAG.SaveSolnDiscreteTime = 1;
         end
         if FLAG.AddInputNoise % Don't redefine the sampling rate and force to save
+            % SIM.Ts           = Ts;                    % [s], Sampling rate of the DT system
         else
-            SIM.Ts           = 10;                    % [s], Sampling rate of the DT system
+            SIM.Ts = 10; % [s], Sampling rate of the DT system
         end
-        % SIM.Ts           = Ts;                    % [s], Sampling rate of the DT system
 	    SIM.TsMultiple   = 5;                     % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
         SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple;   % [s], Sampling rate of the ode output
 
@@ -132,8 +135,8 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     
     FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
         FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
-    FLAG.Plot             = 1;   % 1 if the results plot immediately
-    FLAG.PlotUserCurrentProfiles = 1;
+    FLAG.Plot             = 0;   % 1 if the results plot immediately
+        FLAG.PlotUserCurrentProfiles = 0;
 
 
 %% Numerical Parameters
@@ -291,31 +294,31 @@ end
 
 %% Battery Chemistry (Cell Performance)
 	% ---- Anode ----
-    AN.EqPotentialHandle = @E_eqGraphite;
-    AN.i_oHandle         = @i_oC6;
-    AN.sigmaHandle       = @sigmaC6;
-    AN.D_oHandle         = @D_o_Graphite;
-    
-    AN.k_o      = 3.80589129594505E-09;     % [A m^-2],       Exchange current density Rate constant
-    % AN.i_o_a    = 0.5;      % [],             i_o exponent
-    % AN.i_o_b    = 0.5;      % [],             i_o exponent
-    % AN.i_o_c    = 0.5;      % [],             i_o exponent
-    AN.alpha_a  = 0.5;        % [-],            Symmetry factor, annodic 
-    AN.alpha_c  = 0.5;        % [-],            Symmetry factor, cathodic
-    AN.C_dl     = 3e-6;      % [F/m^2],        Double-layer capacitance
-    % AN.R_dl     = 0;        % [Ohm],          Double Layer Resistance
-    AN.R_SEI    = 0.00733702042141719;     % [Ohm m^2],      Solid electrolyte interface resistance
-    AN.sigma    = 100;              % [S m^-1],       Electrical conductivity (ed phase)
-    AN.D_o      = 3E-13;            % [m^2 s^-1],     Solid-state diffusion coefficient
-    AN.MW       = (72.0642)*1e0;    % [kg kmol^-1],   Molecular weight of C6
-    AN.MW_Lith  = (79.0052)*1e0;    % [kg kmol^-1],   Molecular weight of LiC6
-    AN.specCap  = (350)*1e0;        % [Ahr kg^-1],    Specific capacity
-    AN.rho      = (2.266*1000)*1e0; % [kg m^-3],      Density of the electrode material without Li
-    AN.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Specific heat capacity  of separator material
-    % AN.k        = 470;              % [W m^-1 K^-1],  Thermal conductivity
-    AN.k        = (0.6)*1e0;        % [W m^-1 K^-1],  Thermal conductivity
-    %sciencedirect.com/science/article/pii/S0735193317300179
-    AN.C_Li_max    = 28.4851292093828;        % [kmol m^-3], Max concentration of lithium in the active material
+        AN.EqPotentialHandle = @E_eqGraphite;
+        AN.i_oHandle         = @i_oC6;
+        AN.sigmaHandle       = @sigmaC6;
+        AN.D_oHandle         = @D_o_Graphite;
+        
+        AN.k_o      = 3.80589129594505E-09;     % [A m^-2],       Exchange current density Rate constant
+        % AN.i_o_a    = 0.5;      % [],             i_o exponent
+        % AN.i_o_b    = 0.5;      % [],             i_o exponent
+        % AN.i_o_c    = 0.5;      % [],             i_o exponent
+        AN.alpha_a  = 0.5;        % [-],            Symmetry factor, annodic 
+        AN.alpha_c  = 0.5;        % [-],            Symmetry factor, cathodic
+        AN.C_dl     = 3e-6;      % [F/m^2],        Double-layer capacitance
+        % AN.R_dl     = 0;        % [Ohm],          Double Layer Resistance
+        AN.R_SEI    = 0.00733702042141719;     % [Ohm m^2],      Solid electrolyte interface resistance
+        AN.sigma    = 100;              % [S m^-1],       Electrical conductivity (ed phase)
+        AN.D_o      = 3E-13;            % [m^2 s^-1],     Solid-state diffusion coefficient
+        AN.MW       = (72.0642)*1e0;    % [kg kmol^-1],   Molecular weight of C6
+        AN.MW_Lith  = (79.0052)*1e0;    % [kg kmol^-1],   Molecular weight of LiC6
+        AN.specCap  = (350)*1e0;        % [Ahr kg^-1],    Specific capacity
+        AN.rho      = (2.266*1000)*1e0; % [kg m^-3],      Density of the electrode material without Li
+        AN.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Specific heat capacity  of separator material
+        % AN.k        = 470;              % [W m^-1 K^-1],  Thermal conductivity
+        AN.k        = (0.6)*1e0;        % [W m^-1 K^-1],  Thermal conductivity
+        %sciencedirect.com/science/article/pii/S0735193317300179
+        AN.C_Li_max    = 28.4851292093828;        % [kmol m^-3], Max concentration of lithium in the active material
     
         % Lithium Foil Properties
         if FLAG.AN_LI_FOIL
@@ -340,54 +343,54 @@ end
         end
 
     % ---- Separator ----
-    SEP.rho = (2266)*1e0; % [kg m^-3],      Density of separator material
-    SEP.c_p = (720)*1e0;  % [J kg^-1 K^-1], Specific heat capacity 
-    % SEP.k   = 470;  % [W m^-1 K^-1], Thermal conductivity of separator material
-    SEP.k   = (0.6)*1e0;  % [W m^-1 K^-1],  Thermal conductivity of separator material
+        SEP.rho = (2266)*1e0; % [kg m^-3],      Density of separator material
+        SEP.c_p = (720)*1e0;  % [J kg^-1 K^-1], Specific heat capacity 
+        % SEP.k   = 470;  % [W m^-1 K^-1], Thermal conductivity of separator material
+        SEP.k   = (0.6)*1e0;  % [W m^-1 K^-1],  Thermal conductivity of separator material
     
     % ---- Cathode ----
-    CA.EqPotentialHandle = @E_eqNMC;
-    CA.i_oHandle         = @i_oC6;  
-    CA.sigmaHandle       = @sigmaNMC;
-    CA.D_oHandle         = @D_o_NMC532;
+        CA.EqPotentialHandle = @E_eqNMC;
+        CA.i_oHandle         = @i_oC6;  
+        CA.sigmaHandle       = @sigmaNMC;
+        CA.D_oHandle         = @D_o_NMC532;
     
-    CA.k_o      = 9.72997022033729E-10;   % [A m^-2],       Exchange current density Rate constant
-    % CA.i_o_a    = 0.5;    % i_o exponent
-    % CA.i_o_b    = 0.5;    % i_o exponent
-    % CA.i_o_c    = 0.5;    % i_o exponent
-    % CA.k_ct     = 1e-7;   
-    CA.alpha_a  = 0.5;      % [-],            Symmetry factor, annodic 
-    CA.alpha_c  = 0.5;      % [-],            Symmetry factor, cathodic
-    CA.C_dl     = 1e-6;     % [F/m^2],        Double-layer capacitance
-    % CA.R_dl     = 0.0005;   % [Ohm],          Double-layer resisitance
-    CA.R_SEI    = 0.00611911635271628;   % [ohm m^2],      Solid electrolyte interface resistance
-    CA.sigma    = 3.8;     % [S m^-1],       Electrical conductivity (am phase)
-    CA.D_o      = 5E-13;    % [m^2 s^-1],     Solid-state diffusion coefficient
-    CA.MW       = (89.61275)*1e0; % [kg kmol^-1],   Molecular weight of NMC
-    CA.MW_Lith  = (96.55375)*1e0; % [kg kmol^-1],   Molecular weight of LNMC
-%     CA.specCap  = 155;      % [Ahr kg^-1],    Specific capacity
-    CA.specCap  = (170)*1e0;      % [Ahr kg^-1],    Specific capacity
-%     CA.rho      = 2222.68;  % [kg m^-3],      Density of the electrode material without Li
-    CA.rho      = (2739.6961)*1e0;  % [kg m^-3],      Density of the electrode material without Li
-    CA.c_p      = (720)*1e0;      % [J kg^-1 K^-1], Specific heat capacity of cathode material
-    % CA.k        = 470;      % [W m^-1 K^-1], Thermal conductivity of cathode material
-    CA.k        = (0.6)*1e0;      % [W m^-1 K^-1],  Thermal conductivity of cathode material
-    CA.C_Li_max    = 40.544149086751;        % [kmol m^-3], Max concentration of lithium in the active material
+        CA.k_o      = 9.72997022033729E-10;   % [A m^-2],       Exchange current density Rate constant
+        % CA.i_o_a    = 0.5;    % i_o exponent
+        % CA.i_o_b    = 0.5;    % i_o exponent
+        % CA.i_o_c    = 0.5;    % i_o exponent
+        % CA.k_ct     = 1e-7;   
+        CA.alpha_a  = 0.5;      % [-],            Symmetry factor, annodic 
+        CA.alpha_c  = 0.5;      % [-],            Symmetry factor, cathodic
+        CA.C_dl     = 1e-6;     % [F/m^2],        Double-layer capacitance
+        % CA.R_dl     = 0.0005;   % [Ohm],          Double-layer resisitance
+        CA.R_SEI    = 0.00611911635271628;   % [ohm m^2],      Solid electrolyte interface resistance
+        CA.sigma    = 3.8;     % [S m^-1],       Electrical conductivity (am phase)
+        CA.D_o      = 5E-13;    % [m^2 s^-1],     Solid-state diffusion coefficient
+        CA.MW       = (89.61275)*1e0; % [kg kmol^-1],   Molecular weight of NMC
+        CA.MW_Lith  = (96.55375)*1e0; % [kg kmol^-1],   Molecular weight of LNMC
+    %     CA.specCap  = 155;      % [Ahr kg^-1],    Specific capacity
+        CA.specCap  = (170)*1e0;      % [Ahr kg^-1],    Specific capacity
+    %     CA.rho      = 2222.68;  % [kg m^-3],      Density of the electrode material without Li
+        CA.rho      = (2739.6961)*1e0;  % [kg m^-3],      Density of the electrode material without Li
+        CA.c_p      = (720)*1e0;      % [J kg^-1 K^-1], Specific heat capacity of cathode material
+        % CA.k        = 470;      % [W m^-1 K^-1], Thermal conductivity of cathode material
+        CA.k        = (0.6)*1e0;      % [W m^-1 K^-1],  Thermal conductivity of cathode material
+        CA.C_Li_max    = 40.544149086751;        % [kmol m^-3], Max concentration of lithium in the active material
     
     % ---- Electrolyte ----
-    EL.tf_numHandle       = @transferenceNumber;
-    EL.ActivityHandle     = @activity;
-    EL.D_o_Li_ionHandle   = @D_oLiion;
-    EL.kappaHandle        = @kappa;
-    
-    EL.D_o_Li_ion   = 7.5E-11; % [m^2 s^-1], Li^+ liquid diffusion coefficient
-    EL.kappa        = 0.28;      % [S m^-1], Ionic conductivity
-    EL.C            = 1.0;      % [kmol m^-3], Li concentration
-    EL.tf_num       = 0.363;    % [-], Transference Number 
-    EL.Activity     = 1;        % 
-    EL.rho          = 2266;     % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
-    EL.c_p          = 720;      % [J kg^-1 K^-1], Specific heat capacity of electrolyte
-    EL.k            = 470;      % [W m^-1 K^-1],  Thermal conductivity of electrolyte
+        EL.tf_numHandle       = @transferenceNumber;
+        EL.ActivityHandle     = @activity;
+        EL.D_o_Li_ionHandle   = @D_oLiion;
+        EL.kappaHandle        = @kappa;
+        
+        EL.D_o_Li_ion   = 7.5E-11; % [m^2 s^-1], Li^+ liquid diffusion coefficient
+        EL.kappa        = 0.28;      % [S m^-1], Ionic conductivity
+        EL.C            = 1.0;      % [kmol m^-3], Li concentration
+        EL.tf_num       = 0.363;    % [-], Transference Number 
+        EL.Activity     = 1;        % 
+        EL.rho          = 2266;     % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
+        EL.c_p          = 720;      % [J kg^-1 K^-1], Specific heat capacity of electrolyte
+        EL.k            = 470;      % [W m^-1 K^-1],  Thermal conductivity of electrolyte
     
 
 %% Cell Geometry
@@ -395,7 +398,7 @@ end
 % p - pouch
 % s - spiral
 
-SIM.cell_geo = 'p';
+    SIM.cell_geo = 'p';
 
     % ---- Anode ----
     if SIM.cell_geo == 'p'
@@ -463,6 +466,13 @@ SIM.cell_geo = 'p';
 
 %% Overall Simulation Parameters
     %%% Thermal 
+        if FLAG.InitialThermalGradient
+            SIM.AN_Temp = 18 + 273.15; % [K], Anode   temperature
+            SIM.CA_Temp = 22 + 273.15; % [K], Cathode temperature
+
+            % SIM.AN_Temp = 22 + 273.15; % [K], Anode   temperature
+            % SIM.CA_Temp = 18 + 273.15; % [K], Cathode temperature
+        end
         SIM.Temp_start     = 25 + 273.15; % [K], Initial temperature of the cell 298.15
         SIM.T_inf          = 25 + 273.15; % [K], Ambient temperature
         SIM.h              = 1;           % [],  Convection coefficient on the ends of the battery (Forced vs natural)

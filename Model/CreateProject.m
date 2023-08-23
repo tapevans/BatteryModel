@@ -62,16 +62,21 @@ FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
 
 FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
 
-% folder_name  = 'TestNewInputFile';
+% % folder_name  = 'TestNewInputFile';
 % folder_name  = 'TestNewInputFileNoise';
-folder_name  = 'TestNewInputFileNoise_SplitSim';
+% % folder_name  = 'TestNewInputFileNoise_SplitSim';
+% battery_name = 'Test';
+
+folder_name  = 'ThermalGradient';
 battery_name = 'Test';
+% battery_name = '4C_A2C_ThermalGradient';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    C_rates      = [];
+    % C_rates      = [];
+    C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
@@ -104,19 +109,20 @@ battery_name = 'Test';
     % SS_SOC = [50];
     
     % Desired frequency for impedance results
-        SS_freq = [];
+        % SS_freq = [];
         % SS_freq = logspace(-1,11,101);
         % SS_freq = (logspace(-2,6,75) *(2*pi));
         exp_min = -3;
         exp_max =  5;
         exp_diff = exp_max - exp_min;
-        % SS_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
+        SS_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
         
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 1;
+    KBCP   = 0;
         KBCPProfileOverwrite = 0;
-        KBCPProfileFilename = 'StairStepNoRelax';
+        % KBCPProfileFilename = 'StairStepNoRelax';
+        KBCPProfileFilename = 'GITT';
 
     % Initial SOC
         % KBSOC = 81.93;
@@ -145,9 +151,9 @@ battery_name = 'Test';
     doPRBS = 0;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
         PRBS_SOC     = 50; % [%],     State of Charge
-        PRBS_Tswitch = 10;  % [s],     Switching Time
-        PRBS_t_Report = 1/200; % Inverse of number of samples per Tswitch
-        %%%%%%%%%% Do I need this^^^^
+        PRBS_Tswitch = 10; % [s],     Switching Time
+        % PRBS_t_Report = 1/200; % Inverse of number of samples per Tswitch
+        % %%%%%%%%%% Do I need this^^^^
 
         AddIntermediateRelaxTime = 0;
             NumTsRelax = 2;

@@ -57,13 +57,13 @@ RunSimulations
 
 %% Uncheck Post-Processing Complete
 clear all; close all; clc;
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise_SplitSim\Test_PRBS_Amp1_SOC50_SwitchingTime10.mat';
-load(filename)
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
+load(filename,'postProcessComplete')
 postProcessComplete = 0;
 save(filename)
 %% Post-Processing
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise_SplitSim\Test_PRBS_Amp1_SOC50_SwitchingTime10.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
 postProcessing(filename)
 
 %% Plot Single Results
@@ -78,7 +78,11 @@ close all;
 % filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_PRBS_EIS_SOC50.mat';
 
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_Polar_1.00C_C.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
+
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ThermalGradient\NoThermalGradient_KPCont_GITTSOC0.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ThermalGradient\Test_Polar_0.00C_D.mat';
+
 plotfcn(filename)
 
 

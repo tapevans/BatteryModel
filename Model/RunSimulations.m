@@ -7,8 +7,9 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
+Project_Folder{i} = 'ThermalGradient';   i = i+1;
 % Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
-Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
+% Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
 % Project_Folder{i} = 'TestNewInputFile';   i = i+1;
 
 
@@ -139,9 +140,9 @@ for i = 1:num_sim_files
                 
                 % Determine i_user and tspan
                     if MO == 1 %CC
-                        i_user = 0; % Just initializes the variable
                         SIM.profile_time    = SIM.profile_time_cell{SIM.current_MO_step};
                         SIM.profile_current = SIM.profile_current_cell{SIM.current_MO_step};
+                        i_user = SIM.profile_current(1); % Just initializes the variable
                         tspan = [SIM.profile_time(1), SIM.profile_time(end)];
                     elseif MO == 2 % CV
                         % tspan_vec = [0,SIM.Controller_MO_File(SIM.current_MO_step).Time_lim];
@@ -310,8 +311,8 @@ for i = 1:num_sim_files
 
             i_user = 0;
             
-            TestingSim = 1;
-            if TestingSim
+            % TestingSim = 1;
+            % if TestingSim
                 N_steps = length(SIM.profile_time_Noisy2D);
                 % First Step
                     tspan  = SIM.profile_time_Noisy2D(1,:);
@@ -354,108 +355,108 @@ for i = 1:num_sim_files
                         SV_soln     = [SV_soln     ; SV_soln_int];
                         i_user_soln = [i_user_soln ; i_user_soln_int];
                 end
-            else
-                %%%%%%%%%% Testing splitting sim %%%%%%%%%%
-                if SIM.UseODEextend
-                    split_time = linspace(0 , SIM.profile_time(end) , SIM.NumCuts+1);
-
-                    % Save the initial parameters
-                    if SIM.SaveIntermediate
-                        SIM.SimMode = 0;
-                        postProcessComplete = 1;
-                        save([sim_filenames{i}(1:end-4) '_InputParams.mat'],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
-                        postProcessComplete = 0;
-                        SIM.SimMode = 8;
-                    end
-
-                    % Run First Cut
-                    SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),split_time(1,1:2) , SIM.SV_IC , options);
-                    SOLN_Next = SOLN;
-
-                    % Save First Cut
-                    if SIM.SaveIntermediate
-                        SIM.SimMode = 0;
-                        postProcessComplete = 1;
-                        save([sim_filenames{i}(1:end-4) '_Cut' num2str(1) '.mat'],'SOLN_Next','postProcessComplete','SIM')
-                        postProcessComplete = 0;
-                        SIM.SimMode = 8;
-                    end
-
-                    % Loop through the rest of the Cuts
-                    for j = 2:SIM.NumCuts
-                        SOLN_temp = SOLN_Next;
-                        if SIM.REDUCESOLN
-                            n_points = length(SOLN_temp.x);
-                            y_IDX    = [n_points-1:n_points];
-                            SOLN_temp.x = SOLN_Next.x(1,y_IDX);
-                            SOLN_temp.y = SOLN_Next.y(:,y_IDX);
-                            SOLN_temp.idata.kvec = SOLN_Next.idata.kvec(1,y_IDX);
-                            SOLN_temp.idata.dif3d = SOLN_Next.idata.dif3d(:,:,y_IDX);
-                        end
-                        SOLN_Next = odextend(SOLN_temp , @(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user), split_time(1,j+1));
-                        % SOLN_Next = rmfield( SOLN_Next , 'idata' );
-
-                        % Save Cuts
-                        if SIM.SaveIntermediate
-                            SIM.SimMode = 0;
-                            postProcessComplete = 1;
-                            save([sim_filenames{i}(1:end-4) '_Cut' num2str(j) '.mat'],'SOLN_Next','postProcessComplete','SIM')
-                            postProcessComplete = 0;
-                            SIM.SimMode = 8;
-                        end
-
-                        % Combine SOLN
-                        if SIM.REDUCESOLN
-                            IDX = find(SOLN_Next.x> SOLN.x(end),1);
-                            SOLN.x = [SOLN.x , SOLN_Next.x(1,IDX:end) ];
-                            SOLN.y = [SOLN.y , SOLN_Next.y(:,IDX:end) ];
-                        else
-                            SOLN = SOLN_Next;
-                        end
-                    end
-                else
-                    SIM.tspan = [0, SIM.profile_time(end)];
-                    SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
-                end
-            
-                % %%%%% When having to run smaller time steps %%%%%%%%%%%Testing!!!!!!!!!!!!!!!!!!!!!!!!!!
-                %     old_tFinal = SIM.profile_time(end);
-                %     t_intermed = 0.99*SIM.Tswitch;
-                % 
-                %     %Run first step
-                %         options = odeset('RelTol' ,Tol.Rel,      ...
-                %                          'AbsTol' ,Tol.Abs,      ...
-                %                          'Mass'   ,SIM.M,        ...
-                %                          'MaxStep',0.01*SIM.Tswitch);
-                %                          %'Events' ,events);%,       ...
-                % 
-                %         SIM.tspan = [0,t_intermed]; 
-                %         i_user = 0;
-                %         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
-                % 
-                %     %Run the rest
-                %         IC_new = SOLN.y(:,end);
-                %         options = odeset('RelTol' ,Tol.Rel,      ...
-                %                          'AbsTol' ,Tol.Abs,      ...
-                %                          'Mass'   ,SIM.M,        ...
-                %                          'MaxStep',0.99*SIM.Tswitch);
-                %                          %'Events' ,events);%,       ...
-                % 
-                %         % SIM.tspan = [0,t_intermed]; 
-                %         % i_user = 0;
-                % 
-                %         SOLN = odextend(SOLN, @(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user) , old_tFinal , IC_new , options);
-    
-                if FLAG.SaveSolnDiscreteTime
-                    new_tfinal = SOLN.x(end);
-                    save_time = (0:SIM.SaveTimeStep:new_tfinal)';
-                    t_soln = save_time;
-                    SV_soln = (deval(SOLN,save_time))';
-                else
-                    t_soln  = SOLN.x';
-                    SV_soln = SOLN.y';
-                end
-            end
+            % else
+            %     %%%%%%%%%% Testing splitting sim %%%%%%%%%%
+            %     if SIM.UseODEextend
+            %         split_time = linspace(0 , SIM.profile_time(end) , SIM.NumCuts+1);
+            % 
+            %         % Save the initial parameters
+            %         if SIM.SaveIntermediate
+            %             SIM.SimMode = 0;
+            %             postProcessComplete = 1;
+            %             save([sim_filenames{i}(1:end-4) '_InputParams.mat'],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+            %             postProcessComplete = 0;
+            %             SIM.SimMode = 8;
+            %         end
+            % 
+            %         % Run First Cut
+            %         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),split_time(1,1:2) , SIM.SV_IC , options);
+            %         SOLN_Next = SOLN;
+            % 
+            %         % Save First Cut
+            %         if SIM.SaveIntermediate
+            %             SIM.SimMode = 0;
+            %             postProcessComplete = 1;
+            %             save([sim_filenames{i}(1:end-4) '_Cut' num2str(1) '.mat'],'SOLN_Next','postProcessComplete','SIM')
+            %             postProcessComplete = 0;
+            %             SIM.SimMode = 8;
+            %         end
+            % 
+            %         % Loop through the rest of the Cuts
+            %         for j = 2:SIM.NumCuts
+            %             SOLN_temp = SOLN_Next;
+            %             if SIM.REDUCESOLN
+            %                 n_points = length(SOLN_temp.x);
+            %                 y_IDX    = [n_points-1:n_points];
+            %                 SOLN_temp.x = SOLN_Next.x(1,y_IDX);
+            %                 SOLN_temp.y = SOLN_Next.y(:,y_IDX);
+            %                 SOLN_temp.idata.kvec = SOLN_Next.idata.kvec(1,y_IDX);
+            %                 SOLN_temp.idata.dif3d = SOLN_Next.idata.dif3d(:,:,y_IDX);
+            %             end
+            %             SOLN_Next = odextend(SOLN_temp , @(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user), split_time(1,j+1));
+            %             % SOLN_Next = rmfield( SOLN_Next , 'idata' );
+            % 
+            %             % Save Cuts
+            %             if SIM.SaveIntermediate
+            %                 SIM.SimMode = 0;
+            %                 postProcessComplete = 1;
+            %                 save([sim_filenames{i}(1:end-4) '_Cut' num2str(j) '.mat'],'SOLN_Next','postProcessComplete','SIM')
+            %                 postProcessComplete = 0;
+            %                 SIM.SimMode = 8;
+            %             end
+            % 
+            %             % Combine SOLN
+            %             if SIM.REDUCESOLN
+            %                 IDX = find(SOLN_Next.x> SOLN.x(end),1);
+            %                 SOLN.x = [SOLN.x , SOLN_Next.x(1,IDX:end) ];
+            %                 SOLN.y = [SOLN.y , SOLN_Next.y(:,IDX:end) ];
+            %             else
+            %                 SOLN = SOLN_Next;
+            %             end
+            %         end
+            %     else
+            %         SIM.tspan = [0, SIM.profile_time(end)];
+            %         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
+            %     end
+            % 
+            %     % %%%%% When having to run smaller time steps %%%%%%%%%%%Testing!!!!!!!!!!!!!!!!!!!!!!!!!!
+            %     %     old_tFinal = SIM.profile_time(end);
+            %     %     t_intermed = 0.99*SIM.Tswitch;
+            %     % 
+            %     %     %Run first step
+            %     %         options = odeset('RelTol' ,Tol.Rel,      ...
+            %     %                          'AbsTol' ,Tol.Abs,      ...
+            %     %                          'Mass'   ,SIM.M,        ...
+            %     %                          'MaxStep',0.01*SIM.Tswitch);
+            %     %                          %'Events' ,events);%,       ...
+            %     % 
+            %     %         SIM.tspan = [0,t_intermed]; 
+            %     %         i_user = 0;
+            %     %         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),SIM.tspan,SIM.SV_IC,options);
+            %     % 
+            %     %     %Run the rest
+            %     %         IC_new = SOLN.y(:,end);
+            %     %         options = odeset('RelTol' ,Tol.Rel,      ...
+            %     %                          'AbsTol' ,Tol.Abs,      ...
+            %     %                          'Mass'   ,SIM.M,        ...
+            %     %                          'MaxStep',0.99*SIM.Tswitch);
+            %     %                          %'Events' ,events);%,       ...
+            %     % 
+            %     %         % SIM.tspan = [0,t_intermed]; 
+            %     %         % i_user = 0;
+            %     % 
+            %     %         SOLN = odextend(SOLN, @(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user) , old_tFinal , IC_new , options);
+            % 
+            %     if FLAG.SaveSolnDiscreteTime
+            %         new_tfinal = SOLN.x(end);
+            %         save_time = (0:SIM.SaveTimeStep:new_tfinal)';
+            %         t_soln = save_time;
+            %         SV_soln = (deval(SOLN,save_time))';
+            %     else
+            %         t_soln  = SOLN.x';
+            %         SV_soln = SOLN.y';
+            %     end
+            % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- EIS from Stitching PRBS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 9
             % Load in PRBS results

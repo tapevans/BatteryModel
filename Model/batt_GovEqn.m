@@ -69,7 +69,10 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     %                           - q_conv(i)...
     %                           + q_gen(i)  )...
     %                         / ( props(P.rho,i) * props(P.c_p,i) );
-        dSVdt_AN(P.T, i) = -(SV(P.T,i) - SIM.T_inf);
+
+        % dSVdt_AN(P.T, i) = -(SV(P.T,i) - SIM.T_inf);
+
+        dSVdt_AN(P.T, i) = 0 ;
         
         % phi_el                    
         dSVdt_AN(P.del_phi , i) =  (AN.A_c / AN.A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
@@ -110,7 +113,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     for i = 1:N.N_CV_SEP 
         index_offset = N.N_CV_AN + i;  
         % Temp
-        dSVdt_SEP(P.SEP.T, i) = -(SV(P.T,index_offset) - SIM.T_inf);
+        dSVdt_SEP(P.SEP.T, i) = 0 ;
+        % dSVdt_SEP(P.SEP.T, i) = -(SV(P.T,index_offset) - SIM.T_inf);
     %     dSVdt_SEP(P.SEP.T, i) = (  -(q_cond(index_offset+1) - q_cond(index_offset))/ SEP.del_x...
     %                                - q_conv(index_offset)...
     %                                + q_gen(index_offset)  )...
@@ -129,7 +133,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     for i = 1:N.N_CV_CA
         index_offset = N.N_CV_AN + N.N_CV_SEP + i;  
         % Temp
-        dSVdt_CA(P.T, i) =  -(SV(P.T,index_offset) - SIM.T_inf);
+        dSVdt_CA(P.T, i) = 0 ;
+        % dSVdt_CA(P.T, i) =  -(SV(P.T,index_offset) - SIM.T_inf);
     % 	dSVdt_CA(P.T, i) =  (  -(q_cond(index_offset+1) - q_cond(index_offset))/ CA.del_x...
     %                            - q_conv(index_offset)...
     %                            + q_gen(index_offset)  )...

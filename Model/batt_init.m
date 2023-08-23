@@ -139,34 +139,34 @@ end
 %% Numerical Discretization
 % Del-x of each region
     % ---- Anode ----
-    AN.del_x = AN.L/(N.N_CV_AN);
-    AN.x_vec = (AN.del_x/2):(AN.del_x):(AN.L-AN.del_x/2);
-    AN.x_half_vec = 0 : AN.del_x : AN.L;
+        AN.del_x = AN.L/(N.N_CV_AN);
+        AN.x_vec = (AN.del_x/2):(AN.del_x):(AN.L-AN.del_x/2);
+        AN.x_half_vec = 0 : AN.del_x : AN.L;
     
     % ---- Separator ----
-    SEP.del_x = SEP.L/(N.N_CV_SEP);
-    SEP.x_vec = (AN.L + SEP.del_x/2):(SEP.del_x):(AN.L+SEP.L-SEP.del_x/2);
-    SEP.x_half_vec = AN.L : SEP.del_x : (AN.L+SEP.L);
+        SEP.del_x = SEP.L/(N.N_CV_SEP);
+        SEP.x_vec = (AN.L + SEP.del_x/2):(SEP.del_x):(AN.L+SEP.L-SEP.del_x/2);
+        SEP.x_half_vec = AN.L : SEP.del_x : (AN.L+SEP.L);
     
     % ---- Cathode ----
-    CA.del_x = CA.L/(N.N_CV_CA);
-    CA.x_vec = ((AN.L+SEP.L) + CA.del_x/2):(CA.del_x):((AN.L+SEP.L+CA.L)-CA.del_x/2);
-    CA.x_half_vec = (AN.L+SEP.L) : CA.del_x : (AN.L+SEP.L+CA.L);
+        CA.del_x = CA.L/(N.N_CV_CA);
+        CA.x_vec = ((AN.L+SEP.L) + CA.del_x/2):(CA.del_x):((AN.L+SEP.L+CA.L)-CA.del_x/2);
+        CA.x_half_vec = (AN.L+SEP.L) : CA.del_x : (AN.L+SEP.L+CA.L);
     
     % Overall X-position Vector
-    SIM.x_vec      = [AN.x_vec     , SEP.x_vec            , CA.x_vec            ];
-    SIM.x_half_vec = [AN.x_half_vec, SEP.x_half_vec(2:end), CA.x_half_vec(2:end)];
+        SIM.x_vec      = [AN.x_vec     , SEP.x_vec            , CA.x_vec            ]; % [m], Position of the control volume's center
+        SIM.x_half_vec = [AN.x_half_vec, SEP.x_half_vec(2:end), CA.x_half_vec(2:end)]; % [m], Position of the control volume's edges
     
 % Del-r of each region
     % ---- Anode ----
-    AN.del_r = AN.r_p/(N.N_R_AN);
-    AN.r_vec = (AN.del_r/2):AN.del_r:AN.r_p-(AN.del_r/2);
-    AN.r_half_vec = 0:AN.del_r:AN.r_p;
+        AN.del_r = AN.r_p/(N.N_R_AN);
+        AN.r_vec = (AN.del_r/2):AN.del_r:AN.r_p-(AN.del_r/2);
+        AN.r_half_vec = 0:AN.del_r:AN.r_p;
     
     % ---- Cathode ----
-    CA.del_r = CA.r_p/(N.N_R_CA);
-    CA.r_vec = (CA.del_r/2):CA.del_r:CA.r_p-(CA.del_r/2);
-    CA.r_half_vec = 0:CA.del_r:CA.r_p;
+        CA.del_r = CA.r_p/(N.N_R_CA);
+        CA.r_vec = (CA.del_r/2):CA.del_r:CA.r_p-(CA.del_r/2);
+        CA.r_half_vec = 0:CA.del_r:CA.r_p;
 
 
 %% Various Needed Calculations
@@ -242,6 +242,17 @@ end
         
         % Apply Brug to PROPS
         PROPS = PROPS .* CONS.BRUG;
+    end
+
+% Initial Thermal Gradient
+    if FLAG.InitialThermalGradient
+        L_tot = SIM.x_vec(end) - SIM.x_vec(1);
+        Delta_temp = SIM.CA_Temp - SIM.AN_Temp;
+        Slope = Delta_temp / L_tot;
+        temp_fnc = @(x) Slope.*x + SIM.AN_Temp;
+        Temp_vec = temp_fnc(SIM.x_vec);
+    else
+        Temp_vec = SIM.Temp_start * ones( 1 , N.N_CV_tot );
     end
 
 
@@ -496,8 +507,9 @@ end
 % ---- Anode ----
     for i = 1:N.N_CV_AN
         index_offset = (i-1)*N.N_SV_AN; 
+        CV_offset    = i;
         % Temp
-            SV_IC(index_offset + P.T)       =  SIM.Temp_start;
+            SV_IC(index_offset + P.T)       =  Temp_vec(CV_offset);
         % delta phi
             SV_IC(index_offset + P.del_phi) =  voltage_ini_an;
         % phi_ed
@@ -519,8 +531,9 @@ end
 % ---- Separator ----
     for i = 1:N.N_CV_SEP
         index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
+        CV_offset    = i + N.N_CV_AN;
         % Temp
-            SV_IC(index_offset + P.SEP.T)           =  SIM.Temp_start;
+            SV_IC(index_offset + P.SEP.T)           =  Temp_vec(CV_offset);
         % phi_el
             SV_IC(index_offset + P.SEP.phi_el)      = -voltage_ini_an;
         % C_Li^+
@@ -530,8 +543,9 @@ end
 % ---- Cathode ----
     for i = 1:N.N_CV_CA
         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+        CV_offset    = i + N.N_CV_AN + N.N_CV_SEP;
         % Temp
-            SV_IC(index_offset + P.T)       =  SIM.Temp_start;
+            SV_IC(index_offset + P.T)       =  Temp_vec(CV_offset);
         % delta phi
             SV_IC(index_offset + P.del_phi) =  voltage_ini_ca;
         % phi_ed

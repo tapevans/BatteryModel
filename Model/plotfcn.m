@@ -8,7 +8,7 @@ function plotfcn(filename)
     FLAG.COM       = 0; % Conservation of Mass Check
     FLAG.COC       = 0; % Conservation of Charge Check
     
-    FLAG.TEMP      = 0; % Cell Temperature Profile %%%%%%%%%%%%%These plots need to be fixed
+    FLAG.TEMP      = 1; % Cell Temperature Profile %%%%%%%%%%%%%These plots need to be fixed
     
     FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
     FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
@@ -111,42 +111,42 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
 
     %% Conservation of Mass Check
     if FLAG.COM
-    figure
-    plot(t_soln,mass_error,'LineWidth',2)
-    title('Conservation of Mass Check')
-    xlabel('Time (s)')
-    ylabel('Error [kmol]')
+        figure
+        plot(t_soln,mass_error,'LineWidth',2)
+        title('Conservation of Mass Check')
+        xlabel('Time (s)')
+        ylabel('Error [kmol]')
     end
     
 
     %% Conservation of Charge Check
     if FLAG.COC
-    figure
-    plot(t_soln,CoC,'LineWidth',2)
-    title('Conservation of Charge Check')
-    xlabel('Time (s)')
-    ylabel('Error [A m^{-2}]')
+        figure
+        plot(t_soln,CoC,'LineWidth',2)
+        title('Conservation of Charge Check')
+        xlabel('Time (s)')
+        ylabel('Error [A m^{-2}]')
     end
     
 
     %% Temperature
     if FLAG.TEMP
-    figure
-    hold on
-    for i = 1:length(time_des)
-        plot(SIM.x_vec,TemperatureC(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southwest';
-    title('Temperature')
-    xlabel('X Position')
-    ylabel('Temperature (C)')
-    xlim([0,SIM.x_half_vec(end)])
-
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:length(time_des)
+            plot(SIM.x_vec,TemperatureC(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southwest';
+        title('Temperature')
+        xlabel('X Position')
+        ylabel('Temperature (C)')
+        xlim([0,SIM.x_half_vec(end)])
+    
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
     
 
