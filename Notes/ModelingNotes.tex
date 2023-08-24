@@ -1,0 +1,970 @@
+\documentclass[12pt]{article}
+
+\usepackage{graphicx}
+
+% Dr. Kee's example packages
+%\usepackage{harpoon}
+%\usepackage{chemarrow}
+%\usepackage{lscape}
+%\usepackage{amssymb}
+%\usepackage{amsmath}
+%\usepackage{threeparttable}
+%\usepackage{booktabs, caption, makecell}
+
+% My packages
+\usepackage[dvipsnames]{xcolor}
+\usepackage{amssymb}
+\usepackage{amsmath}
+%\usepackage{booktabs, caption, makecell}
+\usepackage{cancel}
+%\usepackage{chemarrow}
+%%\usepackage{cite}
+\usepackage[margin=0.75in, marginparwidth=2cm, marginparsep=2cm]{geometry} % Margins
+\usepackage{graphicx}
+%\usepackage{harpoon}
+\usepackage[none]{hyphenat}
+%%\usepackage[hidelinks]{hyperref}
+%\usepackage{lscape}
+\usepackage{multirow}
+\usepackage{pdfpages}
+%%\usepackage{url}
+%\usepackage{threeparttable}
+\usepackage{subcaption}
+%%\usepackage{wrapfig}
+
+%\usepackage{soul}
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{0308}{\"}
+\usepackage{listings}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+
+\begin{document}
+\lstset{language=Matlab,%
+	%basicstyle=\color{red},
+	breaklines=true,%
+	morekeywords={matlab2tikz},
+	keywordstyle=\color{blue},%
+	morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},
+	identifierstyle=\color{black},%
+	stringstyle=\color{mylilas},
+	commentstyle=\color{mygreen},%
+	showstringspaces=false,%without this there will be a symbol in the places where there is a space
+	numbers=left,%
+	numberstyle={\tiny \color{black}},% size of the numbers \footnotesize
+	numbersep=10pt, % this defines how far the numbers are from the text
+	emph=[1]{for,end,break},emphstyle=[1]\color{red}, %some words to emphasise
+	%emph=[2]{word1,word2}, emphstyle=[2]{style},    
+}
+
+	\parskip 6 pt
+	
+	\begin{center}
+		{\large\bf Model Formulation Notes}\\
+		T.A.P. Evans\\
+		October 19, 2021
+	\end{center}
+
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{New Stuff}
+	\subsection{COE}
+		\begin{gather}
+			
+		\end{gather}
+\section{Introduction}
+	In 1993 and 1994, Doyle, Fuller, and Newman \cite{DFN93,FDN94} published a model that we know today as the pseudo-2- dimensional (P2D) model. To this day, the P2D model is the most widely used model for predicting the response of a battery under load. The goal of this research is to create our own Li-ion battery model that will improve upon the P2D model; using ideas such as distributed charge transfer and including a binder phase. 
+	%To predict the voltage response of a battery, this model considers charge-transfer at the surface of the active materials and species transport properties throughout the electrodes and electrolyte (Section \ref{sec:GovnEqns}). Implementation of an equivalent circuit is used to describe the governing equations (Section \ref{sec:EquivCirc}). Nodal method, used in calculating circuit properties, is used to derive the system of equations representing the equivalent circuit model. The system is solved using an ODE solver capable of handling a system of DAEs (Section \ref{sec:Numerical}).
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Assumptions} \label{sec:Assumptions}
+	\begin{figure} [h]
+		\centering
+		\includegraphics[width=0.7\linewidth]{Images/OverallBattery_2}
+		\caption{High level overview of a Li-ion battery during discharge}
+		\label{fig:Overall_Battery}
+	\end{figure}
+	%In contrast to the P2D model, this model does not resolve the concentration gradients of lithium in the radial direction of the active material. Instead, all dependent variables are resolved in a single coordinate direction. This direction is considered the x-direction and is normal to the current collector. 
+	Currently this model assumes a binary electrolyte hence only two ions are present in the solution. This assumption may be changed in future iterations of this model. Transport of any species uses the assumption of porous media transport where effective transport coefficients are found using the Bruggeman relation. Another assumption used is the electrolyte and active material have no bulk motion. Due to this assumption, convective transport in the electrolyte is negligible. At the surface of the active material, a single-step chemical reaction is used. The elementary reaction considered is
+	\begin{equation} \label{eqn:elementary_rxn}
+		\textrm{Li(am)} \leftrightharpoons \textrm{Li}^+ \textrm{(el)} + \textrm{e}^- \textrm{(am)}
+	\end{equation}
+	The rate and direction at which this reaction proceeds is governed by the Butler Volmer equation. Before this chemical reaction can take place, all reactants must be present. \\ 
+	\\
+	For a Li-ion to reach or leave the surface of the active material, it must travel through a double layer and the surface-electrolyte interface (SEI). The surface here refers to the surface of the active material. The double layer is a region where charge is drawn to or repelled from a location in the electrolyte due to an electric field. This build of charges can be modeled as a capacitor and is always present. The double layer has an effect on the growth of the SEI during the formation cycle of a battery \cite{MFLNKEB20}. The rate of growth of SEI layer is higher during a formation cycle than it is during normal operation of the battery. The initial formation of the SEI layer is due to side reactions that are more favorable than the chemical reaction that intercalates a lithium atom into the active material. These side reaction consume useable lithium ions as they become a part of the SEI layer. The initial growth of the SEI slows down once the SEI is greater than the tunneling length of an electron \cite{ZSYZWRCXBDBWXXWZ20}. For this model, it is assumed that only lithium ions have the ability to transport through the SEI and that electrons exist on the surface of the active material and binder. This model currently does not include the capacity loss of a battery due to the consumed lithium ions during formation.\\ 
+	\\
+	Figure \ref{fig:Overall_Battery} depicts a lithium ion battery during discharge operation. In this model, the external load current is positive during a discharge operation. When this occurs, the chemical reaction (Equation \ref{eqn:elementary_rxn}) proceeds in the forward (anodic) direction in the anode region, producing an electron and lithium ion. Lithium ion in the electrolyte travels (transport)  through the separator and into the cathode region. At the same time, the electron passes through the external circuit, providing power to the load, and then back into the battery through the cathode current collector. In the cathode region, the chemical reaction proceeds in the reverse (cathodic) direction, consuming both the lithium ion and electron and producing a lithium atom in the active material. During the operation of the battery, conservation of energy, mass and charge must be upheld in all phases.\\
+	\\
+	In summary, the assumptions used are
+	\begin{itemize}
+		%\item All gradients are in the x-direction
+		\item Binary electrolyte
+		\item Porous media transport, using Nernst-Planck and Bruggeman
+		\item No bulk motion of electrolyte
+		\item Single-step chemical reaction
+		\item Li$^+$ exist in the electrolyte and SEI
+		\item Li exist in the active material
+		\item Electrons exist on the surface of active material and in the binder
+		\item Anodic reaction occurs in the anode during discharge operation. This is the positive current direction.
+	\end{itemize}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Governing Equations}
+	A balance equation can be used to represent the conservation of each property. 
+	\begin{equation} \label{eqn:balance}
+		\dot{X}_\text{st} = \dot{X}_\text{in} - \dot{X}_\text{out} + \dot{X}_\text{gen}
+	\end{equation}
+	Unless otherwise noted, all fluxes into and out of a given control volumes are defined positive in the positive coordinate direction. See Figure \ref{fig:ControlVolume}\\
+	\begin{figure} [h]
+		\centering
+		\includegraphics[width=0.7\linewidth]{Images/ControlVolume}
+		\caption{}
+		\label{fig:ControlVolume}
+	\end{figure}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\subsection{Conservation of Energy}
+		Conservation of energy is derived in the cartesian coordinate system. Each control volume includes the volume of the active material and the electrolyte. \\
+		To find the rate at which energy is stored in the control volume, the time rate of energy per unit volume is integrated over the entire differential control volume. 
+		\begin{gather} 
+			\dot{E}_\text{st} = \int_{CV} \frac{d}{dt}\left( \frac{E}{\delta V} \right) dV \\
+			\dot{E}_\text{st} = \int_{CV} \rho \frac{d}{dt}\Big( c_p T \Big) dxdydz \\
+			\dot{E}_\text{st} =  \rho c_p \Delta x \Delta y \Delta z \frac{dT}{dt}
+		\end{gather}
+		The rate at which energy leaves the control volume is described by the heat flux equation. This equation can be derived in many ways. I start by integrating the flux leaving the surface of the control volume. Since this derivation is only performed in the x-direction of the coordinate system, the surface integral can be split into its two surface components: positive (pos) and negative (neg). The positive component is the face where $\dot{X}_\text{out}$ is located in Figure \ref{fig:ControlVolume}. Similarly, the negative component is the face where $\dot{X}_\text{in}$ is located.
+		\begin{gather}
+			\dot{E}_\text{in} - \dot{E}_\text{out} = - \int_{CS} \mathbf{q}'' \cdot \mathbf{n} dA\\
+			\dot{E}_\text{in} - \dot{E}_\text{out} = - \left(\int_{S_\text{neg}} (\mathbf{q}'' \cdot \mathbf{n}) dA + \int_{S_\text{pos}} (\mathbf{q}'' \cdot \mathbf{n}) dA\right)\\
+			\dot{E}_\text{in} - \dot{E}_\text{out} = - \left(\int_{S_\text{neg}} -q_\text{neg}'' dA + \int_{S_\text{pos}} q_\text{pos}'' dA\right)\\
+			\dot{E}_\text{in} - \dot{E}_\text{out} = - \left(-q_\text{neg}'' dA_\text{neg}  + q_\text{pos}'' A_\text{pos} \right)\\
+			\dot{E}_\text{in} - \dot{E}_\text{out} = - \left(-q_\text{neg}'' \Delta y \Delta z  + q_\text{pos}'' \Delta y \Delta z \right)\\
+			\dot{E}_\text{in} - \dot{E}_\text{out} = \left(q_\text{neg}'' - q_\text{pos}''  \right)\Delta y \Delta z
+		\end{gather}
+		where
+		\begin{equation}
+			\mathbf{q}'' = -k \nabla T
+		\end{equation}
+		Lastly, a source of energy within the control volume is the heat generation term.
+		\begin{equation} 
+			\dot{E}_\text{gen} = \int_{CV} q_\text{gen}''' dV = q_\text{gen}''' \Delta x \Delta y \Delta z
+		\end{equation}
+		$q_\text{gen}'''$ could be from multiple sources such as charge transfer or chemical reaction.\\
+		Putting all of this together, the conservation of energy equation is 
+		\begin{equation}
+			\rho c_p \Delta x \Delta y \Delta z \frac{dT}{dt} = \left(q_\text{neg}'' - q_\text{pos}''  \right)\Delta y \Delta z + q_\text{gen}''' \Delta x \Delta y \Delta z
+		\end{equation}
+		This equation can now be simplified to 
+		\begin{equation}
+			\rho c_p \frac{dT}{dt} = \frac{q_\text{neg}'' - q_\text{pos}''}{\Delta x} + q_\text{gen}''' 
+		\end{equation}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\subsection{Conservation of Charge}
+		\begin{figure} [h]
+			\centering
+			\includegraphics[width=0.7\linewidth]{Images/EquivalentCircuit/SEI_2}
+			\caption{}
+			\label{fig:SEI}
+		\end{figure}
+		Due to geometry and the complex nature of the SEI, conservation of charge uses a surface balance rather than a volumetric balance. This model assumes that charge produced from the reaction must travel through the SEI and then the double layer before it can reach the electrolyte. The flux of charge between each region must balance at the surface between each region. This is similar to circuit analysis where current entering a node must equal the current leaving the node. \\
+		In the active material region, charge is not typically stored.% but this model uses a capacitive element for numerical performance.
+		Therefore the charge flux into and out of the control volume is balanced by the charge produced at the surface of the active material.
+		\begin{gather}
+			0 = \frac{i_\text{am,neg} - i_\text{am,pos}}{\Delta x} - \dot{s}_{\text{Li}^+}F A_\text{s}
+		\end{gather}
+		where
+		\begin{equation}
+			i_\text{am} = -\sigma \nabla \phi_{\text{am}}
+		\end{equation}
+		The SEI layer that forms over the active material surface resists the movement of Li$^+$ from the active material to the electrolyte.
+		\begin{equation}
+			V_\text{SEI,am} - V_\text{SEI,el} = R_\text{SEI} \dot{s}_{\text{Li}^+}F A_\text{s}
+		\end{equation}
+		The double layer acts as a leaky capacitor and is modeled as a capacitor in parallel with a resistor. At the interface between the SEI and the double layer the surface balance is
+		\begin{equation}
+			C_\text{dl}\frac{d }{dt}\Big(V_\text{SEI,el} - \phi_\text{el}\Big) = -\left(\frac{V_\text{SEI,el} - V_\text{SEI,am}}{R_\text{SEI}} + \frac{V_\text{SEI,el} - \phi_\text{el}}{R_\text{dl}} \right)
+		\end{equation}
+		The final interface is between the double layer and the electrolyte. Its surface balance is
+		\begin{equation}
+			C_\text{dl}\frac{d }{dt}\Big(\phi_\text{el} - V_\text{SEI,el}\Big) = \frac{i_\text{el,neg} - i_\text{el,pos}}{\Delta x} -\left(\frac{\phi_\text{el} - V_\text{SEI,el}}{R_\text{dl}} \right)
+		\end{equation}
+		where 
+		\begin{equation}
+			i_\text{el} = -\kappa \nabla \phi_{\text{el}} - 2\frac{\kappa RT}{F}\left(1+\frac{\partial \text{ln} f_\pm}{\partial c_{\text{Li}^+}} \right) \left( t_+^0 - 1 \right) \nabla \text{ln} c_{\text{Li}^+}
+		\end{equation}
+		In this derivation, $\dot{s}_{\text{Li}^+}$ and $A_\text{s}$ are the molar production rate per unit area of active material and the specific area of the active material respectively. $F$, $R$, and $T$ are Faraday's constant, universal gas constant, and temperature respectively. $\sigma$ and $\kappa$ are electronic and ionic conductivity respectively.
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\subsection{Conservation of Species}
+		Starting with the integral form, conservation of species is
+		\begin{gather}
+			\int_{CV} \frac{d}{dt}\left(\frac{m_k}{\delta V_m}\right) dV = -\int_{CS} (\mathbf{j}_k \cdot \mathbf{n}) dA + \int_{CS} \dot{\omega}_k W_k dV
+		\end{gather}
+		where $m_k$ is the mass of species $k$, $\delta V_m$ is the volume of phase $m$ in which species $k$ exists, $\mathbf{j}_k$ is the mass flux of species $k$, $\dot{\omega}_k$ is the volumetric molar production rate of species $k$, and $W_k$ is the molecular weight of species $k$. Molecular weight is 
+		\begin{equation}
+			W_k = \frac{m_k}{n_k}
+		\end{equation}
+		where $n_k$ is the number of moles of species $k$. Substituting for $m_k$ and dividing by the molecular weight, 
+		\begin{gather}
+			\int_{CV} \frac{d}{dt}\left(\frac{n_kW_k}{\delta V_m}\right) dV = -\int_{CS} (\mathbf{j}_k \cdot \mathbf{n}) dA + \int_{CV} \dot{\omega}_k W_k dV\\
+			\int_{CV} \frac{d}{dt}\left(\frac{n_k}{\delta V_m}\right) dV = -\int_{CS} (\mathbf{J}_k \cdot \mathbf{n}) dA + \int_{CV} \dot{\omega}_k dV\\
+			\int_{CV} \frac{dc_k}{dt} dV = -\int_{CS} (\mathbf{J}_k \cdot \mathbf{n}) dA + \int_{CV} \dot{\omega}_k dV
+		\end{gather}
+		where $c_k$ is the concentration of species $k$ and $\mathbf{J}_k$ is the molar flux of species $k$.\\
+		Similarly to conservation of charge, this model only tracks two species directly: Li and Li$^+$. Li exists in the active material phase which is discretized in spherical coordinates while Li$^+$ exists in the electrolyte phase and is discretized in cartesian coordinates.
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		\subsubsection{Li$^+$ in the electrolyte} 
+			\begin{gather}
+				\int_{CV} \frac{dc_{\text{Li}^+}}{dt} dV = -\int_{CS} (\mathbf{J}_{\text{Li}^+} \cdot \mathbf{n}) dA + \int_{CV} \dot{\omega}_{\text{Li}^+} dV\\
+				%
+				\delta V_\text{el} \frac{dc_{\text{Li}^+}}{dt} = -\left(\int_{S_\text{neg}} (\mathbf{J}_{\text{Li}^+,\text{neg}} \cdot \mathbf{n}) dA + \int_{S_\text{pos}} (\mathbf{J}_{\text{Li}^+,\text{pos}} \cdot \mathbf{n}) dA\right) +  \dot{\omega}_{\text{Li}^+} \delta V_\text{el}\\
+				%
+				\delta V_\text{el} \frac{dc_{\text{Li}^+}}{dt} = -\left( -J_{\text{Li}^+,\text{neg}} \Delta y \Delta z + J_{\text{Li}^+,\text{pos}}\Delta y \Delta z \right) +  \dot{\omega}_{\text{Li}^+} \delta V_\text{el}\\
+				%
+				\delta V_\text{el} \frac{dc_{\text{Li}^+}}{dt} = \left( J_{\text{Li}^+,\text{neg}} - J_{\text{Li}^+,\text{pos}} \right)\Delta y \Delta z +  \dot{\omega}_{\text{Li}^+} \delta V_\text{el}
+			\end{gather}
+			At this point, it is useful to define the volume fraction
+			\begin{equation}
+				\varepsilon_m = \frac{V_m}{V}
+			\end{equation}
+			Substituting for the differential volume of the electrolyte
+			\begin{gather}
+				\varepsilon_{\text{el}} \delta V \frac{dc_{\text{Li}^+}}{dt} = \left( J_{\text{Li}^+,\text{neg}} - J_{\text{Li}^+,\text{pos}} \right)\Delta y \Delta z + \varepsilon_{\text{el}} \dot{\omega}_{\text{Li}^+}  \delta V\\
+				%
+				\varepsilon_{\text{el}} \Delta x \Delta y \Delta z \frac{dc_{\text{Li}^+}}{dt} = \left( J_{\text{Li}^+,\text{neg}} - J_{\text{Li}^+,\text{pos}} \right)\Delta y \Delta z + \varepsilon_{\text{el}} \dot{\omega}_{\text{Li}^+}  \Delta x \Delta y \Delta z\\
+				%
+				\varepsilon_{\text{el}}  \frac{dc_{\text{Li}^+}}{dt} = \frac{ J_{\text{Li}^+,\text{neg}} - J_{\text{Li}^+,\text{pos}} }{\Delta x} + \varepsilon_{\text{el}} \dot{\omega}_{\text{Li}^+} 
+			\end{gather}
+			Since the chemical reaction takes place at the surface between the active material and the electrolyte, the volumetric production rate must be converted into a surface production rate.
+			\begin{equation}
+				\dot{\omega}_{\text{Li}^+} = \dot{s}_{\text{Li}^+}A_\text{s}
+			\end{equation}
+			The governing equation is now
+			\begin{gather}
+				\varepsilon_{\text{el}}  \frac{dc_{\text{Li}^+}}{dt} = \frac{ J_{\text{Li}^+,\text{neg}} - J_{\text{Li}^+,\text{pos}} }{\Delta x} + \varepsilon_{\text{el}} \dot{s}_{\text{Li}^+}A_\text{s} 
+			\end{gather}
+			where
+			\begin{equation}
+				\mathbf{J}_{\text{Li}^+} = - D_\text{el} \nabla c_{\text{Li}^+} + i_\text{el} \frac{t_+^0}{F}
+			\end{equation}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		\subsubsection{Li in the active material} 
+			\begin{gather}
+				\int_{CV} \frac{dc_{\text{Li}}}{dt} dV = -\int_{CS} (\mathbf{J}_{\text{Li}} \cdot \mathbf{n}) dA + \int_{CV} \dot{\omega}_{\text{Li}} dV\\
+			\end{gather}
+			The differential control volume and area for a sphere are
+			\begin{gather}
+				dV = r^2\text{sin}(\theta) d\phi d\theta dr\\
+				dA = r^2\text{sin}(\theta) d\phi d\theta
+			\end{gather}
+			\begin{gather}
+				\begin{split}
+					\int_{r_\text{neg}}^{r_\text{pos}} \int_{0}^{\pi} \int_{0}^{2\pi} \frac{dc_{\text{Li}}}{dt} r^2\text{sin}(\theta) d\phi d\theta dr = &
+					-\int_{0}^{\pi} \int_{0}^{2\pi} (\mathbf{J}_{\text{Li}} \cdot \mathbf{n}) r^2\text{sin}(\theta) d\phi d\theta \\
+					&+ \int_{r_\text{neg}}^{r_\text{pos}} \int_{0}^{\pi} \int_{0}^{2\pi} \dot{\omega}_{\text{Li}} r^2\text{sin}(\theta) d\phi d\theta dr
+				\end{split}
+			\end{gather}
+			Assuming there are no variation in the $\phi$ and $\theta$ direction, this becomes
+			\begin{gather}
+				\frac{4}{3} \pi \left( r_\text{pos}^3 - r_\text{neg}^3 \right)\frac{dc_{\text{Li}}}{dt}  =
+				-\int_{0}^{\pi} \int_{0}^{2\pi} (\mathbf{J}_{\text{Li}} \cdot \mathbf{n}) r^2\text{sin}(\theta) d\phi d\theta 
+				+ \frac{4}{3} \pi \left( r_\text{pos}^3 - r_\text{neg}^3 \right) \dot{\omega}_{\text{Li}}
+			\end{gather}
+			The flux integral is split between its positive and negative face
+			\begin{gather}
+				\begin{split}
+					\frac{4}{3} \pi \left( r_\text{pos}^3 - r_\text{neg}^3 \right)\frac{dc_{\text{Li}}}{dt}  = &
+					-\left(  \int_{0}^{\pi} \int_{0}^{2\pi} -J_{\text{Li,neg}}  r_\text{neg}^2\text{sin}(\theta) d\phi d\theta  
+					+ \int_{0}^{\pi} \int_{0}^{2\pi}  J_{\text{Li,pos}}  r_\text{pos}^2\text{sin}(\theta) d\phi d\theta \right)\\
+					&+ \frac{4}{3} \pi \left( r_\text{pos}^3 - r_\text{neg}^3 \right) \dot{\omega}_{\text{Li}}
+				\end{split}
+				\\
+				%
+				\frac{4}{3} \pi \left( r_\text{pos}^3 - r_\text{neg}^3 \right)\frac{dc_{\text{Li}}}{dt}  =
+				-4\pi\left(   -J_{\text{Li,neg}}  r_\text{neg}^2 + J_{\text{Li,pos}}  r_\text{pos}^2 \right)
+				+ \frac{4}{3} \pi \left( r_\text{pos}^3 - r_\text{neg}^3 \right) \dot{\omega}_{\text{Li}}\\
+				%
+				\left( r_\text{pos}^3 - r_\text{neg}^3 \right)\frac{dc_{\text{Li}}}{dt}  =
+				3\left( r_\text{neg}^2  J_{\text{Li,neg}}   - r_\text{pos}^2 J_{\text{Li,pos}}   \right)
+				+  \left( r_\text{pos}^3 - r_\text{neg}^3 \right) \dot{\omega}_{\text{Li}}\\
+				%
+				\frac{dc_{\text{Li}}}{dt}  =
+				3\frac{ r_\text{neg}^2  J_{\text{Li,neg}}   - r_\text{pos}^2 J_{\text{Li,pos}}   }{r_\text{pos}^3 - r_\text{neg}^3}
+				+  \dot{\omega}_{\text{Li}}
+			\end{gather}
+			As done before, the production rate needs to be converted
+			\begin{equation}
+				\dot{\omega}_{\text{Li}} = \dot{s}_{\text{Li}}A_\text{s}
+			\end{equation}			
+			From the elementary reaction (Equation \ref{eqn:elementary_rxn}), one can see that
+			\begin{equation}
+				\dot{s}_{\text{Li}} = -\dot{s}_{\text{Li}^+}
+			\end{equation}			
+			Therefore, the governing equation becomes
+			\begin{equation}
+				\frac{dc_{\text{Li}}}{dt}  =
+				3\frac{ r_\text{neg}^2  J_{\text{Li,neg}}   - r_\text{pos}^2 J_{\text{Li,pos}}   }{r_\text{pos}^3 - r_\text{neg}^3}
+				-  \dot{s}_{\text{Li}^+}A_\text{s}
+			\end{equation}
+			where
+			\begin{equation}
+				\mathbf{J}_{\text{Li}} = - D_\text{am} \nabla c_{\text{Li}}
+			\end{equation}
+			Note, since there is no chemical reaction within the active material, the source term can be removed from the equation and instead written as a flux boundary condition on the surface of the particle.
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\subsection{Porous Media Transport}
+	In this model, flux of a species is only considered in the direction normal to the current collectors. In reality, a species, such as Li$^+$ in the electrolyte, travels through the microstructure of the electrodes and separators. The path that it takes is not a straight line, rather, the path through the microstructure is tortuous. The tortuosity of this path is defined by the Bruggeman empirical relation
+	\begin{equation}
+		\tau_m = \gamma_m \varepsilon_m^{1-p_m}
+	\end{equation}
+	where $\gamma_m$ and $p_m$ are found through experimental correlations. Typically $\gamma_m = 1$ and $p_m = 1.5$. Using the Bruggeman relation, an effective value can be found for transport coefficient. For parameter $\chi$, the effective value is 
+	\begin{equation}
+		\chi^{\text{eff}} = \frac{\varepsilon_m}{\tau_m}\chi
+	\end{equation}
+	As an example, the effective diffusion coefficient through the cathode's active material is
+	\begin{equation}
+		D_{\text{ca}}^{\text{eff}} = \frac{\varepsilon_\text{ca}}{\tau_\text{ca}}D_{\text{ca}}
+	\end{equation}
+	where
+	\begin{equation}
+		\tau_\text{ca} = \gamma_\text{ca} \varepsilon_\text{ca}^{1-p_\text{ca}}
+	\end{equation}
+	This correction factor will be applied to coefficients that we deem necessary to apply it to.
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\subsection{Charge-Transfer} \label{sec:Charge-Transfer}
+	The source and sink term in the conservation of charge equations are governed by the charge-transfer reaction which is governed by the Butler-Volmer equation.
+	\begin{equation}
+		\dot{s}_{\textrm{Li}^+} = i_\circ \left[\textrm{exp}\left(\frac{\alpha_\textrm{a}nF}{RT}\eta\right)
+		-\textrm{exp}\left(\frac{-\alpha_\textrm{c}nF}{RT}\eta \right)\right]
+	\end{equation}
+	\begin{equation}
+		i_\circ = k_{\text{ct}} (c_{\text{Li,surf}})^{a}( c_{\text{Li,max}} - c_{\text{Li,surf}})^{b} (c_{\text{Li}^+})^{c}
+	\end{equation}
+	where $\alpha_\textrm{a}$ and $\alpha_\textrm{c}$ are the anodic and cathodic rates, $n$ is the number of electrons transferred in the chemical reaction, $F$ is Faraday's constant, $R$ is the universal gas constant, $T$ is the temperature, $k_{ct}$ is the reaction rate coefficient, $a$, $b$, $c$ are tuneable chemical reaction rate exponentials, and $\eta$ is the overpotential. Overpotential is a measure of how far the voltage potentials between the electrolyte and electrode deviate from equilibrium conditions.
+	%\begin{gather}
+	%	\eta = (\Phi_\textrm{ed}-\Phi_\textrm{el}) - (\Phi_\textrm{ed}-\Phi_\textrm{el})^\textrm{eq}
+	%\end{gather}
+	\begin{gather}
+		\eta = (\phi_\textrm{am}-\phi_\textrm{el}) - (\phi_\textrm{am}-\phi_\textrm{el})^\textrm{eq} - V_\textrm{SEI}\\
+		V_\textrm{SEI} = \dot{s}_{\textrm{Li}^+} A_\text{surf}R_\textrm{SEI}
+	\end{gather}
+	where $V_\textrm{SEI}$ is the potential drop across the SEI. 
+
+	%\begin{figure} [h]
+	%	\centering
+	%	\includegraphics[width=0.9\linewidth]{Images/EquivalentCircuit_nice}
+	%	\caption{Graphic showing an equivalent circuit model describing the flow of current throughout the electrode (anode) and its dependence on the charge transfer current.}
+	%	\label{fig:EquivalentCircuit}
+	%\end{figure}
+	
+	%\colorbox{yellow}{(Does this change based on the electrode? Does it depend on what is the forward(anodic) direction}
+	%\colorbox{yellow}{for the reaction for each electrode? I think the overpotential will be negative on the opposite electrode }
+	%\colorbox{yellow}{forcing the reaction to go in the opposite direction)}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\subsection{Summary of Governing Equations}
+		\begin{gather}
+			\rho c_p \frac{dT}{dt} = \frac{q_\text{neg}'' - q_\text{pos}''}{\Delta x} + q_\text{gen}'''\\
+			%
+			0 = \frac{i_\text{am,neg} - i_\text{am,pos}}{\Delta x} - \dot{s}_{\text{Li}^+}F A_\text{s}\\
+			%
+			V_\text{SEI,am} - V_\text{SEI,el} = R_\text{SEI} \dot{s}_{\text{Li}^+}F A_\text{s}\\
+			%
+			C_\text{dl}\frac{d }{dt}(V_\text{SEI,el} - \phi_\text{el}) = -\left(\frac{V_\text{SEI,el} - V_\text{SEI,am}}{R_\text{SEI}} + \frac{V_\text{SEI,el} - \phi_\text{el}}{R_\text{dl}} \right)\\
+			%
+			C_\text{dl}\frac{d }{dt}(\phi_\text{el} - V_\text{SEI,el}) = \frac{i_\text{el,neg} - i_\text{el,pos}}{\Delta x} -\left(\frac{\phi_\text{el} - V_\text{SEI,el}}{R_\text{dl}} \right)\\
+			%
+			\varepsilon_{\text{el}}  \frac{dc_{\text{Li}^+}}{dt} = \frac{ J_{\text{Li}^+,\text{neg}} - J_{\text{Li}^+,\text{pos}} }{\Delta x} + \varepsilon_{\text{el}} \dot{s}_{\text{Li}^+}A_\text{s}\\
+			%
+			\frac{dc_{\text{Li}}}{dt}  = 3\frac{ r_\text{neg}^2  J_{\text{Li,neg}}   - r_\text{pos}^2 J_{\text{Li,pos}}   }{r_\text{pos}^3 - r_\text{neg}^3} -  \dot{s}_{\text{Li}^+}A_\text{s}
+		\end{gather}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\subsection{Boundary Conditions}
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{c|c|c|c|c}
+			Cartesian       & CC/AN                          & AN/SEP                                                                     & SEP/CA                                                                           & CA/CC     \\ \hline
+			Energy          & $\mathbf{q}'' = 0$             & $\mathbf{q}_\text{an}''=\mathbf{q}_\text{sep}''$                           & $\mathbf{q}_\text{sep}'' = \mathbf{q}_\text{ca}''$                                                                   & $\mathbf{q}''= 0$     \\
+			Charge: el      & $\mathbf{i}_\text{el} = 0$     & $\mathbf{i}_\text{el,an} = \mathbf{i}_\text{el,sep}$                       & $\mathbf{i}_\text{el,sep} = \mathbf{i}_\text{el,ca}$                                    					 & $\mathbf{i}_\text{el} = 0$   \\
+			Charge: am      & $\phi = 0$                     & $\mathbf{i}_\text{am} = 0$                                                 & $\mathbf{i}_\text{am} = 0$                                                          					 & $\mathbf{i}_\text{am} = i_\text{user}$\\
+			Species: Li$^+$ & $\mathbf{J}_{\text{Li}^+} = 0$ & $\mathbf{J}_{\text{Li}^+,\text{an}} = \mathbf{J}_{\text{Li}^+,\text{sep}}$ & $\mathbf{J}_{\text{Li}^+,\text{sep}} = \mathbf{J}_{\text{Li}^+,\text{ca}}$                         					 & $\mathbf{J}_{\text{Li}^+} = 0$
+		\end{tabular}
+	\end{table}
+	
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{c|c|c}
+			Radial      & r = 0                      & r = r$_\text{p}$                  \\ \hline
+			Species: Li & $\mathbf{J}_\text{Li} = 0$ & $\mathbf{J}_\text{Li} = 0$ or $\mathbf{J}_\text{Li} = \dot{s}_{\text{Li}^+}A_\text{s}$ 
+		\end{tabular}
+	\end{table}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\subsection{Initial Conditions:}
+	\begin{itemize}
+		\item There is no concentration or potential gradient in the active material or electrolyte phase.
+		\item Lithium concentration in the active material is determined by the state of charge (SOC) of the battery.
+		\item {[}Li{]} = 0, $\phi_\textrm{ed}$ =  0, in separator region
+		\item Lithium ion concentration in the electrolyte is determined by the molarity of the solvent (typically 1M)
+		\item Temperature is 25$^\circ$C
+		%\item The double layer charge density is zero.
+	\end{itemize}
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\section{Discretization of Governing Equations}
+	\begin{figure} [h]
+		\centering
+		\includegraphics[width=0.7\linewidth]{Images/Stencil_CV}
+		\caption{}
+		\label{fig:Stencil_CV}
+	\end{figure}
+	When discretizing the governing equations, index $i$ is used to describe the control volume in the cartesian direction while $j$ is used to denote a radial control volume. A radial control volume is located in an $i$th control volume.\\
+	\underline{Conservation of Energy}
+%%%%%%%
+	\begin{equation}
+		\rho c_p \frac{dT_i}{dt} = -\frac{q_{i+\frac{1}{2}}'' - q_{i-\frac{1}{2}}''}{x_{i+\frac{1}{2}} - x_{i-\frac{1}{2}}} + q_{\text{gen},i}'''
+	\end{equation}
+\fontsize{8}{12}\selectfont
+\begin{lstlisting}
+% flux at 'i+1' is the i+1/2 face and 'i' is the i-1/2
+dSVdt_an(P.T, i) = -(q(i+1) - q(i)) / AN.del_x    + heat_gen(i); 
+\end{lstlisting}
+\fontsize{12}{12}\selectfont
+\underline{	Conservation of Charge: active material}
+%%%%%%%
+	\begin{equation}
+		0 = -\frac{i_{\text{am},{i+\frac{1}{2}}} -i_{\text{am},{i-\frac{1}{2}}} }{x_{i+\frac{1}{2}} - x_{i-\frac{1}{2}}} - \dot{s}_{\text{Li}^+,i}F A_\text{s}
+	\end{equation}
+\fontsize{8}{12}\selectfont
+\begin{lstlisting}
+% flux at 'i+1' is the i+1/2 face and 'i' is the i-1/2
+dSVdt_an(P.phi_ed, i) = -(i_ed(i+1) - i_ed(i)) / AN.del_x  - s_dot_Liiion(i)*AN.A_s*CONS.F;
+\end{lstlisting}
+\fontsize{12}{12}\selectfont
+\underline{	V$_\text{SEI}$ constraint}
+%%%%%%%
+	\begin{equation}
+		0 = R_\text{SEI} \dot{s}_{\text{Li}^+,i}F A_\text{s} - (V_{\text{SEI,am},i} - V_{\text{SEI,el},i})
+	\end{equation}
+\fontsize{8}{12}\selectfont
+\begin{lstlisting}
+%
+dSVdt_an(P.V_SEI_ed, i) = AN.R_SEI*(s_dot_Liiion(i) * AN.A_s * CONS.F)  ...
+		 - (SV(P.V_SEI_ed,i) - SV(P.V_SEI_el,i));
+\end{lstlisting}
+\fontsize{12}{12}\selectfont
+\underline{	Double Layer constraint}
+%%%%%%%
+	\begin{equation}
+		C_\text{dl}\frac{d }{dt}\Big(V_{\text{SEI,el},i} - \phi_{\text{el},i}\Big) = -\left(\frac{V_{\text{SEI,el},i} - V_{\text{SEI,am},i}}{R_\text{SEI}} + \frac{V_{\text{SEI,el},i} - \phi_{\text{el},i}}{R_\text{dl}} \right)
+	\end{equation}
+\fontsize{8}{12}\selectfont
+\begin{lstlisting}
+%
+dSVdt_an(P.V_SEI_el, i) = -( ( SV(P.V_SEI_el,i) - SV(P.V_SEI_ed,i) ) / AN.R_SEI ...
+		   	   + ( SV(P.V_SEI_el,i) - SV(P.phi_el,i)   ) / AN.R_dl);
+\end{lstlisting}
+\fontsize{12}{12}\selectfont
+\underline{Conservation of Charge: electrolyte}
+%%%%%%%
+	\begin{equation}
+		C_\text{dl}\frac{d }{dt}\Big(\phi_{\text{el},i} - V_{\text{SEI,el},i}\Big) = -\frac{ i_{\text{el},{i+\frac{1}{2}}} - i_{\text{el},{i-\frac{1}{2}}} }{x_{i+\frac{1}{2}} - x_{i-\frac{1}{2}}} -\left(\frac{\phi_{\text{el},i} - V_{\text{SEI,el},i}}{R_\text{dl}} \right)
+	\end{equation}
+\fontsize{8}{12}\selectfont
+\begin{lstlisting}
+% flux at 'i+1' is the i+1/2 face and 'i' is the i-1/2
+dSVdt_an(P.phi_el, i) = -(i_el(i+1) - i_el(i)) / AN.del_x ...
+		- ( (SV(P.phi_el,i) - SV(P.V_SEI_el,i)) / AN.R_dl);
+\end{lstlisting}
+\fontsize{12}{12}\selectfont
+\underline{Conservation of Species: Li$^+$}
+%%%%%%%
+	\begin{equation}
+		\varepsilon_{\text{el}}  \frac{dc_{\text{Li}^+},i}{dt} = -\frac{ J_{\text{Li}^+,i+\frac{1}{2}} - J_{\text{Li}^+,i-\frac{1}{2}} }{x_{i+\frac{1}{2}} - x_{i-\frac{1}{2}}} + \varepsilon_{\text{el}} \dot{s}_{\text{Li}^+,i}A_\text{s}
+	\end{equation}
+\fontsize{8}{12}\selectfont
+\begin{lstlisting}
+%
+dSVdt_an(P.C_Liion, i) = -(J_Liion(i+1) - J_Liion(i)) / AN.del_x ...
+		+ AN.eps_el* s_dot_Liiion(i) * AN.A_s;
+\end{lstlisting}
+\fontsize{12}{12}\selectfont
+\underline{Conservation of Species: Li$^+$}
+%%%%%%%
+	\begin{equation}
+		\frac{dc_{\text{Li},i,j}}{dt}  = -3\frac{  r_{j+\frac{1}{2}}^2 J_{\text{Li},i,j+\frac{1}{2}}  -  r_{j-\frac{1}{2}}^2  J_{\text{Li},i,j-\frac{1}{2}}   }{r_{j+\frac{1}{2}}^3 - r_{j-\frac{1}{2}}^3} -  \dot{s}_{\text{Li}^+,i}A_\text{s}
+	\end{equation}
+\fontsize{8}{12}\selectfont
+\begin{lstlisting}
+%
+for j = 1:N.N_R_an
+   dSVdt_an(P.C_Li_inner-1+j, i) = -3*(AN.r_half_vec(j+1)^2 * J_Li(j+1,i) - AN.r_half_vec(j)^2 * J_Li(j,i)) ...
+		/ (AN.r_half_vec(j+1)^3-AN.r_half_vec(j)^3);
+% Molar production rate at the surface
+   if j == N.N_R_an
+	   dSVdt_an(P.C_Li_inner-1+j, i) = dSVdt_an(P.C_Li_inner-1+j,i) -  s_dot_Liiion(i) * AN.A_s;
+   end
+end
+\end{lstlisting}
+\fontsize{12}{12}\selectfont
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Flux Calculations
+\begin{equation}
+	q_{i+\frac{1}{2}}'' = -k_{i+\frac{1}{2}} \frac{T_{i+1} - T_i    }{x_{i+1} - x_{i}  }   \;\;\;\;\;\;\;\; 
+	q_{i-\frac{1}{2}}'' = -k_{i-\frac{1}{2}} \frac{T_{i}   - T_{i-1}}{x_{i}   - x_{i-1}}
+\end{equation}
+%
+\begin{equation}
+	i_{\text{am},i+\frac{1}{2}} = -\sigma_{i+\frac{1}{2}} \frac{ \phi_{\text{am},i+1} - \phi_{\text{am},i} }{x_{i+1} - x_{i}} \;\;\;\;\;\;\;\;
+	i_{\text{am},i-\frac{1}{2}} = -\sigma_{i-\frac{1}{2}} \frac{ \phi_{\text{am},i} - \phi_{\text{am},i-1} }{x_{i} - x_{i-1}}
+\end{equation}
+%
+\begin{equation}
+	\begin{split}
+		i_{\text{el},i+\frac{1}{2}} &= -\kappa_{i+\frac{1}{2}} \frac{ \phi_{\text{el},i+1} - \phi_{\text{el},i} }{x_{i+1} - x_{i}} - 2\frac{\kappa_{i+\frac{1}{2}} RT_{i+\frac{1}{2}}}{F}\left(1+\frac{\partial \text{ln} f_\pm}{\partial c_{\text{Li}^+}} \right)_{i+\frac{1}{2}} \left( t_+^0 - 1 \right)_{i+\frac{1}{2}} \frac{  \text{ln} c_{\text{Li}^+,i+1}  -  \text{ln} c_{\text{Li}^+,i}  }{x_{i+1} - x_{i}} \\
+		%
+		i_{\text{el},i-\frac{1}{2}} &= -\kappa_{i-\frac{1}{2}} \frac{ \phi_{\text{el},i} - \phi_{\text{el},i-1} }{x_{i} - x_{i-1}} - 2\frac{\kappa_{i-\frac{1}{2}} RT_{i-\frac{1}{2}}}{F}\left(1+\frac{\partial \text{ln} f_\pm}{\partial c_{\text{Li}^+}} \right)_{i-\frac{1}{2}} \left( t_+^0 - 1 \right)_{i-\frac{1}{2}} \frac{  \text{ln} c_{\text{Li}^+,i}  -  \text{ln} c_{\text{Li}^+,i-1}  }{x_{i} - x_{i-1}}
+	\end{split}
+\end{equation}
+%
+\begin{equation}
+	\begin{split}
+		J_{\text{Li}^+,i+\frac{1}{2}} &= - D_{\text{el},i+\frac{1}{2}}  \frac{  c_{\text{Li}^+,i+1}  -  c_{\text{Li}^+,i} }{x_{i+1} - x_{i}} + i_{\text{el},i+\frac{1}{2}} \frac{t_{+i+\frac{1}{2}}^0}{F}\\
+		%
+		J_{\text{Li}^+,i-\frac{1}{2}} &= - D_{\text{el},i-\frac{1}{2}}  \frac{  c_{\text{Li}^+,i}  -  c_{\text{Li}^+,i-1} }{x_{i} - x_{i-1}} + i_{\text{el},i-\frac{1}{2}} \frac{t_{+,i-\frac{1}{2}}^0}{F}
+	\end{split}
+\end{equation}
+%
+\begin{equation}
+	J_{\text{Li},i,j+\frac{1}{2}} = - D_{\text{am},j+\frac{1}{2}}  \frac{  c_{\text{Li},j+1}  -  c_{\text{Li},j} }{ r_{j+1} - r_{j} }  \;\;\;\;\;\;\;\;
+	J_{\text{Li},i,j-\frac{1}{2}} = - D_{\text{am},j-\frac{1}{2}}  \frac{  c_{\text{Li},j}  -  c_{\text{Li},j-1} }{ r_{j} - r_{j-1} }
+\end{equation}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Model Support Calculations}
+%\subsection{Pointers}
+%If doing a thermal analysis, then the first pointer is for temperature (T) of each control volume. Otherwise the order of variables in the solution vector is $\phi_\textrm{ed}$, $\phi_\textrm{el}$, [Li$^+$], [Li]. [Li] is last so if doing a radial analysis, then all of the radial control volumes are just added to the end of the pointer list. The first radial or active material concentration control volume is associated with the surface of the active material.
+\subsection{Electrolyte Volume Fraction}
+\begin{equation}
+	\varepsilon_\textrm{el} = 1 - \varepsilon_\textrm{am} - \varepsilon_\textrm{b}
+\end{equation}
+\subsection{Specific Surface Area}
+There are 2 different ways to calculate specific surface area.\\
+1) Solve for surface area and volume from particle radius
+\begin{equation}
+	%A_s = 3/(\varepsilon_\textrm{am} r_p)
+	A_s = 3/r_p
+\end{equation}
+2) Using the metric of surface area per gram of active material AG$_s$ (m$^2$/g).\\
+A$_s$ = (g/m$^3$) * (m$^2$/g)
+\begin{equation}
+	A_s = \rho AG_s
+\end{equation}
+\subsection{Max Concentration}
+\begin{equation}
+	C_{\textrm{max},k} = \rho_k / W_k
+\end{equation}
+\subsection{Capacity Ratio}
+Found in the 1994 paper by Fuller\cite{FDN94}, the capacity ratio is the ratio of cathode capacity to anode capacity. It is used to determine the equilibrium mole fraction (concentration) of both active materials. This is also important when calculating the mole fraction limits for SOC.
+\begin{equation}
+	z = \frac{C_\textrm{max,ca}(1 - \varepsilon_\textrm{ed,ca} - \varepsilon_\textrm{b,ca})L_\textrm{ca}}{C_\textrm{max,an}(1 - \varepsilon_\textrm{ed,an} - \varepsilon_\textrm{b,an})L_\textrm{an}}
+\end{equation}
+\subsection{Voltage Limits/SOC}
+Figure \ref{fig:VoltageLimits} depicts how the state of charge (SOC) is determined for a battery at equilibrium. Starting at Point F, the known lithiation fraction at formation, an equation for the line is found using the capacity ratio. Using this equation, the max and min cathode lithiation fraction is found; Points A and B respectively. Next, the lithiation fractions are found for the user defined max and min operating voltage; Points C and D respectively. Applying some logic, if the anode lithiation fraction at Point C is greater than Point A, Point C is the limiting parameter. Similarly, if the anode lithiation fraction at Point D is less than Point B, Point D is the limiting parameter. The two limiting parameters define the operating region for the modeled battery and hence the state of charge.
+\begin{figure} [h]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/VoltageLimits}
+	\caption{Lithiation fraction for each electrode at equilibrium}
+	\label{fig:VoltageLimits}
+\end{figure}
+\clearpage
+\subsection{Load Current}
+Find the theoretical specific capacity of each electrode. 
+\begin{equation}
+q_{\textrm{theo},m}= \frac{|n_m F|}{3600 W_m}
+\end{equation}
+Find electrode capacity
+\begin{equation}
+Q_{\textrm{theo},m} = q_{\textrm{theo},m}\rho_m \varepsilon_m \Delta z_m \Delta y_m L_m
+\end{equation}
+Find the cross-sectional area of each electrode normal to the current collectors
+\begin{equation}
+A_{\textrm{c},m}= \Delta z_m \Delta y_m
+\end{equation}
+Find the load current using the minimum electrode capacity
+\begin{equation}
+I_\textrm{user} = Q_{\textrm{theo,min}} C_\textrm{rate}
+\end{equation}
+Find the load current density using the minimum cross-sectional area
+\begin{equation}
+i_\textrm{user}= \frac{I_\textrm{user}}{A_{\textrm{c,min}}}
+\end{equation}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{table}[]
+	\caption{Nomenclature}
+	\centering
+	\begin{tabular}{lll}
+		\textbf{\underline{Variable}}  & \textbf{\underline{Unit}} & \textbf{\underline{Description}} \\
+		A$_\text{s}$   		& m$^{-1}$     				& Specific surface area            \\
+		A$_\text{surf}$		& m$^{2}$     				& Surface area of the active material            \\
+		AG$_\text{s}$  		& m$^{2}$g$^{-1}$			& Surface area per gram of active material            \\
+		C         		 	& F m$^{-2}$      			& Capacitance            \\
+		c         		 	& J kg$^{-1}$ K$^{-1}$		& Specific heat capacity            \\
+		D$_m^{\text{eff}}$	& m$^2$ s$^{-1}$     		& Effective diffusion coefficient of phase m            \\
+		F         			& s A mol$^{-1}$   			& Faraday's constant            \\
+		$f_\pm$       		& -     					& Activity coefficient            \\
+		i$_\textrm{BV}$ 	& A m$^{-2}$    			& Butler-Volmer current density            \\
+		i$_\textrm{ext}$	& A m$^{-2}$     			& External current density            \\
+		I$_\textrm{ext}$	& A 		     			& External current density            \\
+		\textbf{i}$_m$  	& A m$^{-2}$     			& Current density (Charge flux)            \\
+		i$_\circ$       	& A m$^{-2}$     			& Exchange current density            \\
+		\textbf{J}$_k$  	& (mol of k) s$^{-1}$ m$^{-2}$ & Molar flux of species k            \\
+		k$_\textrm{ct}$ 	& -    						& Charge-transfer reaction coefficient            \\
+		k				 	& W m$^{-1}$ K$^{-1}$		& Thermal conductivity            \\
+		m         			& kg     					& Total mass            \\
+%		M         			& -     					& Mass matrix            \\
+		m$_k$        		& (kg of k)    				& Mass of species k            \\
+		n         			& -     					& Number of electrons transferred during the reaction            \\
+		n$_k$        		& (mol of k)   				& Moles of species k            \\
+		p$_m$        		& -		     				& Bruggeman exponential coefficient           \\
+		q''        			& W m$^{-2}$     			& Heat flux            \\
+		R         			& J mol$^{-1}$ K$^{-1}$ 	& Universal gas constant            \\
+		R$_\textrm{SEI}$	& $\Omega$     				& Resistance of SEI layer            \\
+		$\dot{s}_k$     	& mol s$^{-1}$ m$^{-2}$ 	& Molar production rate of species k            \\
+		t$_+^0$         	& -     					& Li-ion transferrence number            \\
+		t               	& s     					& Time            \\
+		V         			& m$^{3}$     				& Total Volume            \\
+%		V$_\textrm{dl}$ 	& V     					& Voltage across the double layer            \\
+		V$_\textrm{SEI}$	& V     					& Voltage across the SEI layer            \\
+		W$_k$        		& g mol$^{-1}$      		& Molecular weight of species k            \\
+		{[}X$_k${]}     	& mol m$^{-3}$     			& Concentration of species k            \\
+%		Y$_k$        		& (kg of k)(kg total)$^{-1}$& Mass fraction of species k            \\
+		z$_k$        		& -     					& Charge of species k            \\         
+		z	        		& -     					& Capacity ratio            \\         
+	\end{tabular}
+\end{table}
+\begin{table}[]
+	\caption{Nomenclature}
+	\centering
+	\begin{tabular}{lll}
+		\multicolumn{3}{c}{\textbf{\underline{Greek}}}      \\
+		\textbf{\underline{Variable}}  & \textbf{\underline{Unit}} & \textbf{\underline{Description}} \\
+		$\alpha_k$    			& -      					& Anodic or cathodic transfer coefficient            \\
+		$\varepsilon_k$ 		& -      					& Porosity            \\
+		$\eta$       			& V           				& Overpotential            \\
+		$\gamma$       			& -           				& Bruggeman pre-exponential coefficient            \\
+		$\kappa_m^{\text{eff}}$	& $\Omega^{-1}$ m$^{-1}$ 	& Effective electrolyte ionic conductivity            \\
+		$\dot{\Omega}_k$    	& C m$^{-3}$     			& Volumetric charge production rate            \\
+		$\dot{\omega}_k$		& (mol of k) m$^{-3}$		& Volumetric            \\
+		$\phi_m$      			& V     					& Voltage of phase $m$            \\
+		$\rho$       			& (kg total) m$^{-3}$ 		& Total density            \\
+		$\sigma_m^{\text{eff}}$	& $\Omega^{-1}$ m$^{-1}$	& Effective electrode (active material) electronic conductivity   \\
+		$\tau_m$       			& -     					& Tortuosity of phase $m$            \\
+		\multicolumn{3}{c}{\textbf{\underline{Subscripts}}} \\
+		an        & -     & Anode            \\
+		ca        & -     & Cathode            \\
+		b         & -     & Binder            \\
+		AM        & -     & Electrode (active material)           \\
+		EL        & -     & Electrolyte            \\
+		ext       & -     & External (load)            \\
+		i         & -     & Node (finite volume)            \\
+		j         & -     & Radial discretization (finite volume)            \\
+		k         & -     & Species            \\
+		m         & -     & Phase (ed,el,binder)            \\
+		SEI       & -     & Surface (Active material) Electrolyte Interface              \\
+		sep       & -     & Seperator             \\
+		tot       & -     & Total           
+	\end{tabular}
+\end{table}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Finite-Difference} \label{sec:FiniteDiff}
+%\subsubsection{Anode Region}
+%\begin{figure} [h]
+%	\centering
+%	\includegraphics[width=1\linewidth]{Images/Stencil_Anode}
+%	\caption{Stencil of anode region. (All control volumes will be changed to be full volume)}
+%	\label{fig:Anode_Stencil}
+%\end{figure}
+%\textbf{Conservation of Mass: [Li$^+$]}\\
+%($j_{\textrm{an}}$ = 1):
+%\begin{equation}
+%\frac{\partial (\varepsilon_\textrm{el} [\textrm{Li}^+]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li}^+,j+\frac{1}{2}})+ \dot{\omega}_{\textrm{Li}^+,j} 
+%\end{equation}
+%(2 $\leq j_\textrm{an} \leq$ J$_\textrm{an}$):
+%\begin{gather}
+%\frac{\partial (\varepsilon_\textrm{el} [\textrm{Li}^+]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li}^+,j+\frac{1}{2}}- \mathbf{n}_{\textrm{Li}^+,j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li}^+,j} 
+%\end{gather}
+%%($j_{\textrm{an}}$ = J$_{\textrm{an}}$):
+%%\begin{gather}
+%%	\frac{\partial (\varepsilon_\textrm{el} [\textrm{Li}^+]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li}^+,j+\frac{1}{2}}- \mathbf{n}_{\textrm{Li}^+,j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li}^+,j} 
+%%\end{gather}
+%%\begin{gather}
+%%	[\textrm{Li}^+]_{j_\textrm{an}} = [\textrm{Li}^+]_{j_\textrm{sep}=1}
+%%\end{gather} 
+%%
+%\textbf{Conservation of Mass: [Li]}\\
+%($j_{\textrm{an}}$ = 1):
+%\begin{equation}
+%\frac{\partial (\varepsilon_\textrm{ed} [\textrm{Li}]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li},j+\frac{1}{2}})+ \dot{\omega}_{\textrm{Li},j} 
+%\end{equation}
+%(2 $\leq j_\textrm{an} \leq$ J$_\textrm{an}$-1):
+%\begin{gather}
+%\frac{\partial (\varepsilon_\textrm{ed} [\textrm{Li}]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li},j+\frac{1}{2}}- \mathbf{n}_{\textrm{Li},j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li},j} 
+%\end{gather}
+%($j_{\textrm{an}}$ = J$_{\textrm{an}}$):
+%\begin{gather}
+%\frac{\partial (\varepsilon_\textrm{ed} [\textrm{Li}]_j)}{\partial t} = -\frac{1}{\Delta x} (- \mathbf{n}_{\textrm{Li},j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li},j} 
+%\end{gather} 
+%%
+%\textbf{Conservation of Charge: Active Material Phase}\\
+%($j_{\textrm{an}}$ = 1):
+%\begin{equation}
+%C\left(\frac{\partial \Phi_{\text{ed},j}}{\partial t} - \frac{\partial \Phi_{\text{el},j}}{\partial t}\right) = - \frac{\mathbf{i}_{\text{ed},j+\frac{1}{2}} - i_{\text{ext}}}{\Delta x} + \dot{\Omega}_{\text{ed},j}
+%\end{equation}
+%(2 $\leq j_\textrm{an} \leq$ J$_\textrm{an}$-1):
+%\begin{gather}
+%C\left(\frac{\partial \Phi_{\text{ed},j}}{\partial t} - \frac{\partial \Phi_{\text{el},j}}{\partial t}\right) = - \frac{\mathbf{i}_{\text{ed},j+\frac{1}{2}} - \mathbf{i}_{\text{ed},j-\frac{1}{2}}}{\Delta x} + \dot{\Omega}_{\text{ed},j}
+%\end{gather}
+%($j_{\textrm{an}}$ = J$_{\textrm{an}}$):
+%\begin{gather}
+%C\left(\frac{\partial \Phi_{\text{ed},j}}{\partial t} - \frac{\partial \Phi_{\text{el},j}}{\partial t}\right) = - \frac{ - \mathbf{i}_{\text{ed},j-\frac{1}{2}}}{\Delta x} + \dot{\Omega}_{\text{ed},j}
+%\end{gather}
+%%
+%\textbf{Conservation of Charge: Overall}\\
+%($j_{\textrm{an}}$ = 1):
+%\begin{equation}
+%(\mathbf{i}_{\textrm{el},j+\frac{1}{2}}) + (\mathbf{i}_{\textrm{ed},j+\frac{1}{2}} - i_{\textrm{ext}}) = 0
+%\end{equation}
+%(2 $\leq j_\textrm{an} \leq$ J$_\textrm{an}$-1):
+%\begin{gather}
+%(\mathbf{i}_{\textrm{el},j+\frac{1}{2}} - \mathbf{i}_{\textrm{el},j-\frac{1}{2}}) + (\mathbf{i}_{\textrm{ed},j+\frac{1}{2}} - \mathbf{i}_{\textrm{ed},j-\frac{1}{2}}) = 0
+%\end{gather}
+%($j_{\textrm{an}}$ = J$_{\textrm{an}}$):
+%\begin{gather}
+%(i_{\textrm{ext}} - \mathbf{i}_{\textrm{el},j-\frac{1}{2}}) + (0 - \mathbf{i}_{\textrm{ed},j-\frac{1}{2}}) = 0
+%\end{gather}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage
+%\subsubsection{Separator Region}
+%\begin{figure} [t]
+%	\centering
+%	\includegraphics[width=1\linewidth]{Images/Stencil_Sep}
+%	\caption{Stencil of separator region. (All control volumes will be changed to be full volume)}
+%	\label{fig:Sep_Stencil}
+%\end{figure}
+%\textbf{Conservation of Mass: [Li$^+$]}\\
+%(1 $\leq j_\textrm{sep} \leq$ J$_\textrm{sep}$):
+%\begin{gather}
+%\frac{\partial (\varepsilon_\textrm{el} [\textrm{Li}^+]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li}^+,j+\frac{1}{2}}- \mathbf{n}_{\textrm{Li}^+,j-\frac{1}{2}})
+%\end{gather}
+%%
+%\textbf{Conservation of Mass: [Li]}\\
+%(1 $\leq j_\textrm{sep} \leq$ J$_\textrm{sep}$):
+%\begin{gather}
+%\frac{\partial ([\textrm{Li}]_j)}{\partial t} = 0
+%\end{gather} 
+%%
+%\textbf{Conservation of Charge: Active Material Phase}\\
+%(1 $\leq j_\textrm{sep} \leq$ J$_\textrm{sep}$):
+%\begin{gather}
+%\frac{\partial \Phi_{\text{ed},j}}{\partial t} = 0
+%\end{gather}
+%%
+%\textbf{Conservation of Charge: Overall}\\
+%(1 $\leq j_\textrm{sep} \leq$ J$_\textrm{sep}$):
+%\begin{gather}
+%(\mathbf{i}_{\textrm{el},j+\frac{1}{2}} - \mathbf{i}_{\textrm{el},j-\frac{1}{2}}) = 0
+%\end{gather}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage
+%\subsubsection{Cathode Region}
+%\begin{figure} [t]
+%	\centering
+%	\includegraphics[width=1\linewidth]{Images/Stencil_Cathode}
+%	\caption{Stencil of cathode region. (All control volumes will be changed to be full volume)}
+%	\label{fig:Cathode_Stencil}
+%\end{figure}
+%\textbf{Conservation of Mass: [Li$^+$]}\\
+%(1 $\leq j_\textrm{ca} \leq$ J$_\textrm{ca}$-1):
+%\begin{gather}
+%\frac{\partial (\varepsilon_\textrm{el} [\textrm{Li}^+]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li}^+,j+\frac{1}{2}}- \mathbf{n}_{\textrm{Li}^+,j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li}^+,j} 
+%\end{gather}
+%($j_{\textrm{ca}}$ = J$_{\textrm{ca}}$):
+%\begin{equation}
+%\frac{\partial (\varepsilon_\textrm{el} [\textrm{Li}^+]_j)}{\partial t} = -\frac{1}{\Delta x} (-\mathbf{n}_{\textrm{Li}^+,j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li}^+,j} 
+%\end{equation}
+%%
+%\textbf{Conservation of Mass: [Li]}\\
+%($j_{\textrm{ca}}$ = 1):
+%\begin{equation}
+%\frac{\partial (\varepsilon_\textrm{ed} [\textrm{Li}]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li},j+\frac{1}{2}})+ \dot{\omega}_{\textrm{Li},j} 
+%\end{equation}
+%(2 $\leq j_\textrm{ca} \leq$ J$_\textrm{ca}$-1):
+%\begin{gather}
+%\frac{\partial (\varepsilon_\textrm{ed} [\textrm{Li}]_j)}{\partial t} = -\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li},j+\frac{1}{2}}- \mathbf{n}_{\textrm{Li},j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li},j} 
+%\end{gather}
+%($j_{\textrm{ca}}$ = J$_{\textrm{ca}}$):
+%\begin{equation}
+%\frac{\partial (\varepsilon_\textrm{ed} [\textrm{Li}]_j)}{\partial t} = -\frac{1}{\Delta x} (-\mathbf{n}_{\textrm{Li},j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li},j} 
+%\end{equation}
+%%
+%\textbf{Conservation of Charge: Active Material Phase}\\
+%($j_{\textrm{ca}}$ = 1):
+%\begin{equation}
+%C\left(\frac{\partial \Phi_{\text{ed},j}}{\partial t} - \frac{\partial \Phi_{\text{el},j}}{\partial t}\right) = - \frac{\mathbf{i}_{\text{ed},j+\frac{1}{2}}}{\Delta x} + \dot{\Omega}_{\text{ed},j}
+%\end{equation}
+%(2 $\leq j_\textrm{ca} \leq$ J$_\textrm{ca}$-1):
+%\begin{gather}
+%C\left(\frac{\partial \Phi_{\text{ed},j}}{\partial t} - \frac{\partial \Phi_{\text{el},j}}{\partial t}\right) = - \frac{\mathbf{i}_{\text{ed},j+\frac{1}{2}} - \mathbf{i}_{\text{ed},j-\frac{1}{2}}}{\Delta x} + \dot{\Omega}_{\text{ed},j}
+%\end{gather}
+%($j_{\textrm{ca}}$ = J$_{\textrm{ca}}$):
+%\begin{gather}
+%C\left(\frac{\partial \Phi_{\text{ed},j}}{\partial t} - \frac{\partial \Phi_{\text{el},j}}{\partial t}\right) = - \frac{i_\text{ext} - \mathbf{i}_{\text{ed},j-\frac{1}{2}}}{\Delta x} + \dot{\Omega}_{\text{ed},j}
+%\end{gather}
+%%
+%\textbf{Conservation of Charge: Overall}\\
+%($j_{\textrm{ca}}$ = 1):
+%\begin{equation}
+%(\mathbf{i}_{\textrm{el},j+\frac{1}{2}} - i_{\textrm{ext}}) + (\mathbf{i}_{\textrm{ed},j+\frac{1}{2}} - 0) = 0
+%\end{equation}
+%(2 $\leq j_\textrm{ca} \leq$ J$_\textrm{ca}$-1):
+%\begin{gather}
+%(\mathbf{i}_{\textrm{el},j+\frac{1}{2}} - \mathbf{i}_{\textrm{el},j-\frac{1}{2}}) + (\mathbf{i}_{\textrm{ed},j+\frac{1}{2}} - \mathbf{i}_{\textrm{ed},j-\frac{1}{2}}) = 0
+%\end{gather}
+%($j_{\textrm{ca}}$ = J$_{\textrm{ca}}$):
+%\begin{gather}
+%(0 - \mathbf{i}_{\textrm{el},j-\frac{1}{2}}) + (i_{\textrm{ext}} - \mathbf{i}_{\textrm{ed},j-\frac{1}{2}}) = 0
+%\end{gather}  
+%where
+%\begin{gather}
+%\mathbf{n}_{\textrm{Li}^+,j\pm\frac{1}{2}} = \varepsilon_\textrm{el} D_{\textrm{el},j\pm\frac{1}{2}}^\textrm{eff}
+%\frac{[\textrm{Li}^+]_{\overset{j+1}{j}}-[\textrm{Li}^+]_{\overset{j}{j-1}}}{\Delta x} - \mathbf{i}_{\textrm{el},j\pm\frac{1}{2}} \frac{t_{+,j\pm\frac{1}{2}}^0}{F}\\
+%%
+%\mathbf{n}_{\textrm{Li},j\pm\frac{1}{2}} = \varepsilon_\textrm{ed} D_{\textrm{ed},j\pm\frac{1}{2}}^\textrm{eff}
+%\frac{[\textrm{Li}]_{\overset{j+1}{j}}-[\textrm{Li}]_{\overset{j}{j-1}}}{\Delta x} \\
+%%
+%\dot{\omega}_{\textrm{Li}^+,j} = \dot{s}_{\textrm{Li}^+,j} A_\textrm{s}\\
+%%
+%\dot{\omega}_{\textrm{Li},j} = \dot{s}_{\textrm{Li},j} A_\textrm{s}\\
+%%
+%\dot{\Omega}_{\text{ed},j} = \dot{s}_{\textrm{e}^-,j} F A_s\\
+%%
+%\mathbf{i}_{\textrm{el},j\pm\frac{1}{2}} = - \kappa_{\textrm{el},j\pm\frac{1}{2}}^\textrm{eff} \frac{\Phi_{\textrm{el},\overset{j+1}{j}}-\Phi_{\textrm{el},\overset{j}{j-1}}}{\Delta x}  
+%- 2\left(\frac{\kappa_{\textrm{el}}^\textrm{eff} RT}{F} \left(1 + \frac{\partial \textrm{ln} f_\pm}{\partial [\textrm{Li}^+]}\right)(t_+^0 - 1)\right)_{j\pm\frac{1}{2}} 
+%\frac{\textrm{ln} [\textrm{Li}^+]_{\textrm{el},\overset{j+1}{j}}-\textrm{ln} [\textrm{Li}^+]_{\textrm{el},\overset{j}{j-1}}}{\Delta x} \\
+%%
+%\mathbf{i}_{\textrm{ed},j\pm\frac{1}{2}} = \sigma_{\textrm{ed},j\pm\frac{1}{2}}^\textrm{eff} \frac{\Phi_{\textrm{ed},\overset{j+1}{j}}-\Phi_{\textrm{ed},\overset{j}{j-1}}}{\Delta x}\\
+%%
+%\Delta x = x_j - x_{j-1}
+%\end{gather}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{DAE Form} \label{sec:DAE}
+%This system of equations is classified as DAEs. By using a mass matrix, the general form required for the system of equations is
+%\begin{equation}
+%M y(t)' + A y(t) = f(t,y)
+%\end{equation}
+%As an example from the summarized equations (Not including the radial lithium concentration)
+%\begin{gather}
+%y_i = 
+%\begin{bmatrix}
+%T\\
+%\phi_{\text{AM}}\\
+%V_\text{SEI,AM}\\
+%V_\text{SEI,EL}\\
+%\phi_{\text{EL}}\\
+%[\textrm{Li}^+]\\
+%[\textrm{Li}]
+%\end{bmatrix}_i
+%\end{gather}
+%the mass matrix becomes
+%\begin{gather}
+%M_i = 
+%\begin{bmatrix}
+%C_\textrm{th} & 0 & 0 & 0      		  & 0      		  & 0 			& 0\\
+%0			  & 0 & 0 & 0      		  & 0      		  & 0 			& 0\\
+%0			  & 0 & 0 & 0      		  & 0      		  & 0 			& 0\\
+%0			  & 0 & 0 &  C_\text{dl}  & -C_\text{dl}  & 0 			& 0\\
+%0			  & 0 & 0 & -C_\text{dl}  &  C_\text{dl}  & 0 			& 0\\
+%0			  & 0 & 0 & 0             & 0      		  & C_\text{EL} & 0\\
+%0			  & 0 & 0 & 0             & 0      		  & 0 		    & C_\text{AM,surf}
+%\end{bmatrix}
+%\end{gather}
+%the A matrix would be
+%
+%The DAE form at volume j is then
+%\begin{gather}
+%\begin{bmatrix}
+%\varepsilon_\textrm{el} & 0 & 0 & 0\\
+%0&\varepsilon_\textrm{ed}&0&0\\
+%0&0&C&-C\\
+%0&0&0&0
+%\end{bmatrix}
+%\frac{\partial}{\partial t}
+%\begin{bmatrix}
+%[\textrm{Li}^+]_j\\
+%[\textrm{Li}]_j\\
+%\Phi_{\text{ed},j}\\
+%\Phi_{\text{el},j}
+%\end{bmatrix}
+%= 
+%\begin{bmatrix}
+%-\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li}^+,j+\frac{1}{2}}- \mathbf{n}_{\textrm{Li}^+,j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li}^+,j}\\
+%%
+%-\frac{1}{\Delta x} (\mathbf{n}_{\textrm{Li},j+\frac{1}{2}}- \mathbf{n}_{\textrm{Li},j-\frac{1}{2}})+ \dot{\omega}_{\textrm{Li},j}\\
+%%
+%- \frac{1}{\Delta x}(\mathbf{i}_{\text{ed},j+\frac{1}{2}} - \mathbf{i}_{\text{ed},j-\frac{1}{2}}) + \dot{\Omega}_{\text{ed},j}\\
+%%
+%(\mathbf{i}_{\textrm{el},j+\frac{1}{2}} - \mathbf{i}_{\textrm{el},j-\frac{1}{2}}) + (\mathbf{i}_{\textrm{ed},j+\frac{1}{2}} - \mathbf{i}_{\textrm{ed},j-\frac{1}{2}})
+%\end{bmatrix}
+%\end{gather}
+%The mass matrix for the anode region can be assembled by placing $M_j$ along the diagonals
+%\begin{gather}
+%M_\text{an} = 
+%\begin{bmatrix}
+%M_{1}&0&0&0&0&0&0\\
+%0&\ddots&0&0&0&0&0\\
+%0&0&M_{j_\textrm{an}-1}&0&0&0&0\\
+%0&0&0&M_{j_\textrm{an}}&0&0&0\\
+%0&0&0&0&M_{j_\textrm{an}+1}&0&0\\
+%0&0&0&0&0&\ddots&0\\
+%0&0&0&0&0&0&M_{J_\textrm{an}}
+%\end{bmatrix}
+%\end{gather}
+%The overall mass matrix would then be
+%\begin{gather}
+%M = 
+%\begin{bmatrix}
+%M_\text{an}&0&0\\
+%0&M_\text{sep}&0\\
+%0&0&M_\text{ca}
+%\end{bmatrix}
+%\end{gather}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{Questions}
+%\begin{enumerate}
+%	\item For the over all system, boundary conditions can be used to define the PDEs. But does the model need to be split into 3 separate regions (anode, separator, cathode) and have boundary conditions for each region?
+%	\begin{itemize}
+%		\item Yes, each region should have its own BCs
+%	\end{itemize}
+%	%
+%	\item For the molar volumetric production rates, does $\dot{\omega}$ need to be multiplied by $\varepsilon_m$?
+%	\begin{itemize}
+%		\item I think the answer is yes
+%	\end{itemize}
+%	%
+%	\item Diffusion and migration of ionic species besides the lithium ion in the electrolyte phase won't take place at the SEI. Correct? If so, do the conservation of charge equations need to not model a capacitor?
+%	%
+%	\item Signs on the conservation of charge equations
+%\end{enumerate}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{What to add into write up}
+%\begin{itemize}
+%	\item Specify positive current direction
+%	\item Which direction is anodic vs cathodic, (Forward vs Reverse reaction)
+%\end{itemize}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliography
+%\clearpage
+\newpage
+\bibliographystyle{unsrt}
+\bibliography{references}
+%\newpage
+%\includepdf[pages=-]{Project6Main.pdf}
+\end{document}
