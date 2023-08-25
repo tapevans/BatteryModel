@@ -68,10 +68,76 @@
 
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{New Stuff}
+	Heat transfer mechanisms:
+	\begin{itemize}
+		\item Conduction
+		\item Convection
+		\item Generation
+	\end{itemize}
 	\subsection{COE}
 		\begin{gather}
-			
+			\frac{\partial E }{\partial t } = E_\text{in} - E_\text{out} + E_\text{gen} \\
+			\rho c_\text{p} V \frac{\partial T}{\partial t} = E_\text{in} - E_\text{out} + E_\text{gen} \\
+			\rho c_\text{p} V \frac{\partial T}{\partial t} = \dot{q}''_\text{cond,in} A_\text{c} - \dot{q}''_\text{cond,out} A_\text{c} - \dot{q}''_\text{conv} A_\text{outside} + \dot{q}_\text{gen} \\
+			%
+			\rho c_\text{p} V \frac{\partial T}{\partial t} = - \left( \dot{q}''_\text{cond,out} - \dot{q}''_\text{cond,in} \right)  A_\text{c} - \dot{q}''_\text{conv} A_\text{outside} + \dot{q}_\text{gen} 
+			\label{eqn:COE_Balance}
+			%
+			%\rho c_\text{p}  \frac{\partial T }{\partial t} = - \left( \dot{q}''_\text{cond,out} - \dot{q}''_\text{cond,in} \right) \frac{ A_\text{c} }{ V } - \dot{q}''_\text{conv} \frac{ A_\text{outside} }{V} + \dot{q}'''_\text{gen} \\
+			%
+			%\rho c_\text{p}  \frac{\partial T }{\partial t} = - \left( \dot{q}''_\text{cond,out} - \dot{q}''_\text{cond,in} \right) \frac{1}{ \Delta x } - \dot{q}''_\text{conv} \frac{ A_\text{outside} }{V} + \dot{q}'''_\text{gen} \label{eqn:COE_Balance}
 		\end{gather}
+		where
+		\begin{gather}
+			\dot{q}''_\text{cond} = -\lambda \nabla T \\
+			\dot{q}''_\text{conv} = h \left( T_\text{s} - T_\infty \right)
+		\end{gather}
+		
+		\subsection{Average Properties}
+			Combined density of a control volume
+			\begin{gather}
+				\rho_\text{CV} = \frac{ m_\text{CV} }{ V } = \frac{\sum_m m_m }{ V } = \frac{ \sum_m V_m \rho_m }{ V } = \sum_m \varepsilon_m \rho_m 
+			\end{gather}
+			Combined specific heat capacity
+			\begin{gather}
+				c_\text{p,CV} = \frac{ \sum_m \varepsilon_m \rho_m c_{\text{p},m} }{ \sum_m \varepsilon_m \rho_m }
+				              = \frac{ \sum_m \varepsilon_m \rho_m c_{\text{p},m} }{ \rho_\text{CV} }
+			\end{gather}
+			Combined thermal conductivity
+			\begin{gather}
+			\lambda_\text{CV} = \frac{ \sum_m \varepsilon_m \rho_m \lambda_m }{ \sum_m \varepsilon_m \rho_m }
+							  = \frac{ \sum_m \varepsilon_m \rho_m \lambda_m }{ \rho_\text{CV} }
+			\end{gather}
+			where $m$ is the phase such as electrode or electrolyte.
+		
+		\subsubsection{Heat Generation mechanisms:}
+		\begin{itemize}
+			\item Electronic
+			\item Ionic
+			\item Faradaic 
+		\end{itemize}
+		The left-hand side of Eqn. \ref{eqn:COE_Balance} has units of 
+		W. 
+		%W~m$^{-3}$. 
+		Electrical power is calculated using $P=IV=I^2R$ and has units of watts.
+		In the following derivations $I = i_m A$ and $V = \Delta \phi_m$.
+		For electronic heat generation (heat produced by current in the electrode)
+		\begin{gather}
+			\dot{q}_\text{gen,elec} = i_\text{ed} A_\text{c} \Delta \phi_\text{ed} %\hspace{10pt} \text{Units: W}
+			%\dot{q}'''_\text{gen,elec} = i_\text{ed} \nabla \phi_\text{ed} \hspace{10pt} \text{Units: W m$^{-3}$}
+		\end{gather}
+		Ionic heat generation (heat produced by current in the electrolyte) follows the same scheme			
+		\begin{gather}
+			\dot{q}_\text{gen,ionic} = i_\text{el} A_\text{c} \Delta \phi_\text{el} 
+			%\dot{q}'''_\text{gen,ionic} = i_\text{el} \nabla \phi_\text{el} 
+		\end{gather}
+		Faradaic heat generation is produced from the charge transfer current.
+		\begin{gather}
+			\dot{q}_\text{gen,Far} = i_\text{BV} A_\text{surf} V_\text{SEI} 
+			%\dot{q}'''_\text{gen,Far} = \frac{ \dot{Q}_\text{gen,Far} }{ V_\text{CV} } \\
+			%\dot{q}'''_\text{gen,Far} = i_\text{BV} A_\text{s} V_\text{SEI} 
+		\end{gather}			
+		
 \section{Introduction}
 	In 1993 and 1994, Doyle, Fuller, and Newman \cite{DFN93,FDN94} published a model that we know today as the pseudo-2- dimensional (P2D) model. To this day, the P2D model is the most widely used model for predicting the response of a battery under load. The goal of this research is to create our own Li-ion battery model that will improve upon the P2D model; using ideas such as distributed charge transfer and including a binder phase. 
 	%To predict the voltage response of a battery, this model considers charge-transfer at the surface of the active materials and species transport properties throughout the electrodes and electrolyte (Section \ref{sec:GovnEqns}). Implementation of an equivalent circuit is used to describe the governing equations (Section \ref{sec:EquivCirc}). Nodal method, used in calculating circuit properties, is used to derive the system of equations representing the equivalent circuit model. The system is solved using an ODE solver capable of handling a system of DAEs (Section \ref{sec:Numerical}).

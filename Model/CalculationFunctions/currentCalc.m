@@ -2,10 +2,11 @@
 % The ith index is the flux at the left (minus) face of the ith control volume
 function [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , FLAG , i_user , props)
 %% Initialize
-zeros_vec   = NaN(1 , N.N_CV_tot+1);
-i_el        = zeros_vec;
-i_ed        = zeros_vec;
+    zeros_vec   = NaN(1 , N.N_CV_tot+1);
+    i_el        = zeros_vec;
+    i_ed        = zeros_vec;
 
+    
 %% Calc
 % ---- Anode ----
     % CC/AN Boundary Condition
@@ -73,8 +74,8 @@ i_ed        = zeros_vec;
         end
 
 % Boundary Condition at the CA/CC
-i = N.N_CV_tot + 1;
-i_ed(i) = i_user; % Electronic flux through current collector
-i_el(i) = 0;      % No ionic   flux through current collector
+    i = N.N_CV_tot + 1;
+    i_ed(i) = i_user; % Electronic flux through current collector
+    i_el(i) = 0;      % No ionic   flux through current collector
 
 end

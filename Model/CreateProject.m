@@ -67,9 +67,13 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % % folder_name  = 'TestNewInputFileNoise_SplitSim';
 % battery_name = 'Test';
 
-folder_name  = 'ThermalGradient';
+% folder_name  = 'ThermalGradient';
+% % battery_name = 'Test';
+% % battery_name = '4C_A2C_ThermalGradient';
+% battery_name = '4C_C2A_ThermalGradient';
+
+folder_name  = 'COETest';
 battery_name = 'Test';
-% battery_name = '4C_A2C_ThermalGradient';
 
 
 %% Simulations

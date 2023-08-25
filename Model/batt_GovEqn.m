@@ -16,7 +16,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 
 %% Calculate i_user
-    if SIM.SimMode == 3 % State Space EIS
+    if     SIM.SimMode == 3 % State Space EIS
         % Uses the i_user value from the function handle
     elseif SIM.SimMode == 5 % MOO Controller
         % Uses the i_user value from the function handle
@@ -34,22 +34,12 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     J_Liion = JLiionCalc( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , i_el , props);
     J_Li    = JLiCalc( SV , AN , CA , P , N , s_dot , props);
 
-
-%% COE
-    q_cond = zeros(1 , N.N_CV_tot+1);
-    q_conv = zeros(1 , N.N_CV_tot  );
-    q_gen  = zeros(1 , N.N_CV_tot  );
     if FLAG.COE
-        % CALCULATE CONDUCTION WITH BC
-        q_cond = qCondCalc( SV , AN , SEP, CA , EL , P , N , SIM , CONS , FLAG , props);
-        
-        if FLAG.CV_CONV % CALCULATE SURFACE CONVECTION
-            %q_conv 
-        end
-        
-        if FLAG.HEAT_GEN_TOTAL % TOTAL HEAT GEN CALC
-            q_gen = calcHeatGenTot( SV , AN , SEP, CA , EL , P , N , CONS , SIM , FLAG , props , i_el, i_ed, i_Far);
-        end
+        [q_cond , q_conv , q_gen] = thermalAllVectors( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , props, i_el, i_ed, i_Far);
+    else
+        q_cond = zeros(1 , N.N_CV_tot+1);
+        q_conv = zeros(1 , N.N_CV_tot  );
+        q_gen  = zeros(1 , N.N_CV_tot  );
     end
 
 
@@ -65,47 +55,50 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     dSVdt_AN = zeros(N.N_SV_AN,N.N_CV_AN);
     for i = 1:N.N_CV_AN
         % Temp
-    %     dSVdt_an(P.T, i) = (  -(q_cond(i+1) - q_cond(i))/ AN.del_x...
-    %                           - q_conv(i)...
-    %                           + q_gen(i)  )...
-    %                         / ( props(P.rho,i) * props(P.c_p,i) );
-
-        % dSVdt_AN(P.T, i) = -(SV(P.T,i) - SIM.T_inf);
-
-        dSVdt_AN(P.T, i) = 0 ;
+            dSVdt_AN(P.T, i) = -(q_cond(i+1) - q_cond(i)) * SIM.A_c ...
+                               - q_conv(i)                * SIM.A_outside_vec(i) ...
+                               + q_gen(i) ;
         
         % phi_el                    
-        dSVdt_AN(P.del_phi , i) =  (AN.A_c / AN.A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
-                                    - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI;
+            dSVdt_AN(P.del_phi , i) =  (AN.A_c / AN.A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
+                                     - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI;
                             
         % phi_ed                                        
-        dSVdt_AN(P.phi_ed , i) =   i_ed(i  ) + i_el(i  )...
-                                 - (i_ed(i+1) + i_el(i+1));
+            dSVdt_AN(P.phi_ed , i) =   i_ed(i  ) + i_el(i  )...
+                                     - (i_ed(i+1) + i_el(i+1));
         
         % V_1                    
-        dSVdt_AN(P.V_1    , i) = - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI ...
-                                 +  i_Far(i);
+            dSVdt_AN(P.V_1    , i) = - (SV(P.V_1,i) - SV(P.phi_el,i))/AN.R_SEI ...
+                                     +  i_Far(i);
                             
         % V_2                    
-        dSVdt_AN(P.V_2    , i) = - i_Far(i)...
-                                 + SV(P.i_PS,i);
+            dSVdt_AN(P.V_2    , i) = - i_Far(i)...
+                                     + SV(P.i_PS,i);
         
 	    % i_PS                    
-        dSVdt_AN(P.i_PS   , i) =    SV(P.phi_ed,i) - SV(P.V_2,i) -  E_eq_vec(i);
+            dSVdt_AN(P.i_PS   , i) =    SV(P.phi_ed,i) - SV(P.V_2,i) -  E_eq_vec(i);
                             
 	    % C_Li^+
-        dSVdt_AN(P.C_Liion, i) = -(J_Liion(i+1) - J_Liion(i))/ AN.del_x...
-                                  + s_dot(i) * AN.A_s;
+            dSVdt_AN(P.C_Liion, i) = -(J_Liion(i+1) - J_Liion(i))/ AN.del_x...
+                                      + s_dot(i) * AN.A_s;
                     
         % C_Li
-        for j = 1:N.N_R_AN
-                dSVdt_AN(P.C_Li+j-1, i) = -3*(AN.r_half_vec(j+1)^2 * J_Li(j+1,i) - AN.r_half_vec(j)^2 * J_Li(j,i)) ...
-                                           / (AN.r_half_vec(j+1)^3-AN.r_half_vec(j)^3);
-        end
+            for j = 1:N.N_R_AN
+                    dSVdt_AN(P.C_Li+j-1, i) = -3*(AN.r_half_vec(j+1)^2 * J_Li(j+1,i) - AN.r_half_vec(j)^2 * J_Li(j,i)) ...
+                                               / (AN.r_half_vec(j+1)^3-AN.r_half_vec(j)^3);
+            end
     end
+
     % Fix Boundary Conditions
-        i = 1;
-        dSVdt_AN(P.phi_ed, i) = -SV(P.phi_ed,i);
+        % Set Anode to be reference electrode
+            i = 1;
+            dSVdt_AN(P.phi_ed, i) = -SV(P.phi_ed,i);
+
+        % If Known Temperature BC
+           if FLAG.T_BC_AN == 1 && FLAG.COE 
+               i = 1;
+               dSVdt_AN(P.T, i) = SV(P.T,i) - SIM.Temp_AN_BC;
+           end
 
 
 %% ---- Separator ----
@@ -113,18 +106,15 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     for i = 1:N.N_CV_SEP 
         index_offset = N.N_CV_AN + i;  
         % Temp
-        dSVdt_SEP(P.SEP.T, i) = 0 ;
-        % dSVdt_SEP(P.SEP.T, i) = -(SV(P.T,index_offset) - SIM.T_inf);
-    %     dSVdt_SEP(P.SEP.T, i) = (  -(q_cond(index_offset+1) - q_cond(index_offset))/ SEP.del_x...
-    %                                - q_conv(index_offset)...
-    %                                + q_gen(index_offset)  )...
-    %                             / ( props(P.rho,index_offset) * props(P.c_p,index_offset) );
+            dSVdt_SEP(P.SEP.T, i) = -(q_cond(index_offset+1) - q_cond(index_offset)) * SIM.A_c ...
+                                    - q_conv(index_offset)                           * SIM.A_outside_vec(index_offset) ...
+                                    + q_gen(index_offset) ;
         
         % phi_el
-        dSVdt_SEP(P.SEP.phi_el, i) = -(i_el(index_offset+1)-i_el(index_offset));
+            dSVdt_SEP(P.SEP.phi_el, i) = -(i_el(index_offset+1)-i_el(index_offset));
         
         % C_Li^+
-        dSVdt_SEP(P.SEP.C_Liion, i)= -(J_Liion(index_offset+1) - J_Liion(index_offset))/SEP.del_x;
+            dSVdt_SEP(P.SEP.C_Liion, i)= -(J_Liion(index_offset+1) - J_Liion(index_offset))/SEP.del_x;
     end
 
 
@@ -133,42 +123,47 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     for i = 1:N.N_CV_CA
         index_offset = N.N_CV_AN + N.N_CV_SEP + i;  
         % Temp
-        dSVdt_CA(P.T, i) = 0 ;
-        % dSVdt_CA(P.T, i) =  -(SV(P.T,index_offset) - SIM.T_inf);
-    % 	dSVdt_CA(P.T, i) =  (  -(q_cond(index_offset+1) - q_cond(index_offset))/ CA.del_x...
-    %                            - q_conv(index_offset)...
-    %                            + q_gen(index_offset)  )...
-    %                            / ( props(P.rho,index_offset) * props(P.c_p,index_offset) );
+    	    dSVdt_CA(P.T, i) = -(q_cond(index_offset+1) - q_cond(index_offset)) * SIM.A_c ...
+                               - q_conv(index_offset)                           * SIM.A_outside_vec(index_offset) ...
+                               + q_gen(index_offset) ;
         
         % phi_el
-        dSVdt_CA(P.del_phi , i) =  (CA.A_c / CA.A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
-                                    - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI;
+            dSVdt_CA(P.del_phi , i) =  (CA.A_c / CA.A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
+                                        - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI;
         
 	    % phi_ed                    
-        dSVdt_CA(P.phi_ed , i)  =   i_ed(index_offset  ) + i_el(index_offset  )...
-                                  - (i_ed(index_offset+1) + i_el(index_offset+1));
+            dSVdt_CA(P.phi_ed , i)  =   i_ed(index_offset  ) + i_el(index_offset  )...
+                                      - (i_ed(index_offset+1) + i_el(index_offset+1));
         
 	    % V_1                    
-        dSVdt_CA(P.V_1    , i)  = - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI ...
-                                  +  i_Far(index_offset);
+            dSVdt_CA(P.V_1    , i)  = - (SV(P.V_1,index_offset) - SV(P.phi_el,index_offset))/CA.R_SEI ...
+                                      +  i_Far(index_offset);
         
 	    % V_2                    
-        dSVdt_CA(P.V_2    , i)  = -  i_Far(index_offset)...
-                                  +  SV(P.i_PS,index_offset);
+            dSVdt_CA(P.V_2    , i)  = -  i_Far(index_offset)...
+                                      +  SV(P.i_PS,index_offset);
         
 	    % i_PS                    
-        dSVdt_CA(P.i_PS   , i)  =    SV(P.phi_ed,index_offset) - SV(P.V_2,index_offset) ...
-                                  -  E_eq_vec(index_offset);
+            dSVdt_CA(P.i_PS   , i)  =    SV(P.phi_ed,index_offset) - SV(P.V_2,index_offset) ...
+                                      -  E_eq_vec(index_offset);
         
         % C_Li^+
-        dSVdt_CA(P.C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset))/ CA.del_x...
-                                  + s_dot(index_offset) * CA.A_s;
+            dSVdt_CA(P.C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset))/ CA.del_x...
+                                      + s_dot(index_offset) * CA.A_s;
         % C_Li
-        for j = 1:N.N_R_CA
-                dSVdt_CA(P.C_Li+j-1, i) = -3*(CA.r_half_vec(j+1)^2 * J_Li(j+1,index_offset) - CA.r_half_vec(j)^2 * J_Li(j,index_offset)) ...
-                                           / (CA.r_half_vec(j+1)^3-CA.r_half_vec(j)^3);
-        end
+            for j = 1:N.N_R_CA
+                    dSVdt_CA(P.C_Li+j-1, i) = -3*(CA.r_half_vec(j+1)^2 * J_Li(j+1,index_offset) - CA.r_half_vec(j)^2 * J_Li(j,index_offset)) ...
+                                               / (CA.r_half_vec(j+1)^3-CA.r_half_vec(j)^3);
+            end
     end
+
+    % Fix Boundary Conditions
+        % If Known Temperature BC
+           if FLAG.T_BC_CA == 1 && FLAG.COE 
+               i = N.N_CV_CA;
+               index_offset     = N.N_CV_AN + N.N_CV_SEP + i;
+               dSVdt_CA(P.T, i) = SV( P.T , index_offset ) - SIM.Temp_CA_BC;
+           end
 
 
 %% Reshape

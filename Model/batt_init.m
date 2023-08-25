@@ -26,8 +26,7 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
 
 
 %% Control Volume Modification for Distributed
-% If radial concentration gradients are not considered, then set the number
-% of radial control volumes equal to 1
+    % If radial concentration gradients are not considered, then set the number of radial control volumes equal to 1
     if ~FLAG.R_AN
         N.N_R_AN  = 1;
     end
@@ -93,9 +92,9 @@ end
     P.sigma      = i; i = i + 1;
     P.kappa      = i; i = i + 1;
     P.R_SEI      = i; i = i + 1;
-    P.k          = i; i = i + 1;
-    P.rho        = i; i = i + 1;
-    P.c_p        = i; i = i + 1;
+    P.lambda_eff = i; i = i + 1;
+    P.rho_eff    = i; i = i + 1;
+    P.c_p_eff    = i; i = i + 1;
     P.D_o_Li_ion = i; i = i + 1;
     P.activity   = i; i = i + 1;
     P.tf_num     = i; i = i + 1;
@@ -170,6 +169,15 @@ end
 
 
 %% Various Needed Calculations
+% Electrolyte volume fraction
+    AN.eps_el   = 1 - AN.eps_ed - AN.eps_b;
+    SEP.eps_el  =     SEP.eps;               
+    SEP.eps_sep = 1 - SEP.eps_el;
+    CA.eps_el   = 1 - CA.eps_ed - CA.eps_b;
+
+% Effective thermal properties
+    [AN , SEP , CA] = getEffectiveThermalProps(AN , SEP , CA , EL);
+
 % Initialize PROPS
     PROPS = zeros( N.N_prop , N.N_CV_tot );
     
@@ -178,19 +186,14 @@ end
     PROPS( P.kappa      , : )              = EL.kappa * ones( 1 , N.N_CV_tot );
     PROPS( P.R_SEI      , N.CV_Region_AN ) = AN.R_SEI * ones( 1 , N.N_CV_AN );
     PROPS( P.R_SEI      , N.CV_Region_CA ) = CA.R_SEI * ones( 1 , N.N_CV_CA );
-    PROPS( P.k          , : )              = [AN.k  *ones(1,N.N_CV_AN), SEP.k  *ones(1,N.N_CV_SEP), CA.k  *ones(1,N.N_CV_CA)];
-    PROPS( P.rho        , : )              = [AN.rho*ones(1,N.N_CV_AN), SEP.rho*ones(1,N.N_CV_SEP), CA.rho*ones(1,N.N_CV_CA)];
-    PROPS( P.c_p        , : )              = [AN.c_p*ones(1,N.N_CV_AN), SEP.c_p*ones(1,N.N_CV_SEP), CA.c_p*ones(1,N.N_CV_CA)];
+    PROPS( P.lambda_eff , : )              = [AN.lambda_eff * ones(1,N.N_CV_AN) , SEP.lambda_eff * ones(1,N.N_CV_SEP) , CA.lambda_eff * ones(1,N.N_CV_CA)];
+    PROPS( P.rho_eff    , : )              = [AN.rho_eff    * ones(1,N.N_CV_AN) , SEP.rho_eff    * ones(1,N.N_CV_SEP) , CA.rho_eff    * ones(1,N.N_CV_CA)];
+    PROPS( P.c_p_eff    , : )              = [AN.c_p_eff    * ones(1,N.N_CV_AN) , SEP.c_p_eff    * ones(1,N.N_CV_SEP) , CA.c_p_eff    * ones(1,N.N_CV_CA)];
     PROPS( P.D_o_Li_ion , : )              = EL.D_o_Li_ion * ones( 1 , N.N_CV_tot );
     PROPS( P.activity   , : )              = EL.Activity   * ones( 1 , N.N_CV_tot );
     PROPS( P.tf_num     , : )              = EL.tf_num     * ones( 1 , N.N_CV_tot );
     PROPS( P.D_o:(P.D_o+N.N_R_AN-1)    , N.CV_Region_AN ) = AN.D_o        * ones( N.N_R_AN , N.N_CV_AN );
     PROPS( P.D_o:(P.D_o+N.N_R_CA-1)    , N.CV_Region_CA ) = CA.D_o        * ones( N.N_R_CA , N.N_CV_CA );
-    
-% Electrolyte volume fraction
-    AN.eps_el  = 1 - AN.eps_ed - AN.eps_b;
-    SEP.eps_el =    SEP.eps;               %     SEP.eps_el = 1 - SEP.eps; %%%%%%%%%
-    CA.eps_el  = 1 - CA.eps_ed - CA.eps_b;
 
 % Initialize Bruggeman
     if FLAG.Bruggeman
@@ -246,111 +249,122 @@ end
 
 % Initial Thermal Gradient
     if FLAG.InitialThermalGradient
-        L_tot = SIM.x_vec(end) - SIM.x_vec(1);
-        Delta_temp = SIM.CA_Temp - SIM.AN_Temp;
-        Slope = Delta_temp / L_tot;
-        temp_fnc = @(x) Slope.*x + SIM.AN_Temp;
-        Temp_vec = temp_fnc(SIM.x_vec);
+        L_tot      = SIM.x_vec(end) - SIM.x_vec(1);
+        Delta_temp = SIM.CA_Temp_init - SIM.AN_Temp_init;
+        Slope      = Delta_temp / L_tot;
+        temp_fnc   = @(x) Slope.*x + SIM.AN_Temp_init;
+        Temp_vec   = temp_fnc(SIM.x_vec);
     else
-        Temp_vec = SIM.Temp_start * ones( 1 , N.N_CV_tot );
+        Temp_vec = SIM.Temp_init * ones( 1 , N.N_CV_tot );
     end
 
 
 %% Geometry Calcs
-% Control Volume - Volume
-    % A_c  ~ cross-sectional area in the x-direction
-    % Vol  ~ Total volume of the electrode
-    % dVol ~ Volume of each control volume
-    
-    % ---- Anode ----
+% A_c       ~ cross-sectional area in the x-direction
+% A_outside ~ Control Volume surface area
+% Vol       ~ Total volume of the electrode
+% dVol      ~ Volume of each control volume
+
+% ---- Anode ----
     if SIM.cell_geo == 'p'
-        AN.A_c  = AN.del_z * AN.del_y;
+        AN.A_c       = AN.del_z * AN.del_y;
+        AN.A_outside = (2*AN.del_z + 2*AN.del_y)*AN.del_x;
     elseif SIM.cell_geo == 'c'
-        AN.A_c  = pi * (AN.diam / 2)^2;
+        AN.A_c       = pi * (AN.diam / 2)^2;
+        AN.A_outside = pi *  AN.diam * AN.del_x;
     end
     AN.Vol  = AN.A_c * AN.L;
     AN.dVol = AN.A_c * AN.del_x;
-    
-    % ---- Separator ----
+
+% ---- Separator ----
     if SIM.cell_geo == 'p'
         SEP.A_c  = SEP.del_z * SEP.del_y;
+        SEP.A_outside = (2*SEP.del_z + 2*SEP.del_y)*SEP.del_x;
     elseif SIM.cell_geo == 'c'
         SEP.A_c  = pi * (SEP.diam / 2)^2;
+        SEP.A_outside = pi *  SEP.diam * SEP.del_x;
     end
     SEP.Vol  = SEP.A_c * SEP.L;
     SEP.dVol = SEP.A_c * SEP.del_x;
-    
-    % ---- Cathode ----
+
+% ---- Cathode ----
     if SIM.cell_geo == 'p'
         CA.A_c  = CA.del_z * CA.del_y;
+        CA.A_outside = (2*CA.del_z + 2*CA.del_y)*CA.del_x;
     elseif SIM.cell_geo == 'c'
         CA.A_c  = pi * (CA.diam / 2)^2;
+        CA.A_outside = pi *  CA.diam * CA.del_x;
     end
     CA.Vol  = CA.A_c * CA.L;
     CA.dVol = CA.A_c * CA.del_x;
-    
+
+% Vectorize
     SIM.CV_vec = [AN.dVol*ones(1,N.N_CV_AN),...
                  SEP.dVol*ones(1,N.N_CV_SEP),...
                   CA.dVol*ones(1,N.N_CV_CA)];
 
+    SIM.A_outside_vec = [AN.A_outside*ones(1,N.N_CV_AN),...
+                        SEP.A_outside*ones(1,N.N_CV_SEP),...
+                         CA.A_outside*ones(1,N.N_CV_CA)];
+
 % Various Geometry Parameters
     % ---- Anode ----
-    AN.V_sphere   = (4/3)*pi*AN.r_p^3;         % [m^3],        Volume of a single spherical particle
-    AN.V_ed       = AN.eps_ed * AN.Vol;        % [m^3],        Volume of the electrode
-    AN.V_el       = AN.eps_el * AN.Vol;        % [m^3],        Volume of the electrolyte
-    AN.dVol_el    = AN.V_el / N.N_CV_AN;       % [m^3 per CV], Volume of electrolyte in each control volume
-    AN.Np_tot     = AN.V_ed / AN.V_sphere;     % Number of total spherical particles
-    AN.Np_CV      = AN.Np_tot / N.N_CV_AN;     % Number of particles per control volume
-    AN.A_surf     = 4*pi*AN.r_p^2;             % [m^2],        Surface area of a particle
-    AN.A_surf     = AN.A_surf * AN.A_geo;      % [m^2],        Account for ecentricity of spherical particle
-    AN.A_surf_tot = AN.A_surf * AN.Np_tot;     % [m^2],        Total surface area in the electrode region
-    AN.A_surf_CV  = AN.A_surf_tot / N.N_CV_AN; % [m^2 per CV], Surface area per control volume
-    AN.A_s        = AN.A_surf_tot / AN.Vol;    % [m^2_surf / m^3_CV]  Particle surface area per control volume
-    
-    if FLAG.AN_LI_FOIL
-        AN.A_surf = AN.A_c;
-        AN.A_surf_CV = AN.A_surf;
-    end
+        AN.V_sphere   = (4/3)*pi*AN.r_p^3;         % [m^3],        Volume of a single spherical particle
+        AN.V_ed       = AN.eps_ed * AN.Vol;        % [m^3],        Volume of the electrode
+        AN.V_el       = AN.eps_el * AN.Vol;        % [m^3],        Volume of the electrolyte
+        AN.dVol_el    = AN.V_el / N.N_CV_AN;       % [m^3 per CV], Volume of electrolyte in each control volume
+        AN.Np_tot     = AN.V_ed / AN.V_sphere;     % Number of total spherical particles
+        AN.Np_CV      = AN.Np_tot / N.N_CV_AN;     % Number of particles per control volume
+        AN.A_surf     = 4*pi*AN.r_p^2;             % [m^2],        Surface area of a particle
+        AN.A_surf     = AN.A_surf * AN.A_geo;      % [m^2],        Account for ecentricity of spherical particle
+        AN.A_surf_tot = AN.A_surf * AN.Np_tot;     % [m^2],        Total surface area in the electrode region
+        AN.A_surf_CV  = AN.A_surf_tot / N.N_CV_AN; % [m^2 per CV], Surface area per control volume
+        AN.A_s        = AN.A_surf_tot / AN.Vol;    % [m^2_surf / m^3_CV]  Particle surface area per control volume
+        
+        if FLAG.AN_LI_FOIL
+            AN.A_surf    = AN.A_c;
+            AN.A_surf_CV = AN.A_surf;
+        end
 
     % ---- Separator ----
-    SEP.V_el      = SEP.eps_el * SEP.Vol;
-    SEP.dVol_el   = SEP.V_el / N.N_CV_SEP;
+        SEP.V_el      = SEP.eps_el * SEP.Vol;
+        SEP.dVol_el   = SEP.V_el / N.N_CV_SEP;
     
     % ---- Cathode ----
-    CA.V_sphere   = (4/3)*pi*CA.r_p^3;         % [m^3],        Volume of a single spherical particle
-    CA.V_ed       = CA.eps_ed * CA.Vol;        % [m^3],        Volume of the electrode
-    CA.V_el       = CA.eps_el * CA.Vol;        % [m^3],        Volume of the electrolyte
-    CA.dVol_el    = CA.V_el / N.N_CV_CA;       % [m^3 per CV], Volume of electrolyte in each control volume
-    CA.Np_tot     = CA.V_ed / CA.V_sphere;     % Number of total spherical particles
-    CA.Np_CV      = CA.Np_tot / N.N_CV_CA;     % Number of particles per control volume
-    CA.A_surf     = 4*pi*CA.r_p^2;             % [m^2],        Surface area of a particle
-    CA.A_surf     = CA.A_surf * AN.A_geo;      % [m^2],        Account for ecentricity of spherical particle
-    CA.A_surf_tot = CA.A_surf * CA.Np_tot;     % [m^2],        Total surface area om the electrode region
-    CA.A_surf_CV  = CA.A_surf_tot / N.N_CV_CA; % [m^2 per CV], Surface area per control volume
-    CA.A_s        = CA.A_surf_tot / CA.Vol;    % [m^2_surf / m^3_CV]  Particle surface area per control volume
+        CA.V_sphere   = (4/3)*pi*CA.r_p^3;         % [m^3],        Volume of a single spherical particle
+        CA.V_ed       = CA.eps_ed * CA.Vol;        % [m^3],        Volume of the electrode
+        CA.V_el       = CA.eps_el * CA.Vol;        % [m^3],        Volume of the electrolyte
+        CA.dVol_el    = CA.V_el / N.N_CV_CA;       % [m^3 per CV], Volume of electrolyte in each control volume
+        CA.Np_tot     = CA.V_ed / CA.V_sphere;     % Number of total spherical particles
+        CA.Np_CV      = CA.Np_tot / N.N_CV_CA;     % Number of particles per control volume
+        CA.A_surf     = 4*pi*CA.r_p^2;             % [m^2],        Surface area of a particle
+        CA.A_surf     = CA.A_surf * AN.A_geo;      % [m^2],        Account for ecentricity of spherical particle
+        CA.A_surf_tot = CA.A_surf * CA.Np_tot;     % [m^2],        Total surface area om the electrode region
+        CA.A_surf_CV  = CA.A_surf_tot / N.N_CV_CA; % [m^2 per CV], Surface area per control volume
+        CA.A_s        = CA.A_surf_tot / CA.Vol;    % [m^2_surf / m^3_CV]  Particle surface area per control volume
     
-    if FLAG.CA_LI_FOIL
-        CA.A_surf = CA.A_c;
-        CA.A_surf_CV = CA.A_surf;
-    end
+        if FLAG.CA_LI_FOIL
+            CA.A_surf    = CA.A_c;
+            CA.A_surf_CV = CA.A_surf;
+        end
     
-    % Matrix of all surface areas
-    SIM.A_surf_CV_vec = [AN.A_surf_CV*ones(1,N.N_CV_AN),...
-                                    zeros(1,N.N_CV_SEP),...
-                         CA.A_surf_CV*ones(1,N.N_CV_CA)];
+    % Vectorize
+        SIM.A_surf_CV_vec = [AN.A_surf_CV*ones(1,N.N_CV_AN),...
+                                        zeros(1,N.N_CV_SEP),...
+                             CA.A_surf_CV*ones(1,N.N_CV_CA)];
     
 % Radial Volume
     % ---- Anode ----
-    AN.dVol_r = zeros(N.N_R_AN,1);
-    for i = 1:N.N_R_AN
-        AN.dVol_r(i) = (4*pi/3)*(AN.r_half_vec(i+1)^3 - AN.r_half_vec(i)^3); % dV of each control volume
-    end
+        AN.dVol_r = zeros(N.N_R_AN,1);
+        for i = 1:N.N_R_AN
+            AN.dVol_r(i) = (4*pi/3)*(AN.r_half_vec(i+1)^3 - AN.r_half_vec(i)^3); % dV of each control volume
+        end
     
     % ---- Cathode ----
-    CA.dVol_r = zeros(N.N_R_CA,1);
-    for i = 1:N.N_R_CA
-        CA.dVol_r(i) = (4*pi/3)*(CA.r_half_vec(i+1)^3 - CA.r_half_vec(i)^3); % dV of each control volume
-    end
+        CA.dVol_r = zeros(N.N_R_CA,1);
+        for i = 1:N.N_R_CA
+            CA.dVol_r(i) = (4*pi/3)*(CA.r_half_vec(i+1)^3 - CA.r_half_vec(i)^3); % dV of each control volume
+        end
     
 
 %% Capacity Calculations 
@@ -373,61 +387,62 @@ end
 
 
 %% Mole Fraction Calculation
-    % x and y are the anode and cathode mole fractions respectively
-    % Points that are being determined
+% x and y are the anode and cathode mole fractions respectively
+% Points that are being determined
     % * F: Mole fractions at formation
     % * A: Mole fraction when x = 0
     % * B: Mole fraction when x = 1
     % * C: Mole fraction at V_max
     % * D: Mole fraction at V_min
-    options = optimoptions('lsqnonlin');
+    options         = optimoptions('lsqnonlin');
     options.Display = 'off';
 
     F_x = SIM.AnodeFormation_X;
     F_y = SIM.CathodeFormation_X;
-    % y-intercept
-        y_intcep = F_y + z * F_x;
 
-    % y mole fraction at x limits
-        A_x = 0;
-        A_y = -z*A_x + y_intcep;
-        B_x = 1;
-        B_y = -z*B_x + y_intcep;
+% y-intercept
+    y_intcep = F_y + z * F_x;
 
-    % Mole fractions at V_max
-        x0 = F_x;
-        lb = 0;
-        ub = 1;
-        V_des = SIM.VoltageMax;
-        C_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
-        C_y = YfromX(C_x,z,y_intcep);
+% y mole fraction at x limits
+    A_x = 0;
+    A_y = -z*A_x + y_intcep;
+    B_x = 1;
+    B_y = -z*B_x + y_intcep;
 
-    % Mole fractions at V_min
-        x0 = F_x;
-        lb = 0;
-        ub = 1;
-        V_des = SIM.VoltageMin;
-        D_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
-        D_y = YfromX(D_x,z,y_intcep);
+% Mole fractions at V_max
+    x0 = F_x;
+    lb = 0;
+    ub = 1;
+    V_des = SIM.VoltageMax;
+    C_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+    C_y = YfromX(C_x,z,y_intcep);
 
-    % Limits on x and y
-        SIM.x_min = max(A_x,D_x);
-        SIM.x_max = min(B_x,C_x);
-        SIM.y_min = YfromX(SIM.x_max,z,y_intcep);
-        SIM.y_max = YfromX(SIM.x_min,z,y_intcep);
+% Mole fractions at V_min
+    x0 = F_x;
+    lb = 0;
+    ub = 1;
+    V_des = SIM.VoltageMin;
+    D_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+    D_y = YfromX(D_x,z,y_intcep);
 
-    % Initial Lithiation Fraction
-        SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
-        SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
+% Limits on x and y
+    SIM.x_min = max(A_x,D_x);
+    SIM.x_max = min(B_x,C_x);
+    SIM.y_min = YfromX(SIM.x_max,z,y_intcep);
+    SIM.y_max = YfromX(SIM.x_min,z,y_intcep);
 
-    % Determine electrode initial voltage potential
-        voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
-        voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
-        voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
+% Initial Lithiation Fraction
+    SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
+    SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
 
-    % Calculate electrode initial active material concentration
-        concen_ini_an = AN.C_Li_max * SIM.x_ini;
-        concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+% Determine electrode initial voltage potential
+    voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
+    voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
+    voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
+
+% Calculate electrode initial active material concentration
+    concen_ini_an = AN.C_Li_max * SIM.x_ini;
+    concen_ini_ca = CA.C_Li_max * SIM.y_ini;
     
     
 %% Determine Minimum Parameters
@@ -524,7 +539,7 @@ end
             SV_IC(index_offset + P.C_Liion) =  EL.C; 
         % C_Li
             for j = 1:N.N_R_AN
-                SV_IC(index_offset+P.C_Li+j-1)   = concen_ini_an;
+                SV_IC(index_offset+P.C_Li+j-1) = concen_ini_an;
             end
     end
     
@@ -560,7 +575,7 @@ end
             SV_IC(index_offset + P.C_Liion) =  EL.C;
         % C_Li
             for j = 1:N.N_R_CA
-                SV_IC(index_offset+N.N_SV_nR+j)   = concen_ini_ca;
+                SV_IC(index_offset+N.N_SV_nR+j) = concen_ini_ca;
             end
     end
 
@@ -613,10 +628,10 @@ end
     end
 
 % Create phi vector    
-    phi_temp = SV(P.del_phi:P.i_PS, :);
-    phi_temp(end+1,: ) = zeros(1,N.N_CV_tot ); % Adding a row for the new constraint equation(i_dl)
-    phi_temp(end,N.CV_Region_SEP) = NaN(1,N.N_CV_SEP); % No SV in the SEP region for the new constraint
-    phi_temp = reshape(phi_temp, [],1);
+    phi_temp                      = SV(P.del_phi:P.i_PS, :);
+    phi_temp(end+1,: )            = zeros(1,N.N_CV_tot );    % Adding a row for the new constraint equation(i_dl)
+    phi_temp(end,N.CV_Region_SEP) = NaN(1,N.N_CV_SEP);       % No SV in the SEP region for the new constraint
+    phi_temp                      = reshape(phi_temp, [],1);
 
 % Remove NaN
     phi_guess = zeros((N.N_ES_var)*N.N_CV_AN + N.N_CV_SEP + (N.N_ES_var)*N.N_CV_CA , 1);
@@ -636,8 +651,8 @@ end
     
 % Solve for better phi values
     phi_soln = fsolve(@(phi) phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props) , phi_guess , SIM.fsolve_options);
-    i_user = phi_soln(end);
-    phi = phi1Dto2D( phi_soln(1:end-1) , N , P , FLAG);
+    i_user   = phi_soln(end);
+    phi      = phi1Dto2D( phi_soln(1:end-1) , N , P , FLAG);
 
 
 %% Fix phi for Initial State Vector
@@ -645,51 +660,51 @@ end
     for i = 1:N.N_CV_AN
         index_offset = (i-1)*N.N_SV_AN; 
         % phi_el
-        SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi,i); 
+            SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi,i); 
         % phi_ed
-        SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed,i);  
+            SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed,i);  
         % V_1
-        SV_IC(index_offset + P.V_1)     =  phi(P.ES.V_1   ,i);  
+            SV_IC(index_offset + P.V_1)     =  phi(P.ES.V_1   ,i);  
         % V_2
-        SV_IC(index_offset + P.V_2)     =  phi(P.ES.V_2   ,i);  
+            SV_IC(index_offset + P.V_2)     =  phi(P.ES.V_2   ,i);  
         % i_PS
-        SV_IC(index_offset + P.i_PS)    =  phi(P.ES.i_PS  ,i); 
+            SV_IC(index_offset + P.i_PS)    =  phi(P.ES.i_PS  ,i); 
     end
 
 % ---- Separator ----
     for i = 1:N.N_CV_SEP
         index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
         % phi_el
-        SV_IC(index_offset + P.SEP.phi_el) =  phi(P.ES.del_phi,i+N.N_CV_AN); 
+            SV_IC(index_offset + P.SEP.phi_el) =  phi(P.ES.del_phi,i+N.N_CV_AN); 
     end
 
 % ---- Cathode ----
     for i = 1:N.N_CV_CA
         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
         % phi_el
-        SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi , i+N.N_CV_AN+N.N_CV_SEP); 
+            SV_IC(index_offset + P.del_phi) =  phi(P.ES.del_phi , i+N.N_CV_AN+N.N_CV_SEP); 
         % phi_ed
-        SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed , i+N.N_CV_AN+N.N_CV_SEP);  
+            SV_IC(index_offset + P.phi_ed)  =  phi(P.ES.phi_ed , i+N.N_CV_AN+N.N_CV_SEP);  
         % V_1
-        SV_IC(index_offset + P.V_1   )  =  phi(P.ES.V_1    , i+N.N_CV_AN+N.N_CV_SEP);  
+            SV_IC(index_offset + P.V_1   )  =  phi(P.ES.V_1    , i+N.N_CV_AN+N.N_CV_SEP);  
         % V_2
-        SV_IC(index_offset + P.V_2   )  =  phi(P.ES.V_2    , i+N.N_CV_AN+N.N_CV_SEP);  
+            SV_IC(index_offset + P.V_2   )  =  phi(P.ES.V_2    , i+N.N_CV_AN+N.N_CV_SEP);  
         % i_PS
-        SV_IC(index_offset + P.i_PS  )  =  phi(P.ES.i_PS   , i+N.N_CV_AN+N.N_CV_SEP); 
+            SV_IC(index_offset + P.i_PS  )  =  phi(P.ES.i_PS   , i+N.N_CV_AN+N.N_CV_SEP); 
     end
 
     SIM.SV_IC = SV_IC;
 
 
 %% Mass Matrix
-M = zeros(N.N_SV_tot,N.N_SV_tot);
-sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into ODEs. With solver working, this isn't needed anymore
-
+    M = zeros(N.N_SV_tot,N.N_SV_tot);
+    sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into ODEs. With solver working, this isn't needed anymore
+    
 % ---- Anode ----
     for i = 1:N.N_CV_AN
         index_offset = (i-1)*N.N_SV_AN;
         % Temp
-            M(index_offset+P.T       , index_offset+P.T )        =  1;
+            M(index_offset+P.T       , index_offset+P.T )        =  AN.rho_eff * AN.c_p_eff * AN.dVol; 
         % del_phi
             M(index_offset+P.del_phi , index_offset+P.del_phi )  =  AN.C_dl;
         % phi_ed 
@@ -712,7 +727,7 @@ sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into
     for i = 1:N.N_CV_SEP
         index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
         % Temp
-            M(index_offset+P.SEP.T       , index_offset+P.SEP.T )        =  1;
+            M(index_offset+P.SEP.T       , index_offset+P.SEP.T )        =  SEP.rho_eff * SEP.c_p_eff * SEP.dVol;
         % phi_el
             M(index_offset+P.SEP.phi_el  , index_offset+P.SEP.phi_el )   =  sim_cap;
         % C_Li^+
@@ -723,7 +738,7 @@ sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into
     for i = 1:N.N_CV_CA
         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
         % Temp
-            M(index_offset+P.T       , index_offset+P.T )        =  1;
+            M(index_offset+P.T       , index_offset+P.T )        =  CA.rho_eff * CA.c_p_eff * CA.dVol;
         % del_phi
             M(index_offset+P.del_phi , index_offset+P.del_phi )  =  CA.C_dl;
         % phi_ed
@@ -747,20 +762,39 @@ sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into
     offset = N.N_SV_AN*(i-1);
     M(P.phi_ed + offset , :) = zeros(1,N.N_SV_tot);
 
+% Fix Known Temperature BC
+    if FLAG.COE
+        if FLAG.T_BC_AN == 1 % 1) Known Temperature
+            i = 1;
+            index_offset = (i-1)*N.N_SV_AN;
+            M(index_offset+P.T , index_offset+P.T ) =  sim_cap; 
+        end
+        if FLAG.T_BC_CA == 1 % 1) Known Temperature
+            i = N.N_CV_CA;
+            index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+            M(index_offset+P.T , index_offset+P.T ) =  sim_cap;
+        end
+    end
 
     SIM.M = M;
 
 
 %% Make Mass for just diffEq
 % if SIM.SimMode == 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
-    % Make indices vector
+
+% Make indices vector
     idx_diff = [];
     idx_algb = [];
-    % ---- Anode ----
+    
+% ---- Anode ----
     for i = 1:N.N_CV_AN
         index_offset = (i-1)*N.N_SV_AN;
         % Temp
-            idx_diff(end+1) = index_offset + P.T;
+            if FLAG.COE && FLAG.T_BC_AN == 1 && i == 1
+                idx_algb(end+1) = index_offset + P.T;
+            else
+                idx_diff(end+1) = index_offset + P.T;
+            end
         % del_phi
             idx_diff(end+1) = index_offset + P.del_phi;
         % phi_ed
@@ -779,7 +813,7 @@ sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into
             end
     end
 
-    % ---- Separator ----
+% ---- Separator ----
     for i = 1:N.N_CV_SEP
         index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
         % Temp
@@ -790,11 +824,15 @@ sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into
             idx_diff(end+1) = index_offset + P.SEP.C_Liion;
     end
 
-    % ---- Cathode ----
+% ---- Cathode ----
     for i = 1:N.N_CV_CA
         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
         % Temp
-            idx_diff(end+1) = index_offset + P.T;
+            if FLAG.COE && FLAG.T_BC_CA == 1 && i == N.N_CV_CA
+                idx_algb(end+1) = index_offset + P.T;
+            else
+                idx_diff(end+1) = index_offset + P.T;
+            end
         % del_phi
             idx_diff(end+1) = index_offset + P.del_phi;
         % phi_ed
@@ -813,8 +851,8 @@ sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into
             end
     end
 
-%     SIM.M_DiffEq = M(idx_diff,idx_diff);
-%     SIM.M_DiffEq_Inv = inv(SIM.M_DiffEq);
+    % SIM.M_DiffEq = M(idx_diff,idx_diff);
+    % SIM.M_DiffEq_Inv = inv(SIM.M_DiffEq);
     SIM.diff_idx = idx_diff;
     SIM.algb_idx = idx_algb;
 
@@ -849,6 +887,9 @@ function res = XfromDesPotential(x,V_des,z,y_intcep,AN,CA)
         Eeq_cell = Eeq_ca - Eeq_an;
         res = Eeq_cell - V_des;
 end
+
+
+
 
 
 %% OOOOOOOLLLLLDDDD Stuff

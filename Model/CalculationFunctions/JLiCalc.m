@@ -5,8 +5,9 @@
 
 function J_Li = JLiCalc( SV , AN , CA , P , N , s_dot , props)
 %% Initialize
-J_Li = NaN(N.N_R_max+1 , N.N_CV_tot); % [kmol m^-2 s^-1], Radial molar flux (in electrode)(m^-2 is the cross-sectional area)
+    J_Li = NaN(N.N_R_max+1 , N.N_CV_tot); % [kmol m^-2 s^-1], Radial molar flux (in electrode)(m^-2 is the cross-sectional area)
 
+    
 %% Calc
 % Symmetry BC
     j = 1;
