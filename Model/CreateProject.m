@@ -68,24 +68,28 @@ FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one 
 % battery_name = 'Test';
 
 % folder_name  = 'ThermalGradient';
-% % battery_name = 'Test';
+% battery_name = 'NoThermalGradient';
 % % battery_name = '4C_A2C_ThermalGradient';
-% battery_name = '4C_C2A_ThermalGradient';
+% % battery_name = '4C_C2A_ThermalGradient';
 
 folder_name  = 'COETest';
-battery_name = 'Test';
+battery_name = '444All_Constant';
+
+% folder_name  = 'QuickTest';
+% battery_name = 'NoisePLots';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
     % C_rates      = [];
-    C_rates      = [0]; 
+    % C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
     % C_rates      = [-1]; 
-    % C_rates      = [1/20 -1/20]; 
+    % C_rates      = [1/20]; 
+    C_rates      = [1/20 -1/20 -1 1]; 
     % C_rates      = [-1/3];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
 
@@ -504,7 +508,7 @@ if doPRBS
         SIM.SimMode   = 8;
         SIM.SOC_start = PRBS_SOC;
         SIM.Tswitch   = PRBS_Tswitch;
-        SIM.t_Report  = PRBS_t_Report ;
+        % SIM.t_Report  = PRBS_t_Report ;
         SIM.PRBSAmp   = PRBS_Amp;
 
         SIM.AddIntermediateRelaxTime      = AddIntermediateRelaxTime;

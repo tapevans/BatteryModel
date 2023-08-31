@@ -8,8 +8,8 @@ function props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS)
     %%%%%% It's less clean but then there's less variables
     Ce   = SV( P.C_Liion , :);
     T    = SV( P.T , :);
-    X_AN = SV( P.C_Li:end , N.CV_Region_AN ) / AN.C_Li_max;
-    X_CA = SV( P.C_Li:end , N.CV_Region_CA ) / CA.C_Li_max;
+    X_AN = SV( P.C_Li:P.C_Li_surf_AN , N.CV_Region_AN ) / AN.C_Li_max;
+    X_CA = SV( P.C_Li:P.C_Li_surf_CA , N.CV_Region_CA ) / CA.C_Li_max;
 
     
 %% Evaluate Properties 

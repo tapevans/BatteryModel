@@ -4,19 +4,19 @@ clc
 %%
 % Test Initialization
 %%% Mode 1 ---- Polarization ----
-%     SIM.SOC_start = 10;   % [%], Initial state of charge
-%     SIM.SimMode = 1;
-% %     SIM.C_rate = 1/20;
-%     SIM.C_rate = 0;
-%     SIM.ChargeOrDischarge = 1;
+    SIM.SOC_start = 10;   % [%], Initial state of charge
+    SIM.SimMode = 1;
+%     SIM.C_rate = 1/20;
+    SIM.C_rate = 0;
+    SIM.ChargeOrDischarge = 1;
 
 %%% Mode 2 ---- Harmonic Perturbation ----
 
 %%% Mode 3 ---- State Space EIS ----
-    SIM.SimMode = 3;
-    SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
-    SOC_start = 90
-    SIM.SOC_start = SOC_start;   % [%], Initial state of charge
+    % SIM.SimMode = 3;
+    % SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
+    % SOC_start = 90
+    % SIM.SOC_start = SOC_start;   % [%], Initial state of charge
     
 %%% Mode 4 ---- Known BC Profile Controller ----
 
@@ -37,7 +37,7 @@ clc
 % % % x_surf = SIM.SV_IC(17)/AN.C_Li_max
 
 %%% Mode 3
-cell_voltage = SIM.OutputAtEquil(1)
+    % cell_voltage = SIM.OutputAtEquil(1)
 
 %% Test Governing Eqns Output
 t = 2;
@@ -71,18 +71,7 @@ clc;
 clear all;
 close all;
 
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC25_SwitchingTime10.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_withRelax_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\LongerZeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC50_SwitchingTime10.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\EISCompareForPeter\EISCompareForPeter_EIS_HoKalman_SOC50_SamplingTime1.mat';
-% filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_PRBS_EIS_SOC50.mat';
-
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_Polar_1.00C_C.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
-
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ThermalGradient\NoThermalGradient_KPCont_GITTSOC0.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\ThermalGradient\Test_Polar_0.00C_D.mat';
-
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\COETest\Test213_New_Polar_1.00C_C.mat';
 plotfcn(filename)
 
 
@@ -114,12 +103,8 @@ clear all
 close all
 clc
 
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC50_SwitchingTime10.mat';
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\zeroMeanPRBS_Sims\PRBS_Sims_PRBS_Amp1_SOC100_SwitchingTime10.mat';
-% filename = 'C:\Users\tyevans.ADIT\Desktop\EIS_Temp\EISCompareForPeter_EIS_SIN_w1584.8932_SOC50.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\COETest\Test213_New_Polar_0.00C_D.mat';
 
-% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\EISCompareForPeter\EISCompareForPeter_EIS_SIN_w6.2832_SOC50.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
 
 load(filename)
 

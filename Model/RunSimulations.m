@@ -7,6 +7,7 @@ cd(filepath)
 
 %% List of Project Folders
 i = 1;
+% Project_Folder{i} = 'SOCTest';   i = i+1;
 Project_Folder{i} = 'COETest';   i = i+1;
 % Project_Folder{i} = 'ThermalGradient';   i = i+1;
 % Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
@@ -128,7 +129,7 @@ for i = 1:num_sim_files
                 
             % Loop through all of the steps
             for k = 1:length(SIM.Controller_MO_File)
-                k
+                % k
                 SIM.current_MO_step = k;
                 MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
                 

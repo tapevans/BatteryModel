@@ -5,7 +5,7 @@
 %%%!!!!!!!! Not capable of running a Li foil
 %%%!!!!!!!! Not capable of running temperature dependent thermal properties
 
-function [q_cond] = thermalFluxConduction( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , props)
+function [q_cond] = thermalFluxConduction( SV , AN , SEP, CA , EL , SIM , P , N , CONS , FLAG , props)
 %% Initialize    
     q_cond = nan(1,N.N_CV_tot+1); % ith term is the left face of the ith CV
     T = SV( P.T , :);
@@ -22,7 +22,10 @@ function [q_cond] = thermalFluxConduction( SV , AN , SEP, CA , EL , P , N , CONS
         case 3 % Insulated
             q_cond(i) = SIM.q_AN_BC; % [W m^-2]
         case 4 % Convection
-            q_cond(i) = SIM.h_AN_BC * ( T(i) - SIM.T_inf ); % [W m^-2]
+            q_cond(i) = SIM.h_AN_BC * ( SIM.T_inf - T(i) ); % [W m^-2], 
+            % Flux is written as positive in the positive x-direction
+            % Therefore, positive convection at the anode occurs when T_inf
+            % is greater than T_AN
     end
 
 
@@ -39,7 +42,7 @@ function [q_cond] = thermalFluxConduction( SV , AN , SEP, CA , EL , P , N , CONS
     R_tot = R_AN + R_SEP;
     q_cond(i) = ( T(i) - T(i-1) ) / R_tot;
 
-    
+
 %% Separator Internal
     for i = N.CV_Region_SEP(2:end)
         q_cond(i) = ( T(i) - T(i-1) ) * ( -lambda_vec(i) / SEP.del_x );
@@ -70,7 +73,19 @@ function [q_cond] = thermalFluxConduction( SV , AN , SEP, CA , EL , P , N , CONS
         case 3 % Insulated
             q_cond(i) = SIM.q_CA_BC; % [W m^-2]
         case 4 % Convection
-            q_cond(i) = SIM.h_CA_BC * ( T(i-1) - SIM.T_inf ); % [W m^-2]
+            q_cond(i) = SIM.h_CA_BC * ( T(i-1) - SIM.T_inf ); % [W m^-2], 
+            % Flux is written as positive in the positive x-direction
+            % Therefore, positive convection at the cathode occurs when T_CA
+            % is greater than T_inf
+    end
+
+
+%% Fix Known Temp BC
+    if FLAG.T_BC_AN == 1
+        q_cond(1) = q_cond(2);
+    end
+    if FLAG.T_BC_CA == 1
+        q_cond(end) = q_cond(end-1);
     end
 
 end

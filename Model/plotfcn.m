@@ -2,32 +2,35 @@ function plotfcn(filename)
 %% Load Results
     load(filename)
 
+
 %% Plot Flags
 % ---- Polarization ----
-    FLAG.COE       = 0; % Conservation of Energy Check %%%%%%%%%%%%%These plots need to be fixed
+    FLAG.COE       = 1; % Conservation of Energy Check 
     FLAG.COM       = 0; % Conservation of Mass Check
     FLAG.COC       = 0; % Conservation of Charge Check
     
-    FLAG.TEMP      = 1; % Cell Temperature Profile %%%%%%%%%%%%%These plots need to be fixed
+    FLAG.TEMP      = 1; % Cell Temperature Profile
     
-    FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
-    FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
-    FLAG.X_Li_rad  = 1; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
-    FLAG.s_dot     = 1; % Li_ion production rate
+    FLAG.C_Liion   = 0; % Mass/Species (Concentration Normalized): Li_ion
+    FLAG.X_Li_surf = 0; % Mass/Species (Mole Fraction): Li_surf (x-direction)
+    FLAG.X_Li_rad  = 0; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
+    FLAG.s_dot     = 0; % Li_ion production rate
     
-    FLAG.phi_ed    = 1; % phi_ed
-    FLAG.phi_el    = 1; % phi_el
-    FLAG.del_phi   = 1; % Delta phi (phi_ed - phi_el)
-    FLAG.del_phi_v_time   = 1; %@ AN/SEP
-    FLAG.E_eq      = 1; % Equilibrium delta_phi based on surface concentration
-    FLAG.eta       = 1; % eta
-    FLAG.i_o       = 1; % exchange current density
-    FLAG.i_Far     = 1; % charge-transfer current density
-    FLAG.plotV_SEI = 1; % Voltage across the SEI
+    FLAG.phi_ed    = 0; % phi_ed
+    FLAG.phi_el    = 0; % phi_el
+    FLAG.del_phi   = 0; % Delta phi (phi_ed - phi_el)
+    FLAG.del_phi_v_time = 0; %@ AN/SEP
+    FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
+    FLAG.eta       = 0; % eta
+    FLAG.i_o       = 0; % exchange current density
+    FLAG.i_Far     = 0; % charge-transfer current density
+    FLAG.plotV_SEI = 0; % Voltage across the SEI
     
     FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
     FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
-    FLAG.V_and_A             = 1;
+    FLAG.V_and_A             = 0;
+    FLAG.SOC                 = 0; % SOC vs time
+    FLAG.voltage_vs_SOC      = 0; % Terminal voltage of the battery vs SOC
 
 % ---- Harmonic Perturbation ----
     FLAG.V_and_A_EIS   = 1;
@@ -76,40 +79,44 @@ function plotfcn(filename)
 
     
 %% Inputs
-N_times = 6; % Number of times to plot
-
-if ~(SIM.SimMode == 9)
-    CV_vec = [N.CV_Region_AN(1) , N.CV_Region_AN(end) , N.CV_Region_CA(1) , N.CV_Region_CA(end)];
-end
+    N_times = 6; % Number of times to plot
+    
+    if ~(SIM.SimMode == 9)
+        CV_vec = [N.CV_Region_AN(1) , N.CV_Region_AN(end) , N.CV_Region_CA(1) , N.CV_Region_CA(end)];
+    end
     
 
 %% Make Desired Times for Plotting
-if ~(SIM.SimMode == 3 || SIM.SimMode == 9)
-    time_des = linspace(0, t_soln(end), N_times);
-%     time_des = linspace(SIM.initial_offset, t_soln(end), N_times);
-%     time_des = SIM.initial_offset:(t_soln(end)-SIM.initial_offset)/(N_times-1):t_soln(end);
-%     time_des = 0:t_soln(end)/N_times:t_soln(end);
-    for i = 1:length(time_des)
-        [~,t_index(i)] = min(abs(time_des(i)-t_soln));
+    if ~(SIM.SimMode == 3 || SIM.SimMode == 9)
+        time_des = linspace(0, t_soln(end), N_times);
+        % time_des = linspace(SIM.initial_offset, t_soln(end), N_times);
+        % time_des = SIM.initial_offset:(t_soln(end)-SIM.initial_offset)/(N_times-1):t_soln(end);
+        % time_des = 0:t_soln(end)/N_times:t_soln(end);
+        for i = 1:length(time_des)
+            [~,t_index(i)] = min(abs(time_des(i)-t_soln));
+        end
     end
-end
 
 
 %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- Polarization ----
 if SIM.SimMode == 1 || SIM.SimMode == 8
-    %% Conservation of Energy Check
+%% Conservation of Energy Check
     if FLAG.COE
-%     figure
-%     plot(t_soln,mass_error,'LineWidth',2)
-%     title('Conservation of Mass Check')
-%     xlabel('Time (s)')
-%     ylabel('Error [kmol]')
+        figure
+        hold on
+        plot(t_soln , intr_egy_tot    ,'ro','LineWidth',2,'DisplayName','Sum Internal Energy')
+        plot(t_soln , intr_egy_tot_exp,'k-','LineWidth',2,'DisplayName','Exp Internal Energy')
+        lgn = legend;
+        lgn.Location = 'best';
+        title('Conservation of Energy Check')
+        xlabel('Time (s)')
+        ylabel('Internal Energy [J]')
     end
     
 
-    %% Conservation of Mass Check
+%% Conservation of Mass Check
     if FLAG.COM
         figure
         plot(t_soln,mass_error,'LineWidth',2)
@@ -119,7 +126,7 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
     end
     
 
-    %% Conservation of Charge Check
+%% Conservation of Charge Check
     if FLAG.COC
         figure
         plot(t_soln,CoC,'LineWidth',2)
@@ -129,7 +136,7 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
     end
     
 
-    %% Temperature
+%% Temperature
     if FLAG.TEMP
         figure
         hold on
@@ -137,7 +144,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,TemperatureC(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southwest';
+        % lgn.Location = 'southwest';
+        lgn.Location = 'best';
         title('Temperature')
         xlabel('X Position')
         ylabel('Temperature (C)')
@@ -150,51 +158,51 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
     end
     
 
-    %% Mass/Species (Concentration): Li_ion
+%% Mass/Species (Concentration): Li_ion
     % Plot concentrations for desired times
     if FLAG.C_Liion
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,C_Liion(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southwest';
-    title('C_{Li^+}')
-    xlabel('X Position')
-    ylabel('C_{Li^+} (kmol)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,C_Liion(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southwest';
+        title('C_{Li^+}')
+        xlabel('X Position')
+        ylabel('C_{Li^+} (kmol)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
     
 
-    %% Mass/Species (Concentration): Li_surf
+%% Mass/Species (Concentration): Li_surf
     % Plot surface concentrations for desired times
     if FLAG.X_Li_surf
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southwest';
-    title('x_{Li,surf}')
-    xlabel('X Position')
-    ylabel('x_{Li,surf} (-)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southwest';
+        title('x_{Li,surf}')
+        xlabel('X Position')
+        ylabel('x_{Li,surf} (-)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
     
 
-    %% Radial Concentration Plots:
+%% Radial Concentration Plots:
     if FLAG.X_Li_rad
         for j = 1:length(CV_vec)
             figure
@@ -226,479 +234,503 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
     end
     
 
-    %% s_dot_Li^+
+%% s_dot_Li^+
     if FLAG.s_dot
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,s_dot(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'northeast';
-    title('s dot Li^+')
-    xlabel('X Position')
-    ylabel('s dot Li^+ (kmol m^{-2} s^{-1})')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,s_dot(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'northeast';
+        title('s dot Li^+')
+        xlabel('X Position')
+        ylabel('s dot Li^+ (kmol m^{-2} s^{-1})')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
 
 
-    %% Charge Plots: phi_ed
+%% Charge Plots: phi_ed
     if FLAG.phi_ed
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,phi_ed(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southeast';
-    title('\phi_{ed}')
-    xlabel('X Position')
-    ylabel('\phi_{ed} (V)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,phi_ed(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southeast';
+        title('\phi_{ed}')
+        xlabel('X Position')
+        ylabel('\phi_{ed} (V)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
     
 
-    %% Charge Plots: phi_el
+%% Charge Plots: phi_el
     if FLAG.phi_el
-    figure
-    hold on
-    for i = 1:length(time_des)
-        plot(SIM.x_vec,phi_el(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southwest';
-    title('\phi_{el}')
-    xlabel('X Position')
-    ylabel('\phi_{el} (V)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:length(time_des)
+            plot(SIM.x_vec,phi_el(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southwest';
+        title('\phi_{el}')
+        xlabel('X Position')
+        ylabel('\phi_{el} (V)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
         
 
-    %% Charge Plots: Delta phi
+%% Charge Plots: Delta phi
     if FLAG.del_phi
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,del_phi(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southeast';
-    title('\Delta \phi')
-    xlabel('X Position')
-    ylabel('\Delta \phi (V)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,del_phi(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southeast';
+        title('\Delta \phi')
+        xlabel('X Position')
+        ylabel('\Delta \phi (V)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
 
 
-    %% Charge Plots: Delta phi @ AN/SEP for all time
+%% Charge Plots: Delta phi @ AN/SEP for all time
     if FLAG.del_phi_v_time
-    figure
-    plot(t_soln,del_phi(:,N.N_CV_AN),'-','LineWidth',2)
-    title('\Delta \phi at AN/SEP')
-    xlabel('Time (s)')
-    ylabel('Voltage (V)')
-%     xlim([1,1+1e-6])
+        figure
+        plot(t_soln,del_phi(:,N.N_CV_AN),'-','LineWidth',2)
+        title('\Delta \phi at AN/SEP')
+        xlabel('Time (s)')
+        ylabel('Voltage (V)')
+    %     xlim([1,1+1e-6])
     end
     
 
-    %% E^eq
+%% E^eq
     if FLAG.E_eq
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,Eq(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southeast';
-    title('E^{eq}')
-    xlabel('X Position')
-    ylabel('E^{eq} (V)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,Eq(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southeast';
+        title('E^{eq}')
+        xlabel('X Position')
+        ylabel('E^{eq} (V)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
     
 
-    %% Eta
+%% Eta
     if FLAG.eta 
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,eta(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southeast';
-    title('\eta')
-    xlabel('X Position')
-    ylabel('\eta (V)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';    
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,eta(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southeast';
+        title('\eta')
+        xlabel('X Position')
+        ylabel('\eta (V)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';    
     end
     
 
-    %% i_o
+%% i_o
     if FLAG.i_o
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,i_o(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southeast';
-    title('i_o')
-    xlabel('X Position')
-    ylabel('i_o (A m^{-2})')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';     
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,i_o(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southeast';
+        title('i_o')
+        xlabel('X Position')
+        ylabel('i_o (A m^{-2})')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';     
     end
     
 
-    %% i_Far
+%% i_Far
     if FLAG.i_Far
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,i_Far(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southeast';
-    title('i_{Far}')
-    xlabel('X Position')
-    ylabel('i_{Far} (A m^{-2})')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';     
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,i_Far(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southeast';
+        title('i_{Far}')
+        xlabel('X Position')
+        ylabel('i_{Far} (A m^{-2})')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';     
     end    
 
 
-    %% V_SEI
+%% V_SEI
     if FLAG.plotV_SEI
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec,V_SEI(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southeast';
-    title('V_{SEI}')
-    xlabel('X Position')
-    ylabel('V_{SEI} (V)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';     
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec,V_SEI(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southeast';
+        title('V_{SEI}')
+        xlabel('X Position')
+        ylabel('V_{SEI} (V)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';     
     end  
     
 
-    %% Charge Plots: Cell Voltage
+%% Charge Plots: Cell Voltage
     if FLAG.cellVoltage
-    figure
-    plot(t_soln,cell_voltage,'LineWidth',2)
-    title('Cell Voltage')
-    xlabel('Time (s)')
-    ylabel('Voltage (V)')
-    xlim([0,t_soln(end)])
+        figure
+        plot(t_soln,cell_voltage,'LineWidth',2)
+        title('Cell Voltage')
+        xlabel('Time (s)')
+        ylabel('Voltage (V)')
+        xlim([0,t_soln(end)])
     end
     
 
-    %% Cell Potential vs Capacity
+%% Cell Potential vs Capacity
     if FLAG.voltage_vs_capacity
-    figure
-    plot(Cap, cell_voltage,'-k','LineWidth',2);
-    title('Cell Voltage vs Capacity')
-    xlabel('Capacity (Ahr)')
-    ylabel('Voltage (V)')
-    if Cap(1)<Cap(end)
-        xlim([Cap(1),Cap(end)]);
-    else
-        xlim([Cap(end),Cap(1)]);
-    end
-    end
-    
-
-    %% Cell Potential and Load Current vs Time
-    if FLAG.V_and_A
-    figure
-    hold on
-    yyaxis left
-    plot(t_soln, cell_voltage,'LineWidth',2,'DisplayName','Voltage'); %,'-o'
-    ylabel('Voltage (V)')
-    yyaxis right
-    plot(t_soln, i_user,'LineWidth',2,'DisplayName','Current'); %,'-o'
-    ylabel('Current (A m^-2)')
-    title('Cell Voltage and Load Current vs Time')
-    xlabel('Time (s)')
-    lgn = legend;
-    end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ---- Harmonic Perturbation ----
-elseif SIM.SimMode == 2
-    %% Cell Potential and Load Current vs Time
-    if FLAG.V_and_A_EIS
-    figure
-    hold on
-    yyaxis left
-    plot(t_soln, cell_voltage,'-o','LineWidth',2,'DisplayName','Voltage'); %,'-o'
-    ylabel('Voltage (V)')
-    yyaxis right
-    plot(t_soln, i_user,'LineWidth',2,'DisplayName','Current'); %,'-o'
-    ylabel('Current (A m^-2)')
-    title('Cell Voltage and Load Current vs Time')
-    xlabel('Time (s)')
-    lgn = legend;
-    end
-    
-
-    %% Surface Concentration of Multiple CV
-    if FLAG.X_Li_surf_EIS
-    figure
-    hold on
-    for j = 1:length(CV_vec)
-        if CV_vec(j) == 1
-            plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName','CC/AN')
-        elseif CV_vec(j) == N.CV_Region_AN(end)
-            plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName','AN/SEP')
-        elseif CV_vec(j) == N.CV_Region_CA(1)
-            plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName','SEP/CA')
-        elseif CV_vec(j) == N.CV_Region_CA(end)
-            plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName','CA/CC')
+        figure
+        plot(Cap, cell_voltage,'-k','LineWidth',2);
+        title('Cell Voltage vs Capacity')
+        xlabel('Capacity (Ahr)')
+        ylabel('Voltage (V)')
+        if Cap(1)<Cap(end)
+            xlim([Cap(1),Cap(end)]);
         else
-            if sum(CV_vec(j) == N.CV_Region_AN)
-                plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName',['CV: ', num2str(CV_vec(j)) ', Anode' ])
-            elseif sum(CV_vec(j) == N.CV_Region_CA)
-                plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName',['CV: ', num2str(CV_vec(j)) ', Cathode'])
-            else
-                disp('No surface in the separator region')
-            end            
+            xlim([Cap(end),Cap(1)]);
         end
     end
-    lgn = legend;
-    lgn.Location = 'east';
-    title('X_{Li,surf}')
-    xlabel('Time (s)')
-    ylabel('X_{Li,surf} (-)')
+    
+
+%% Cell Potential and Load Current vs Time
+    if FLAG.V_and_A
+        figure
+        hold on
+        yyaxis left
+        plot(t_soln, cell_voltage,'LineWidth',2,'DisplayName','Voltage'); %,'-o'
+        ylabel('Voltage (V)')
+        yyaxis right
+        plot(t_soln, i_user,'LineWidth',2,'DisplayName','Current'); %,'-o'
+        ylabel('Current (A m^-2)')
+        title('Cell Voltage and Load Current vs Time')
+        xlabel('Time (s)')
+        lgn = legend;
+    end
+
+
+%% SOC vs Time
+    if FLAG.SOC
+        figure
+        plot(t_soln,SOC,'LineWidth',2)
+        title('SOC')
+        xlabel('Time (s)')
+        ylabel('SOC (%)')
+        xlim([0,t_soln(end)])
+    end
+
+
+%% Cell Potential vs SOC
+    if FLAG.voltage_vs_SOC
+        figure
+        plot(SOC, cell_voltage,'-k','LineWidth',2);
+        title('Cell Voltage vs SOC')
+        xlabel('SOC (%)')
+        ylabel('Voltage (V)')
+    end
+
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ---- Harmonic Perturbation ----
+elseif SIM.SimMode == 2
+%% Cell Potential and Load Current vs Time
+    if FLAG.V_and_A_EIS
+        figure
+        hold on
+        yyaxis left
+        plot(t_soln, cell_voltage,'-o','LineWidth',2,'DisplayName','Voltage'); %,'-o'
+        ylabel('Voltage (V)')
+        yyaxis right
+        plot(t_soln, i_user,'LineWidth',2,'DisplayName','Current'); %,'-o'
+        ylabel('Current (A m^-2)')
+        title('Cell Voltage and Load Current vs Time')
+        xlabel('Time (s)')
+        lgn = legend;
     end
     
 
-    %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+%% Surface Concentration of Multiple CV
+    if FLAG.X_Li_surf_EIS
+        figure
+        hold on
+        for j = 1:length(CV_vec)
+            if CV_vec(j) == 1
+                plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName','CC/AN')
+            elseif CV_vec(j) == N.CV_Region_AN(end)
+                plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName','AN/SEP')
+            elseif CV_vec(j) == N.CV_Region_CA(1)
+                plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName','SEP/CA')
+            elseif CV_vec(j) == N.CV_Region_CA(end)
+                plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName','CA/CC')
+            else
+                if sum(CV_vec(j) == N.CV_Region_AN)
+                    plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName',['CV: ', num2str(CV_vec(j)) ', Anode' ])
+                elseif sum(CV_vec(j) == N.CV_Region_CA)
+                    plot(t_soln, X_Li_surf(:,CV_vec(j)),'LineWidth',2,'DisplayName',['CV: ', num2str(CV_vec(j)) ', Cathode'])
+                else
+                    disp('No surface in the separator region')
+                end            
+            end
+        end
+        lgn = legend;
+        lgn.Location = 'east';
+        title('X_{Li,surf}')
+        xlabel('Time (s)')
+        ylabel('X_{Li,surf} (-)')
+    end
+    
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
 % ---- SS EIS ----
 elseif SIM.SimMode == 3
-    %% EIS
+%% EIS
     if FLAG.SS_NYQUIST
-    figure
-    plot(Z_results(:,P.SS.Z_Re),-Z_results(:,P.SS.Z_Im),'-ok','Linewidth',2)
-    title('EIS')
-    xlabel('Z_{Re} (Ohm)')
-    ylabel('-Z_{Im} (Ohm)')
-%     xlim([5,20])
-%     ylim([0,12])    
-    axis equal    
+        figure
+        plot(Z_results(:,P.SS.Z_Re),-Z_results(:,P.SS.Z_Im),'-ok','Linewidth',2)
+        title('EIS')
+        xlabel('Z_{Re} (Ohm)')
+        ylabel('-Z_{Im} (Ohm)')
+        % xlim([5,20])
+        % ylim([0,12])    
+        axis equal    
     end   
     
 
-    %% Bode
+%% Bode
     if FLAG.SS_BODE
-    figure
-    title('Bode')
-
-    subplot(2,1,1)
-    semilogx(Z_results(:,P.SS.omega) , Z_results(:,P.SS.Z_dB) , '-ok' , 'LineWidth' , 2)
-    ylabel('Magnitude (dB)')
-
-    subplot(2,1,2)
-    semilogx(Z_results(:,P.SS.omega) , Z_results(:,P.SS.Z_ps_deg) , '-ok' , 'LineWidth' , 2)
-    ylabel('Phase (degrees)')
-    xlabel('Frequency (rad s^{-1})')   
+        figure
+        title('Bode')
+    
+        subplot(2,1,1)
+        semilogx(Z_results(:,P.SS.omega) , Z_results(:,P.SS.Z_dB) , '-ok' , 'LineWidth' , 2)
+        ylabel('Magnitude (dB)')
+    
+        subplot(2,1,2)
+        semilogx(Z_results(:,P.SS.omega) , Z_results(:,P.SS.Z_ps_deg) , '-ok' , 'LineWidth' , 2)
+        ylabel('Phase (degrees)')
+        xlabel('Frequency (rad s^{-1})')   
     end
     
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- Known BC Profile Controller ----
 elseif SIM.SimMode == 4
-    %% Cell Voltage
+%% Cell Voltage
     if FLAG.KPCONT_cellVoltage
-    figure
-    plot(t_soln,cell_voltage,'LineWidth',2)
-    title('Cell Voltage')
-    xlabel('Time (s)')
-    ylabel('Voltage (V)')
-    xlim([0,t_soln(end)])
-%     xlim([1,1+1e-6])
+        figure
+        plot(t_soln,cell_voltage,'LineWidth',2)
+        title('Cell Voltage')
+        xlabel('Time (s)')
+        ylabel('Voltage (V)')
+        xlim([0,t_soln(end)])
+        % xlim([1,1+1e-6])
     end
     
 
-    %% Current Plot
+%% Current Plot
     if FLAG.KPCONT_i_user
-    figure
-    plot(t_soln,i_user,'LineWidth',2)
-    title('i_{user}')
-    xlabel('Time (s)')
-    ylabel('Load Current (A m^{-2})')
-    xlim([0,t_soln(end)])
+        figure
+        plot(t_soln,i_user,'LineWidth',2)
+        title('i_{user}')
+        xlabel('Time (s)')
+        ylabel('Load Current (A m^{-2})')
+        xlim([0,t_soln(end)])
     end
     
 
-    %% Voltage and Normalized C-rate Absolute Value
+%% Voltage and Normalized C-rate Absolute Value
     if FLAG.KPCONT_V_and_A_norm_abs
-    figure
-    title('Voltage and |C-rate|')
-    xlabel('Time (s)')
-
-    yyaxis left
-    plot(t_soln , cell_voltage , 'Linewidth' , 2 )
-    ylabel('Cell Voltage (V)')
-
-    yyaxis right
-    plot(t_soln , abs(I_user_norm_Crate), 'Linewidth' , 2 )
-    ylabel('Absolute Value of C-rate')
+        figure
+        title('Voltage and |C-rate|')
+        xlabel('Time (s)')
+    
+        yyaxis left
+        plot(t_soln , cell_voltage , 'Linewidth' , 2 )
+        ylabel('Cell Voltage (V)')
+    
+        yyaxis right
+        plot(t_soln , abs(I_user_norm_Crate), 'Linewidth' , 2 )
+        ylabel('Absolute Value of C-rate')
     end
     
 
-    %% Voltage and Normalized wrt 1C-rate
+%% Voltage and Normalized wrt 1C-rate
     if FLAG.KPCONT_V_and_A_norm
-    figure
-    title('Voltage and C-rate')
-    xlabel('Time (s)')
-
-    yyaxis left
-    plot(t_soln , cell_voltage , 'Linewidth' , 2 )
-    ylabel('Cell Voltage (V)')
-
-    yyaxis right
-    plot(t_soln , I_user_norm_Crate, 'Linewidth' , 2 )
-    ylabel('C-rate')
+        figure
+        title('Voltage and C-rate')
+        xlabel('Time (s)')
+    
+        yyaxis left
+        plot(t_soln , cell_voltage , 'Linewidth' , 2 )
+        ylabel('Cell Voltage (V)')
+    
+        yyaxis right
+        plot(t_soln , I_user_norm_Crate, 'Linewidth' , 2 )
+        ylabel('C-rate')
     end
     
 
-    %% SOC vs Cell Voltage (Think I need a SOC calc in postProcessing which requires saving i_user)
+%% SOC vs Cell Voltage (Think I need a SOC calc in postProcessing which requires saving i_user)
     if FLAG.KPCONT_VOLT_v_SOC
-    figure
-    plot(SOC , cell_voltage , 'Linewidth' , 2)
-    title('Voltage vs SOC')
-    xlabel('SOC')
-    ylabel('Voltage')
+        figure
+        plot(SOC , cell_voltage , 'Linewidth' , 2)
+        title('Voltage vs SOC')
+        xlabel('SOC')
+        ylabel('Voltage')
     end
     
 
-    %% Mass/Species (Concentration): Li_surf
+%% Mass/Species (Concentration): Li_surf
     % Plot surface concentrations for desired times
     if FLAG.KPCONT_X_Li_surf
-    figure
-    hold on
-    for i = 1:N_times
-        plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
-    end
-    lgn = legend;
-    lgn.Location = 'southwest';
-    title('x_{Li,surf}')
-    xlabel('X Position')
-    ylabel('x_{Li,surf} (-)')
-    xlim([0,SIM.x_half_vec(end)])
-    
-    xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
-    xl_AS.LabelHorizontalAlignment = 'center';
-    xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
-    xl_SC.LabelHorizontalAlignment = 'center';
+        figure
+        hold on
+        for i = 1:N_times
+            plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        lgn.Location = 'southwest';
+        title('x_{Li,surf}')
+        xlabel('X Position')
+        ylabel('x_{Li,surf} (-)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';
     end
     
 
-    %% Mass/Species (Concentration): Li_surf @ AN/SEP wrt time
+%% Mass/Species (Concentration): Li_surf @ AN/SEP wrt time
     if FLAG.KPCONT_X_Li_surf_v_time
-    figure
-    plot(t_soln,X_Li_surf(:,N.N_CV_AN),'-','LineWidth',2)
-    title('x_{surf} at AN/SEP')
-    xlabel('Time (s)')
-    ylabel('Mole Fraction (-)')
-%     xlim([1,1+1e-6])
+        figure
+        plot(t_soln,X_Li_surf(:,N.N_CV_AN),'-','LineWidth',2)
+        title('x_{surf} at AN/SEP')
+        xlabel('Time (s)')
+        ylabel('Mole Fraction (-)')
+        % xlim([1,1+1e-6])
     end
     
 
-    %% Charge Plots: Delta phi
+%% Charge Plots: Delta phi
     if FLAG.KPCONT_del_phi_v_time
-    figure
-    plot(t_soln,del_phi(:,N.N_CV_AN),'-','LineWidth',2)
-    title('\Delta \phi at AN/SEP')
-    xlabel('Time (s)')
-    ylabel('Voltage (V)')
-%     xlim([1,1+1e-6])
+        figure
+        plot(t_soln,del_phi(:,N.N_CV_AN),'-','LineWidth',2)
+        title('\Delta \phi at AN/SEP')
+        xlabel('Time (s)')
+        ylabel('Voltage (V)')
+        % xlim([1,1+1e-6])
     end
     
 
-    %% 
+%% Faradaic Current vs Time
     if FLAG.KPCONT_i_Far_v_time
-    figure
-    plot(t_soln,i_Far(:,N.N_CV_AN),'-','LineWidth',2)
-    title('i_{Far} at AN/SEP')
-    xlabel('Time (s)')
-    ylabel('i_{Far} (A/m^2)')
-%     xlim([1,1+1e-6])
+        figure
+        plot(t_soln,i_Far(:,N.N_CV_AN),'-','LineWidth',2)
+        title('i_{Far} at AN/SEP')
+        xlabel('Time (s)')
+        ylabel('i_{Far} (A/m^2)')
+        % xlim([1,1+1e-6])
     end
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---- MOO Controller ----
 elseif SIM.SimMode == 5
-    %% Cell Voltage
+%% Cell Voltage
     if FLAG.CONT_cellVoltage
-    figure
-    plot(t_soln,cell_voltage,'LineWidth',2)
-    title('Cell Voltage')
-    xlabel('Time (s)')
-    ylabel('Voltage (V)')
-    xlim([0,t_soln(end)])
+        figure
+        plot(t_soln,cell_voltage,'LineWidth',2)
+        title('Cell Voltage')
+        xlabel('Time (s)')
+        ylabel('Voltage (V)')
+        xlim([0,t_soln(end)])
     end
     
 
-    %% Current Plot
+%% Current Plot
     
-    %% SOC vs Cell Voltage (Think I need a SOC calc in postProcessing which requires saving i_user)   
+%% SOC vs Cell Voltage (Think I need a SOC calc in postProcessing which requires saving i_user)   
     
     
-    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
 % ---- Manual Current Profile ----
 elseif SIM.SimMode == 7 
     idx = find(t_soln > SIM.ramp_time/2,1); % Don't plot the first ramp
-    %% Delta Phi
+%% Delta Phi
     if FLAG.MAN_del_phi
         figure
         plot(t_soln , del_phi(:,N.N_CV_AN), 'Linewidth' , 2)
@@ -709,7 +741,7 @@ elseif SIM.SimMode == 7
     end
     
 
-    %% Overlaping delta phi
+%% Overlaping delta phi
     if FLAG.MAN_del_phi_overlap
         % Determine region for each time value
             time_step_regions = zeros(length(t_soln),1);
@@ -767,7 +799,7 @@ elseif SIM.SimMode == 7
     end
     
 
-    %% Current Profile
+%% Current Profile
     if FLAG.MAN_current_profile
         figure
         plot(t_soln(idx:end) , I_user(idx:end), 'Linewidth' , 2)
@@ -777,7 +809,7 @@ elseif SIM.SimMode == 7
     end
     
 
-    %% Full Current Profile from Refinement
+%% Full Current Profile from Refinement
     if FLAG.MAN_full_current_profile
         time_vec    = 0:1:SIM.tspan(2);
         current_vec = interp1(SIM.profile_time , SIM.profile_current , time_vec);
@@ -790,7 +822,7 @@ elseif SIM.SimMode == 7
     end
     
 
-    %% Current Profile Normalized
+%% Current Profile Normalized
     if FLAG.MAN_current_profile_norm
         figure
         plot(t_soln(idx:end) , I_user_norm_Crate(idx:end), 'Linewidth' , 2 )
@@ -805,7 +837,7 @@ elseif SIM.SimMode == 7
     end
     
 
-    %% Voltage Profile
+%% Voltage Profile
     if FLAG.MAN_voltage_profile
         figure
         plot(t_soln , cell_voltage , 'Linewidth' , 2 )
@@ -815,7 +847,7 @@ elseif SIM.SimMode == 7
     end
     
 
-    %% Voltage and Current Profile
+%% Voltage and Current Profile
     if FLAG.MAN_volt_and_curr_profile
         figure
         title('Voltage and |C-rate|')
@@ -836,7 +868,7 @@ elseif SIM.SimMode == 7
     end
     
 
-    %% Refinement
+%% Refinement
     if FLAG.MAN_refinement
         figure
         plot(1:length(SIM.sum_of_refinement_vec),SIM.sum_of_refinement_vec/SIM.N_regions)
@@ -849,9 +881,11 @@ elseif SIM.SimMode == 7
     end
     
 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
 % ---- EIS from Stitching PRBS ----
 elseif SIM.SimMode == 9
-    %% EIS
+%% EIS
     if FLAG.EIS_PRBS_NYQUIST
         figure
         plot(Z_results(:,P.SS.Z_Re) , -Z_results(:,P.SS.Z_Im),'-ob','Linewidth',2)
@@ -863,7 +897,8 @@ elseif SIM.SimMode == 9
         %     ylim([0,12])    
     end   
 
-    %% Bode
+
+%% Bode
     if FLAG.EIS_PRBS_BODE
         figure
         t = tiledlayout(2,1,'TileSpacing','loose','Padding','compact');
@@ -883,9 +918,12 @@ elseif SIM.SimMode == 9
         t.Title.FontWeight = 'bold';
     end
 
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
 % ---- EIS Ho-Kalman ----
 elseif SIM.SimMode == 10
-    %% Cell Voltage (during impulse)
+%% Cell Voltage (during impulse)
     if FLAG.HK_cellVoltage
         figure
         plot(t_soln,cell_voltage,'-k','LineWidth',2)
@@ -896,7 +934,7 @@ elseif SIM.SimMode == 10
     end
 
 
-    %% EIS FOM
+%% EIS FOM
     if FLAG.HK_NYQUIST_FOM
         figure
         plot(Z_results_FOM(:,P.SS.Z_Re),-Z_results_FOM(:,P.SS.Z_Im),'-ob','Linewidth',2)
@@ -908,7 +946,8 @@ elseif SIM.SimMode == 10
         %     ylim([0,12])    
     end   
 
-    %% Bode FOM
+
+%% Bode FOM
     if FLAG.HK_BODE_FOM
         figure
         t = tiledlayout(2,1,'TileSpacing','loose','Padding','compact');
@@ -928,7 +967,8 @@ elseif SIM.SimMode == 10
         t.Title.FontWeight = 'bold';
     end
 
-    %% EIS ROM
+
+%% EIS ROM
     if FLAG.HK_NYQUIST_ROM
         figure
         plot(Z_results_ROM(:,P.SS.Z_Re),-Z_results_ROM(:,P.SS.Z_Im),'-ok','Linewidth',2)
@@ -940,7 +980,8 @@ elseif SIM.SimMode == 10
         %     ylim([0,12])    
     end   
 
-    %% Bode ROM
+
+%% Bode ROM
     if FLAG.HK_BODE_ROM
         figure
         t = tiledlayout(2,1,'TileSpacing','loose','Padding','compact');
@@ -960,7 +1001,8 @@ elseif SIM.SimMode == 10
         t.Title.FontWeight = 'bold';
     end
 
-    %% EIS Compare FOM and ROM
+
+%% EIS Compare FOM and ROM
     if FLAG.HK_NYQUIST_Compare
         figure
         hold on
@@ -974,7 +1016,8 @@ elseif SIM.SimMode == 10
         axis equal    
     end   
 
-    %% Bode Compare FOM and ROM
+
+%% Bode Compare FOM and ROM
     if FLAG.HK_BODE_Compare
         figure
         t = tiledlayout(2,1,'TileSpacing','loose','Padding','compact');
@@ -1003,7 +1046,7 @@ elseif SIM.SimMode == 10
 end % if SIM.SimMode statement
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Arrange Figures
 FigArrange = 1;
 if FigArrange == 1

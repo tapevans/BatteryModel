@@ -6,9 +6,9 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
 %% Constants
     CONS.F = 96485338.3; % [C kmol^-1], Faraday's Constant 
     CONS.R = 8314.472;   % [J kmol^-1 K^-1], Gas Constant
-    if FLAG.COE == 0
-        CONS.T = SIM.Temp_start;     % [K], Temperature
-    end
+    % if FLAG.COE == 0
+    %     CONS.T = SIM.Temp_start;     % [K], Temperature
+    % end
 
 
 %% Control Volume Modification for Li Foil
@@ -170,10 +170,10 @@ end
 
 %% Various Needed Calculations
 % Electrolyte volume fraction
-    AN.eps_el   = 1 - AN.eps_ed - AN.eps_b;
-    SEP.eps_el  =     SEP.eps;               
-    SEP.eps_sep = 1 - SEP.eps_el;
-    CA.eps_el   = 1 - CA.eps_ed - CA.eps_b;
+    AN.eps_el   = 1 - AN.eps_ed - AN.eps_b; % Electrolyte Volume Fraction in the anode
+    SEP.eps_el  =    SEP.eps;               % Electrolyte Volume Fraction in the separator
+    CA.eps_el   = 1 - CA.eps_ed - CA.eps_b; % Electrolyte Volume Fraction in the cathode
+    SEP.eps_sep = 1 - SEP.eps_el;           % Separator material Volume Fraction
 
 % Effective thermal properties
     [AN , SEP , CA] = getEffectiveThermalProps(AN , SEP , CA , EL);
@@ -249,14 +249,20 @@ end
 
 % Initial Thermal Gradient
     if FLAG.InitialThermalGradient
-        L_tot      = SIM.x_vec(end) - SIM.x_vec(1);
-        Delta_temp = SIM.CA_Temp_init - SIM.AN_Temp_init;
-        Slope      = Delta_temp / L_tot;
-        temp_fnc   = @(x) Slope.*x + SIM.AN_Temp_init;
-        Temp_vec   = temp_fnc(SIM.x_vec);
+        % L_tot        = AN.L+SEP.L+CA.L;
+        L_tot        = SIM.x_vec(end) - SIM.x_vec(1);
+        Delta_temp   = SIM.CA_Temp_init - SIM.AN_Temp_init;
+        Slope        = Delta_temp / L_tot;
+        temp_fnc     = @(x) Slope.*x + SIM.AN_Temp_init;
+        pos_vec      = SIM.x_vec- SIM.x_vec(1); % Needed for proper BC
+        % pos_vec(1)   = 0;
+        % pos_vec(end) = AN.L+SEP.L+CA.L;
+        Temp_vec     = temp_fnc(pos_vec);
     else
         Temp_vec = SIM.Temp_init * ones( 1 , N.N_CV_tot );
     end
+    % % Test Plot
+    % plot(SIM.x_vec,Temp_vec-273.15)
 
 
 %% Geometry Calcs
@@ -863,6 +869,7 @@ end
 
 %% Set up Jacobian here too (sparse)
 %%%%% Later
+
 
 end
 

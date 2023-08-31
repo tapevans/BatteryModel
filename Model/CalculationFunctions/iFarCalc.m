@@ -2,7 +2,7 @@
 % The ith index is the faradaic current of the ith CV
 function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props)
 %% Initialize
-    i_Far = zeros(1 , N.N_CV_tot);
+    i_Far = nan(1 , N.N_CV_tot);
 
 %% Concentration Dependent Parameters
 % % Delta phi

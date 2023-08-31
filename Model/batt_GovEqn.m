@@ -35,7 +35,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     J_Li    = JLiCalc( SV , AN , CA , P , N , s_dot , props);
 
     if FLAG.COE
-        [q_cond , q_conv , q_gen] = thermalAllVectors( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , props, i_el, i_ed, i_Far);
+        [q_cond , q_conv , q_gen] = thermalAllVectors( SV , AN , SEP, CA , EL , SIM , P , N , CONS , FLAG , props, i_el, i_ed, i_Far);
     else
         q_cond = zeros(1 , N.N_CV_tot+1);
         q_conv = zeros(1 , N.N_CV_tot  );
@@ -178,9 +178,9 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 
 %% Used for troubleshooting
-    % if t>SIM.initial_offset
-    %    t;
-    % end
+    if t>SIM.initial_offset
+       t;
+    end
     % if t>SIM.t_ramp
     %    t;
     % end

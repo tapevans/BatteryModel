@@ -10,46 +10,6 @@ function [SIM] = UserCurrentProfile(SIM,FLAG)
     FLAG.DoXlim = 0;
     x_lim = [0,25];
 
-    % SIM.C_rate = 20;
-    % % SIM.C_rate = 0;
-    % SIM.initial_offset = 10;
-    % % SIM.initial_offset = 0;
-    % % SIM.t_ramp = 2;
-    % SIM.t_ramp = 0;
-    % 
-    % if SIM.C_rate == 0
-    %     SIM.i_user_amp = 0;
-    % else
-    %     SIM.i_user_amp = 5;
-    % end
-
-    % Polarization
-        % SIM.SimMode     = 1;
-        % SIM.charge_frac = 1;
-
-    % Harmonic
-        % SIM.SimMode  = 2;
-        % SIM.freq     = 1e-2;
-        % SIM.N_cycles = 10;
-
-    % PRBS
-        % SIM.SimMode     = 8;
-        % SIM.PRBSLength = 159;
-        % SIM.PRBSAmp    = 1;
-        % SIM.Tswitch    = 10;
-        % SIM.MakeLongPRBSSignal       = 1;
-        %     SIM.DesiredLength  = 4e3;
-        % SIM.AddIntermediateRelaxTime = 1;
-        %     SIM.NumTsRelax = 2;
-        %     SIM.NumZeroCrossingUntilNextRelax = 5;
-        % PRBSLimit = 200;
-
-    % EIS Ho--Kalman
-        % SIM.SimMode     = 10;
-        % SIM.HK_nSamples = 800;
-        % SIM.Tsample     = 1;
-        % SIM.initial_offset = 0;
-
 
 %% No Noise Profile
 % ---- Polarization ----
@@ -80,7 +40,7 @@ function [SIM] = UserCurrentProfile(SIM,FLAG)
         
         % Get Simulation Time
         if SIM.C_rate == 0
-            t_final = 30; % [s], Final time
+            t_final = 50; % [s], Final time
         else
             t_final = SIM.charge_frac*3600/SIM.C_rate; % [s], Sim time
         end
@@ -506,3 +466,45 @@ function [timeNoisy , currentNoisy] = getDTNoiseMO( SIM , time_noNoise , current
         end
     end
 end
+
+%% OOOOOLLLLLLLLLDDDDDDDDDD Stuff
+% Testing
+    % SIM.C_rate = 20;
+    % % SIM.C_rate = 0;
+    % SIM.initial_offset = 10;
+    % % SIM.initial_offset = 0;
+    % % SIM.t_ramp = 2;
+    % SIM.t_ramp = 0;
+    % 
+    % if SIM.C_rate == 0
+    %     SIM.i_user_amp = 0;
+    % else
+    %     SIM.i_user_amp = 5;
+    % end
+
+    % Polarization
+        % SIM.SimMode     = 1;
+        % SIM.charge_frac = 1;
+
+    % Harmonic
+        % SIM.SimMode  = 2;
+        % SIM.freq     = 1e-2;
+        % SIM.N_cycles = 10;
+
+    % PRBS
+        % SIM.SimMode     = 8;
+        % SIM.PRBSLength = 159;
+        % SIM.PRBSAmp    = 1;
+        % SIM.Tswitch    = 10;
+        % SIM.MakeLongPRBSSignal       = 1;
+        %     SIM.DesiredLength  = 4e3;
+        % SIM.AddIntermediateRelaxTime = 1;
+        %     SIM.NumTsRelax = 2;
+        %     SIM.NumZeroCrossingUntilNextRelax = 5;
+        % PRBSLimit = 200;
+
+    % EIS Ho--Kalman
+        % SIM.SimMode     = 10;
+        % SIM.HK_nSamples = 800;
+        % SIM.Tsample     = 1;
+        % SIM.initial_offset = 0;
