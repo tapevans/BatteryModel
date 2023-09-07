@@ -6,9 +6,6 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
 %% Constants
     CONS.F = 96485338.3; % [C kmol^-1], Faraday's Constant 
     CONS.R = 8314.472;   % [J kmol^-1 K^-1], Gas Constant
-    % if FLAG.COE == 0
-    %     CONS.T = SIM.Temp_start;     % [K], Temperature
-    % end
 
 
 %% Control Volume Modification for Li Foil
@@ -130,9 +127,9 @@ end
     N.N_CV_tot = N.N_CV_AN + N.N_CV_SEP + N.N_CV_CA;
 
 % Regional Indexing 
-    N.CV_Region_AN  =                          1 : N.N_CV_AN; % AN CVs
+    N.CV_Region_AN  =                          1 : N.N_CV_AN;              % AN CVs
     N.CV_Region_SEP = N.N_CV_AN              + 1 : N.N_CV_AN + N.N_CV_SEP; % SEP CVs
-    N.CV_Region_CA  = N.N_CV_AN + N.N_CV_SEP + 1 : N.N_CV_tot; % CA CVs
+    N.CV_Region_CA  = N.N_CV_AN + N.N_CV_SEP + 1 : N.N_CV_tot;             % CA CVs
 
 
 %% Numerical Discretization
@@ -407,7 +404,7 @@ end
     F_y = SIM.CathodeFormation_X;
 
 % y-intercept
-    y_intcep = F_y + z * F_x;
+    y_intcep = F_y + z * F_x; % Assumes z is absolute value and needs to be negative
 
 % y mole fraction at x limits
     A_x = 0;

@@ -2,21 +2,23 @@
 % This file will run all simulations in a given project folder
 
 %% Change to this script's working directory
-[filepath,~,~] = fileparts(mfilename('fullpath'));
-cd(filepath)
+    [filepath,~,~] = fileparts(mfilename('fullpath'));
+    cd(filepath)
 
+    
 %% List of Project Folders
-i = 1;
-% Project_Folder{i} = 'SOCTest';   i = i+1;
-Project_Folder{i} = 'COETest';   i = i+1;
-% Project_Folder{i} = 'ThermalGradient';   i = i+1;
-% Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
-% Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
-% Project_Folder{i} = 'TestNewInputFile';   i = i+1;
+    i = 1;
+    % Project_Folder{i} = 'SOCTest';   i = i+1;
+    Project_Folder{i} = 'COETest';   i = i+1;
+    % Project_Folder{i} = 'ThermalGradient';   i = i+1;
+    % Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
+    % Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
+    % Project_Folder{i} = 'TestNewInputFile';   i = i+1;
 
 
-%%
-num_Proj = length(Project_Folder);
+%% Initial Calc
+    num_Proj = length(Project_Folder);
+
 
 %% Make a list of all sim file names with full path name
 for i = 1:num_Proj

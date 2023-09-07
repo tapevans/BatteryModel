@@ -2,40 +2,40 @@
 % This file is used to create a project folder. In this folder is a file of
 % battery parameters used, which simulations are to be performed, and a
 % data file (.mat) for each simulation to be performed.
-
+%
 % Simulations generated with this file will use the values in batt_inputs
 % for other simulation parameters such as temperature, voltage limits, how
 % deep to discharge, and etc...
-
+%
 % File names
     % ---- Polarization ----
         % 'battery_name'_Polar_'Crate'C_(CorD)
-    
+%    
     % ---- Harmonic Perturbation ----
         % 'battery_name'_EIS_SIN_w'freq'_SOC'SOC'
-    
+%    
     % ---- State Space EIS ----
         % 'battery_name'_SS_EIS_SOC'SOC'
-    
+%    
     % ---- Known BC Profile Controller ----
         % 'battery_name'_KPCont_'KBCPProfileFilename'_SOC'KBSOC'
-        
+%        
     % ---- MOO Controller ----
         % 'battery_name'_MOOCont_'ControllerName'
-    
+%    
     % ---- Manual Current Profile ----
         % For platingRefinement
             % 'battery_name'_ManCurrProf_ 'MCP.N_regions' steps_ 'MCP.max_iterations' Iter_ 'MCP.tol_Delta_phi' tol 
         % For other
             % 'battery_name'_ManCurrProf_'ManualProfName'
-    
+%    
     % ---- PRBS ----
         % 'battery_name'_PRBS_Amp'PRBS_Amp'_SOC'PRBS_SOC'_SwitchingTime'PRBS_Tswitch'
-
+%
     % ---- EIS from Stiching PRBS ---- 
         % 'battery_name'_PRBS_Amp'PRBS_Amp'_SOC'EIS_PRBS.SOC'_SwitchingTime'PRBS_Tswitch'
         % 'battery_name'_PRBS_EIS_SOC'EIS_PRBS.SOC'
-    
+%    
     % ---- EIS Ho-Kalman ----
         % 'battery_name'_EIS_HoKalman_SOC'HK_SOC'_SamplingTime'HK_Ts'
         
@@ -45,38 +45,39 @@ clear all; close all; clc;
 
 
 %% Subdirecties to Include
-% Script's filepath
-[current_file_path,~,~] = fileparts(mfilename('fullpath'));
-
-% Include all folders
-addpath(genpath(current_file_path)); 
-% genpath creates a string with all folders and subfolders in a given directory
-% addpath then adds all of them to the current workspace
+    % Script's filepath
+        [current_file_path,~,~] = fileparts(mfilename('fullpath'));
+    
+    % Include all folders
+    addpath(genpath(current_file_path)); 
+        % genpath creates a string with all folders and subfolders in a
+        % given directory addpath then adds all of them to the current
+        % workspace
 
 
 %% Inputs
-FLAG_local.folder_overwrite = 0; % 1 if delete folder if it already exists
-FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
-% if folder_overwrite and folder_add are 0, then a new name should be used
-% for the folder
-
-FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
-
-% % folder_name  = 'TestNewInputFile';
-% folder_name  = 'TestNewInputFileNoise';
-% % folder_name  = 'TestNewInputFileNoise_SplitSim';
-% battery_name = 'Test';
-
-% folder_name  = 'ThermalGradient';
-% battery_name = 'NoThermalGradient';
-% % battery_name = '4C_A2C_ThermalGradient';
-% % battery_name = '4C_C2A_ThermalGradient';
-
-folder_name  = 'COETest';
-battery_name = '444All_Constant';
-
-% folder_name  = 'QuickTest';
-% battery_name = 'NoisePLots';
+    FLAG_local.folder_overwrite = 0; % 1 if delete folder if it already exists
+    FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
+        % if folder_overwrite and folder_add are 0, then a new name should
+        % be used for the folder
+    
+    FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
+    
+    % % folder_name  = 'TestNewInputFile';
+    % folder_name  = 'TestNewInputFileNoise';
+    % % folder_name  = 'TestNewInputFileNoise_SplitSim';
+    % battery_name = 'Test';
+    
+    % folder_name  = 'ThermalGradient';
+    % battery_name = 'NoThermalGradient';
+    % % battery_name = '4C_A2C_ThermalGradient';
+    % % battery_name = '4C_C2A_ThermalGradient';
+    
+    folder_name  = 'COETest';
+    battery_name = '444All_Constant';
+    
+    % folder_name  = 'QuickTest';
+    % battery_name = 'NoisePLots';
 
 
 %% Simulations
@@ -89,7 +90,7 @@ battery_name = '444All_Constant';
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
     % C_rates      = [-1]; 
     % C_rates      = [1/20]; 
-    C_rates      = [1/20 -1/20 -1 1]; 
+    C_rates      = [1/20 -1/20]; 
     % C_rates      = [-1/3];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
 
@@ -217,35 +218,35 @@ battery_name = '444All_Constant';
         
 %% Create Folder    
 % Make Folder Path
-save_file_path = [current_file_path filesep 'Results' filesep folder_name];
-folder_exist = isfolder(save_file_path);
-if folder_exist
-    if FLAG_local.folder_overwrite
-        disp('Deleting folder with the same name and all of its contents then creating a new folder with the same name')
-        rmdir(save_file_path, 's')
-        mkdir(save_file_path)
-    end
-    if ~FLAG_local.folder_overwrite && ~FLAG_local.folder_add
-        disp('Creating new folder name')
-        count = 1;
-        good_new_name = 0;
-        while ~good_new_name
-            new_name = [save_file_path '_(' num2str(count) ')'];
-%             folder_exist = isfolder(new_name);
-            if isfolder(new_name)
-                count = count + 1;
-            else
-                mkdir(new_name)
-                save_file_path = new_name;
-                good_new_name = 1;
+    save_file_path = [current_file_path filesep 'Results' filesep folder_name];
+    folder_exist = isfolder(save_file_path);
+    if folder_exist
+        if FLAG_local.folder_overwrite
+            disp('Deleting folder with the same name and all of its contents then creating a new folder with the same name')
+            rmdir(save_file_path, 's')
+            mkdir(save_file_path)
+        end
+        if ~FLAG_local.folder_overwrite && ~FLAG_local.folder_add
+            disp('Creating new folder name')
+            count = 1;
+            good_new_name = 0;
+            while ~good_new_name
+                new_name = [save_file_path '_(' num2str(count) ')'];
+                % folder_exist = isfolder(new_name);
+                if isfolder(new_name)
+                    count = count + 1;
+                else
+                    mkdir(new_name)
+                    save_file_path = new_name;
+                    good_new_name = 1;
+                end
             end
+        else
+            disp('Folder exist. Adding new simulations to existing folder')
         end
     else
-        disp('Folder exist. Adding new simulations to existing folder')
+        mkdir(save_file_path)
     end
-else
-    mkdir(save_file_path)
-end
 
 
 %% Create Simulation Files
