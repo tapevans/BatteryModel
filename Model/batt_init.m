@@ -4,7 +4,7 @@
 
 function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG)
 %% Constants
-    CONS.F = 96485338.3; % [C kmol^-1], Faraday's Constant 
+    CONS.F = 96485338.3; % [C kmol^-1],      Faraday's Constant 
     CONS.R = 8314.472;   % [J kmol^-1 K^-1], Gas Constant
 
 
@@ -56,7 +56,7 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
     P.SEP.C_Liion = i; i = i + 1;
 
 % Extra Pointer for phi_el
-    P.phi_el    = P.C_Li_surf_max + 1;
+    P.phi_el     = P.C_Li_surf_max + 1;
     
 % Pointers for Electrostatic 
     i = 1;
@@ -67,7 +67,7 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
     P.ES.i_PS    = i; i = i + 1;
     P.ES.i_dl    = i; i = i + 1;
     
-    N.N_ES_var  = 6;
+    N.N_ES_var   = 6;
 
 % Pointers for State Space EIS
 if SIM.SimMode == 3 || SIM.SimMode == 10 || SIM.SimMode == 9
@@ -109,6 +109,9 @@ end
     P.OM.C_Li       = i; i = i + 1;
     P.OM.delta_C_Li = i; i = i + 1;
     P.OM.T          = i; i = i + 1;
+    P.OM.V_AN       = i; i = i + 1;
+    P.OM.V_SEP      = i; i = i + 1;
+    P.OM.V_CA       = i; i = i + 1;
     
     N.N_Out = length(fieldnames(P.OM));
 
@@ -208,9 +211,9 @@ end
             brug_ED    = eps_ED ./ tau_fac_ED;
         end
         if FLAG.BRUG_EL
-            tau_fac_AN_EL  = EL.gamma_brug * AN.eps_el  ^ (1 - EL.alpha_brug);
-            tau_fac_CA_EL  = EL.gamma_brug * CA.eps_el  ^ (1 - EL.alpha_brug);
-            tau_fac_SEP_EL = EL.gamma_brug * SEP.eps_el ^ (1 - EL.alpha_brug);
+            tau_fac_AN_EL  = EL.gamma_brug * AN.eps_el  ^ (1 - EL.alpha_brug_an);
+            tau_fac_CA_EL  = EL.gamma_brug * CA.eps_el  ^ (1 - EL.alpha_brug_ca);
+            tau_fac_SEP_EL = EL.gamma_brug * SEP.eps_el ^ (1 - EL.alpha_brug_sep);
             
             tau_fac_EL = [tau_fac_AN_EL*ones(1,N.N_CV_AN) , tau_fac_SEP_EL*ones(1,N.N_CV_SEP) , tau_fac_CA_EL*ones(1,N.N_CV_CA)];
             eps_EL     = [AN.eps_el    *ones(1,N.N_CV_AN) , SEP.eps_el    *ones(1,N.N_CV_SEP) , CA.eps_el    *ones(1,N.N_CV_CA)];
@@ -260,6 +263,17 @@ end
     end
     % % Test Plot
     % plot(SIM.x_vec,Temp_vec-273.15)
+
+% Temperature BC Ramp
+    if FLAG.RampThermalGradient % Assuming linear ramping
+        % y-intercept
+            AN.b_thermal = SIM.Temp_init;
+            CA.b_thermal = SIM.Temp_init;
+
+        % slope
+            AN.m_thermal = (SIM.Temp_AN_BC - SIM.Temp_init)/SIM.RampThermalGradientTime;
+            CA.m_thermal = (SIM.Temp_CA_BC - SIM.Temp_init)/SIM.RampThermalGradientTime;
+    end
 
 
 %% Geometry Calcs
@@ -385,69 +399,114 @@ end
     AN.Cap = AN.C_Li_max * CONS.F *(1/3600)*AN.V_ed; % [Ahr], Method 2: Based on a modeled parameter of C_max
     CA.Cap = CA.C_Li_max * CONS.F *(1/3600)*CA.V_ed; % [Ahr], Method 2: Based on a modeled parameter of C_max
 
-% Capacity Ratio
-    z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
+if isempty(SIM.VoltageMax) 
+    %% Mole Fraction Calculation
+    % Determine V_min and V_max
+        voltage_min_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC0);
+        voltage_min_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC0);
+        SIM.VoltageMin = voltage_min_ca - voltage_min_an; % Voltage at SOC0
+        V_min = voltage_min_ca - voltage_min_an;
 
+        voltage_max_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC100);
+        voltage_max_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC100);
+        SIM.VoltageMax = voltage_max_ca - voltage_max_an; % Voltage at SOC100
+        V_max = voltage_max_ca - voltage_max_an;
 
-%% Mole Fraction Calculation
-% x and y are the anode and cathode mole fractions respectively
-% Points that are being determined
-    % * F: Mole fractions at formation
-    % * A: Mole fraction when x = 0
-    % * B: Mole fraction when x = 1
-    % * C: Mole fraction at V_max
-    % * D: Mole fraction at V_min
-    options         = optimoptions('lsqnonlin');
-    options.Display = 'off';
-
-    F_x = SIM.AnodeFormation_X;
-    F_y = SIM.CathodeFormation_X;
-
-% y-intercept
-    y_intcep = F_y + z * F_x; % Assumes z is absolute value and needs to be negative
-
-% y mole fraction at x limits
-    A_x = 0;
-    A_y = -z*A_x + y_intcep;
-    B_x = 1;
-    B_y = -z*B_x + y_intcep;
-
-% Mole fractions at V_max
-    x0 = F_x;
-    lb = 0;
-    ub = 1;
-    V_des = SIM.VoltageMax;
-    C_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
-    C_y = YfromX(C_x,z,y_intcep);
-
-% Mole fractions at V_min
-    x0 = F_x;
-    lb = 0;
-    ub = 1;
-    V_des = SIM.VoltageMin;
-    D_x = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
-    D_y = YfromX(D_x,z,y_intcep);
-
-% Limits on x and y
-    SIM.x_min = max(A_x,D_x);
-    SIM.x_max = min(B_x,C_x);
-    SIM.y_min = YfromX(SIM.x_max,z,y_intcep);
-    SIM.y_max = YfromX(SIM.x_min,z,y_intcep);
-
-% Initial Lithiation Fraction
-    SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
-    SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
-
-% Determine electrode initial voltage potential
-    voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
-    voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
-    voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
-
-% Calculate electrode initial active material concentration
-    concen_ini_an = AN.C_Li_max * SIM.x_ini;
-    concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+    % Set stoich limits
+        SIM.x_min = SIM.AnodeStoich_SOC0;
+        SIM.x_max = SIM.AnodeStoich_SOC100;
+        SIM.y_min = SIM.CathodeStoich_SOC100;
+        SIM.y_max = SIM.CathodeStoich_SOC0;
     
+    % Initial Lithiation Fraction
+        SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
+        SIM.y_ini = (SIM.y_min-SIM.y_max)*SIM.SOC_start/100 + SIM.y_max;
     
+    % Determine electrode initial voltage potential
+        voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
+        voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
+        voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
+    
+    % Calculate electrode initial active material concentration
+        concen_ini_an = AN.C_Li_max * SIM.x_ini;
+        concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+        
+    % % Test OCP
+    %     SOC_vec = 0:0.1:100;
+    %     xFromSOC = @(SOC) (SIM.x_max-SIM.x_min)*SOC/100 + SIM.x_min;
+    %     yFromSOC = @(SOC) (SIM.y_min-SIM.y_max)*SOC/100 + SIM.y_max;
+    %     x_vec = xFromSOC(SOC_vec);
+    %     y_vec = yFromSOC(SOC_vec);
+    %     v_an_vec = AN.EqPotentialHandle(x_vec);
+    %     v_ca_vec = CA.EqPotentialHandle(y_vec);
+    %     v_vec = v_ca_vec - v_an_vec;
+    %     figure
+    %     plot(SOC_vec , v_vec , '-k' , 'LineWidth', 2)
+
+else
+    % Capacity Ratio
+            z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
+
+    %% Mole Fraction Calculation
+    % x and y are the anode and cathode mole fractions respectively
+    % Points that are being determined
+        % * F: Mole fractions at formation
+        % * A: Mole fraction when x = 0
+        % * B: Mole fraction when x = 1
+        % * C: Mole fraction at V_max
+        % * D: Mole fraction at V_min
+        options         = optimoptions('lsqnonlin');
+        options.Display = 'off';
+    
+        F_x = SIM.AnodeFormation_X;
+        F_y = SIM.CathodeFormation_X;
+    
+    % y-intercept
+        y_intcep = F_y + z * F_x;
+    
+    % y mole fraction at x limits
+        A_x = 0;
+        A_y = -z*A_x + y_intcep;
+        B_x = 1;
+        B_y = -z*B_x + y_intcep;
+    
+    % Mole fractions at V_max
+        x0    = F_x;
+        lb    = 0;
+        ub    = 1;
+        V_des = SIM.VoltageMax;
+        C_x   = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+        C_y   = YfromX(C_x,z,y_intcep);
+    
+    % Mole fractions at V_min
+        x0    = F_x;
+        lb    = 0;
+        ub    = 1;
+        V_des = SIM.VoltageMin;
+        D_x   = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+        D_y   = YfromX(D_x,z,y_intcep);
+    
+    % Limits on x and y
+        SIM.x_min = max(A_x,D_x);
+        SIM.x_max = min(B_x,C_x);
+        SIM.y_min = YfromX(SIM.x_max,z,y_intcep);
+        SIM.y_max = YfromX(SIM.x_min,z,y_intcep);
+    
+    % Initial Lithiation Fraction
+        SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
+        SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
+    
+    % Determine electrode initial voltage potential
+        voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
+        voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
+        voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
+    
+    % Calculate electrode initial active material concentration
+        concen_ini_an = AN.C_Li_max * SIM.x_ini;
+        concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+end
+
+ 
 %% Determine Minimum Parameters
     SIM.A_c      = min( AN.A_c, CA.A_c );
     SIM.Cell_Cap = min( AN.Cap, CA.Cap );
@@ -476,14 +535,14 @@ end
         % Cell Voltage
             idx_phi_ed_AN = P.phi_ed;
 
-            i = N.N_CV_CA(end);
+            i = N.N_CV_CA;
             index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
             idx_phi_ed_CA = index_offset + P.phi_ed;
 
             SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_AN) = -1;
             SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_CA) =  1;
         % @AN/SEP
-            i = N.N_CV_AN(end);
+            i = N.N_CV_AN;
             index_offset = (i-1)*N.N_SV_AN;
 
         % Delta Phi      @AN/SEP
@@ -517,6 +576,44 @@ end
         % Temperature    @AN/SEP
             idx = index_offset + P.T;
             SIM.OutputMatrix(P.OM.T,idx)          =  1;
+
+        % Delta V_AN (phi_el,ANSEP - 0)
+            i = N.N_CV_AN;
+            index_offset = (i-1)*N.N_SV_AN;
+            idx = index_offset + P.phi_ed;
+            SIM.OutputMatrix(P.OM.V_AN , idx)     =  1;
+            
+            i = N.N_CV_AN;
+            index_offset = (i-1)*N.N_SV_AN;
+            idx = index_offset + P.del_phi;
+            SIM.OutputMatrix(P.OM.V_AN , idx)     = -1;
+            
+        % Delta V_SEP (phi_el,CASEP - phi_el,ANSEP)
+            i = N.N_CV_SEP;
+            index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
+            idx = index_offset + P.SEP.phi_el;
+            SIM.OutputMatrix(P.OM.V_SEP , idx)    =  1;
+
+            i = 1;
+            index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
+            idx = index_offset + P.SEP.phi_el;
+            SIM.OutputMatrix(P.OM.V_SEP , idx)    = -1;
+            
+        % Delta V_CA (phi_ed,CA - phi_el,CASEP)
+            i = N.N_CV_CA;
+            index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+            idx = index_offset + P.phi_ed;
+            SIM.OutputMatrix(P.OM.V_CA , idx)     =  1;
+
+            i = 1;
+            index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+            idx = index_offset + P.phi_ed;
+            SIM.OutputMatrix(P.OM.V_CA , idx)     =  1;  
+
+            i = 1;
+            index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+            idx = index_offset + P.del_phi;
+            SIM.OutputMatrix(P.OM.V_CA , idx)     = -1;        
 
 
 %% Determine Initial State Vector

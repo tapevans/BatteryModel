@@ -12,7 +12,7 @@
         % 'battery_name'_Polar_'Crate'C_(CorD)
 %    
     % ---- Harmonic Perturbation ----
-        % 'battery_name'_EIS_SIN_w'freq'_SOC'SOC'
+        % 'battery_name'_EIS_SIN_w'omega'_SOC'SOC'
 %    
     % ---- State Space EIS ----
         % 'battery_name'_SS_EIS_SOC'SOC'
@@ -56,6 +56,16 @@ clear all; close all; clc;
 
 
 %% Inputs
+    % FLAG.InputFile
+    %   0) batt_input
+    %   1) batt_input_Wiley_Lui
+    %   2) batt_input_HZ_A
+    %   3) batt_input_HZ_B
+    %   4) batt_input_NREL
+    %   5) batt_input_ToddKingston
+    %   6) batt_input_MPC
+    FLAG.InputFile = 4;
+
     FLAG_local.folder_overwrite = 0; % 1 if delete folder if it already exists
     FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
         % if folder_overwrite and folder_add are 0, then a new name should
@@ -73,24 +83,27 @@ clear all; close all; clc;
     % % battery_name = '4C_A2C_ThermalGradient';
     % % battery_name = '4C_C2A_ThermalGradient';
     
-    folder_name  = 'COETest';
-    battery_name = '444All_Constant';
+    % folder_name  = 'COETest';
+    % battery_name = 'Test123';
     
     % folder_name  = 'QuickTest';
     % battery_name = 'NoisePLots';
+    
+    folder_name  = 'TestImpedanceContributions';
+    battery_name = 'Standard';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    % C_rates      = [];
+    C_rates      = [];
     % C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
     % C_rates      = [-1]; 
     % C_rates      = [1/20]; 
-    C_rates      = [1/20 -1/20]; 
+    % C_rates      = [1/20 -1/20]; 
     % C_rates      = [-1/3];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
 
@@ -111,20 +124,30 @@ clear all; close all; clc;
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    SS_SOC = [];
+    % SS_SOC = [];
     % SS_SOC = 0:1:100;
-    % SS_SOC = [5, 10, 25, 50, 75, 90, 95];
+    SS_SOC = [5, 10, 25, 50, 75, 90, 95];
     % SS_SOC = [80.46];
     % SS_SOC = [50];
     
-    % Desired frequency for impedance results
+    % Desired frequency [rad s^-1] for impedance results (Starting with known Hz)
         % SS_freq = [];
         % SS_freq = logspace(-1,11,101);
         % SS_freq = (logspace(-2,6,75) *(2*pi));
-        exp_min = -3;
-        exp_max =  5;
+        exp_min = -2;
+        exp_max =  6;
         exp_diff = exp_max - exp_min;
         SS_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
+        SS_omega = SS_freq*2*pi; % [rad/s]
+    
+    % % Desired frequency [rad s^-1] for impedance results
+    %     % SS_omega = [];
+    %     % SS_omega = logspace(-1,11,101);
+    %     % SS_freq = (logspace(-2,6,75) *(2*pi));
+    %     exp_min = -3;
+    %     exp_max =  5;
+    %     exp_diff = exp_max - exp_min;
+    %     SS_omega = logspace(exp_min ,exp_max ,exp_diff*10+1);
         
         
 % ---- Known BC Profile Controller ----
@@ -147,7 +170,7 @@ clear all; close all; clc;
 % ---- Manual Current Profile ----
     ManCurrProfile = 0; % 1 if want to make a manual current profile simulation from what is currently in makeCurrentProfile.m and input.m
         MCP.plating_refine = 1; % 1 if to use the plating refinement naming structure; if 0, then ManProfileName will be used
-            MCP.N_regions  = 100;  % Number of steps used in the current profile
+            MCP.N_regions      = 100;  % Number of steps used in the current profile
             MCP.max_iterations = 1000; % Number of refinements used in the while loop
             MCP.tol_Delta_phi  = 0.01; % Goal for the largest delta_phi
             
@@ -214,6 +237,118 @@ clear all; close all; clc;
         HK_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
         HK_nSamples = 800; % [], Number of relaxation samples (2 inital relax, 1 pulse, nSamples relax)
         % HK_nSamples = 5; % [], Number of relaxation samples (2 inital relax, 1 pulse, nSamples relax)
+
+
+%% Function Handles
+% FLAG.InputFile
+    %   0) batt_input
+    %   1) batt_input_Wiley_Lui
+    %   2) batt_input_HZ_A
+    %   3) batt_input_HZ_B
+    %   4) batt_input_NREL
+    %   5) batt_input_ToddKingston
+    %   6) batt_input_MPC
+    FLAG.InputFile = 4;
+switch FLAG.InputFile
+    case 0 % batt_input
+        inputHandle             = @batt_input;
+        SIM.ANEqPotentialHandle = @E_eqGraphite;
+        SIM.ANi_oHandle         = @i_oC6;
+        SIM.ANsigmaHandle       = @sigmaC6;
+        SIM.AND_oHandle         = @D_o_Graphite;
+        SIM.CAEqPotentialHandle = @E_eqNMC;
+        SIM.CAi_oHandle         = @i_oC6;  
+        SIM.CAsigmaHandle       = @sigmaNMC;
+        SIM.CAD_oHandle         = @D_o_NMC532;
+        SIM.ELtf_numHandle      = @transferenceNumber;
+        SIM.ELActivityHandle    = @activity;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion;
+        SIM.ELkappaHandle       = @kappa;
+    case 1 % batt_input_Wiley_Lui
+        inputHandle             = @batt_input_Wiley_Lui;
+        SIM.ANEqPotentialHandle = @E_eqGraphite;
+        SIM.ANi_oHandle         = @i_oC6;
+        SIM.ANsigmaHandle       = @sigmaC6;
+        SIM.AND_oHandle         = @D_o_Graphite;
+        SIM.CAEqPotentialHandle = @E_eqNMC;
+        SIM.CAi_oHandle         = @i_oC6;  
+        SIM.CAsigmaHandle       = @sigmaNMC;
+        SIM.CAD_oHandle         = @D_o_NMC532;
+        SIM.ELtf_numHandle      = @transferenceNumber;
+        SIM.ELActivityHandle    = @activity;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion;
+        SIM.ELkappaHandle       = @kappa;
+    case 2 % batt_input_HZ_A
+        inputHandle             = @batt_input_HZ_A;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_HZ;
+        SIM.ANi_oHandle         = @i_oC6_HZ;
+        SIM.ANsigmaHandle       = @sigmaC6_HZ;
+        SIM.AND_oHandle         = @D_o_Graphite_HZ;
+        SIM.CAEqPotentialHandle = @E_eqNMC_HZ;
+        SIM.CAi_oHandle         = @i_oC6_HZ;  
+        SIM.CAsigmaHandle       = @sigmaNMC_HZ;
+        SIM.CAD_oHandle         = @D_o_NMC532_HZ;
+        SIM.ELtf_numHandle      = @transferenceNumber_HZ;
+        SIM.ELActivityHandle    = @activity_HZ;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_HZ;
+        SIM.ELkappaHandle       = @kappa_HZ;
+    case 3 % batt_input_HZ_B
+        inputHandle             = @batt_input_HZ_B;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_HZ;
+        SIM.ANi_oHandle         = @i_oC6_HZ;
+        SIM.ANsigmaHandle       = @sigmaC6_HZ;
+        SIM.AND_oHandle         = @D_o_Graphite_HZ;
+        SIM.CAEqPotentialHandle = @E_eqNMC_HZ;
+        SIM.CAi_oHandle         = @i_oNMC_HZ;  
+        SIM.CAsigmaHandle       = @sigmaNMC_HZ;
+        SIM.CAD_oHandle         = @D_o_NMC532_HZ;
+        SIM.ELtf_numHandle      = @transferenceNumber_HZ;
+        SIM.ELActivityHandle    = @activity_HZ;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_HZ;
+        SIM.ELkappaHandle       = @kappa_HZ;
+    case 4 % batt_input_NREL
+        inputHandle             = @batt_input_NREL;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+        SIM.ELActivityHandle    = @activity_NREL;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_NREL;
+    case 5 % batt_input_ToddKingston
+        inputHandle             = @batt_input_ToddKingston;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+        SIM.ELActivityHandle    = @activity_NREL;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_NREL;
+    case 6 % batt_input_MPC
+        inputHandle             = @batt_input_MPC;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+        SIM.ELActivityHandle    = @activity_NREL;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_NREL;
+end
         
         
 %% Create Folder    
@@ -256,11 +391,15 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
         CorD = 'C';
         SIM.ChargeOrDischarge = -1;
         SIM.SOC_start = 0;
-    else
+    elseif C_rates(i) > 0
         CorD = 'D';
         SIM.ChargeOrDischarge = 1;
         SIM.SOC_start = 95;
-%         SIM.SOC_start = 100;
+        % SIM.SOC_start = 100;
+    else
+        CorD = 'D';
+        SIM.ChargeOrDischarge = 1;
+        SIM.SOC_start = 50;
     end
     cRateTxt = sprintf( '%.2f' , abs(C_rates(i)) ) ;
     filename = [ battery_name , '_Polar_' , cRateTxt , 'C_' , CorD , '.mat'];
@@ -347,17 +486,17 @@ for i = 1:length(SS_SOC)
     if ~isfile([save_file_path filesep filename])
         SIM.results_filename = filename;
         SIM.SimMode = 3;
-        SIM.freq = SS_freq;
+        SIM.omega = SS_omega;
         SIM.SOC_start = SS_SOC(i);
         % Call Inputs
-        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+            [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
         % Call Init
-        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+            [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
         % Save File
-        postProcessComplete = 0;
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+            postProcessComplete = 0;
+            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         % Clear Variables
-        clear AN CA SEP EL SIM CONS P N FLAG PROPS
+            clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 end
 

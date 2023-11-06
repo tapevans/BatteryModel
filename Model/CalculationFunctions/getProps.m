@@ -43,14 +43,16 @@ function props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS)
     
     % Active Material Diffusion -- Anode
         if FLAG.VARIABLE_D_o_AN
-            props( P.D_o:end , N.CV_Region_AN ) = AN.D_oHandle(X_AN);
+            % props( P.D_o:end , N.CV_Region_AN ) = AN.D_oHandle(X_AN);
+            props( P.D_o:end , N.CV_Region_AN ) = AN.D_oHandle(X_AN , T(:,N.CV_Region_AN));
         else
             props( P.D_o:end , N.CV_Region_AN ) = PROPS( P.D_o:end , N.CV_Region_AN );
         end
     
     % Active Material Diffusion -- Cathode
         if FLAG.VARIABLE_D_o_CA
-            props( P.D_o:end , N.CV_Region_CA ) = CA.D_oHandle(X_CA);
+            % props( P.D_o:end , N.CV_Region_CA ) = CA.D_oHandle(X_CA);
+            props( P.D_o:end , N.CV_Region_CA ) = CA.D_oHandle(X_CA , T(:,N.CV_Region_CA));
         else
             props( P.D_o:end , N.CV_Region_CA ) = PROPS( P.D_o:end , N.CV_Region_CA);
         end

@@ -33,16 +33,10 @@
     % 10) EIS Ho-Kalman
     % 0)  Files that are used strictly for data and not to run a simulation
 
-function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
-%% Flags
-    FLAG.AN_LI_FOIL = 0; % 1 if the anode   is a Li foil
-    FLAG.CA_LI_FOIL = 0; % 1 if the cathode is a Li foil %%%%%Not Implemented
-    
+function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_Wiley_Lui(SIM)
+%% Flags    
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
-
-    % FLAG.OffDiagOnsager = 1;
-    %     FLAG.Soret = 1;
     
     FLAG.COE    = 0; % Cons of Energy (Temperature). 0 if dTdt = 0
         % Thermal Boundary Conditions
@@ -50,8 +44,8 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         % 2) Known Heat Flux    -k dTdx|x=0 = q''_s
         % 3) Insulated             dTdx|x=0 = 0
         % 4) Convection         -k dTdx|x=0 = h[T_inf - T(0,t)]
-            FLAG.T_BC_AN      = 3; % BC applied to the face normal to the AN current collector 
-            FLAG.T_BC_CA      = 3; % BC applied to the face normal to the CA current collector 
+            FLAG.T_BC_AN      = 4; % BC applied to the face normal to the AN current collector 
+            FLAG.T_BC_CA      = 4; % BC applied to the face normal to the CA current collector 
             FLAG.T_BC_Outside = 3; % BC applied to the surface of each CV, Can only be 3 or 4
     
         FLAG.HEAT_GEN_TOTAL    = 0; % Heat generation total within the control volume
@@ -95,10 +89,10 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         % FLAG.VARIABLE_sigma    = 0;
         FLAG.VARIABLE_kappa    = 1;
         FLAG.VARIABLE_activity = 0;
-        FLAG.VARIABLE_D_Liion  = 1;
+        FLAG.VARIABLE_D_Liion  = 0;
         FLAG.VARIABLE_tf_num   = 0;
-        FLAG.VARIABLE_D_o_AN   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
-        FLAG.VARIABLE_D_o_CA   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
+        FLAG.VARIABLE_D_o_AN   = 0; % 1 if the active material diffusion coefficient is dependent on concentration
+        FLAG.VARIABLE_D_o_CA   = 0; % 1 if the active material diffusion coefficient is dependent on concentration
     
     %%%% If CONSTANT_PROPS_FROM_HANDLES or VARIABLE_PROPS_FROM_HANDLES are 1
     %%%% but none of the individual properties are a 1, then all properties are
@@ -150,24 +144,12 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
 
 
 %% Numerical Parameters
-    % N.N_CV_AN   = 3;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
-    % N.N_CV_SEP  = 3;  % Number of x-direction seperator control volumes (CV)
-    % N.N_CV_CA   = 3;  % Number of x-direction cathode   control volumes (CV)
-    % N.N_R_AN    = 3;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
-    % N.N_R_CA    = 3;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
-
     N.N_CV_AN   = 10;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
     N.N_CV_SEP  = 5;   % Number of x-direction seperator control volumes (CV)
     N.N_CV_CA   = 10;  % Number of x-direction cathode   control volumes (CV)
     N.N_R_AN    = 10;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
     N.N_R_CA    = 10;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
 
-    % N.N_CV_AN   = 20;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
-    % N.N_CV_SEP  = 10;  % Number of x-direction seperator control volumes (CV)
-    % N.N_CV_CA   = 20;  % Number of x-direction cathode   control volumes (CV)
-    % N.N_R_AN    = 10;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
-    % N.N_R_CA    = 10;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
-    
 
 %% fsolve options
     options                   = optimoptions('fsolve');
@@ -325,42 +307,15 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     AN.MW       = (72.0642)*1e0;        % [kg kmol^-1],   Molecular weight of C6
     AN.MW_Lith  = (79.0052)*1e0;        % [kg kmol^-1],   Molecular weight of LiC6
     AN.specCap  = (350)*1e0;            % [Ahr kg^-1],    Specific capacity
-    % AN.rho      = (2.266*1000)*1e0;     % [kg m^-3],      Density of the electrode material without Li
-    % AN.c_p      = (720)*1e0;            % [J kg^-1 K^-1], Specific heat capacity of active material
-    % % AN.lambda = 470;                    % [W m^-1 K^-1],  Thermal conductivity
-    % AN.lambda   = 1.04;                 % [W m^-1 K^-1],  Thermal conductivity of active material %sciencedirect.com/science/article/pii/S0735193317300179        
+    AN.rho      = (2.266*1000)*1e0;     % [kg m^-3],      Density of the electrode material without Li
+    AN.c_p      = (720)*1e0;            % [J kg^-1 K^-1], Specific heat capacity of active material
+    AN.lambda   = 1.04*1e-3;            % [W m^-1 K^-1],  Thermal conductivity of active material %sciencedirect.com/science/article/pii/S0735193317300179        
     AN.C_Li_max = 28.544149086751;      % [kmol m^-3],    Max concentration of lithium in the active material
-    AN.rho      = (2.266*1000)*1e0; % [kg m^-3],      Testing
-    AN.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Testing
-    AN.lambda   = 1.04*1e-3;        % [W m^-1 K^-1],  Testing
-
-    % Lithium Foil Properties
-        if FLAG.AN_LI_FOIL
-            AN.EqPotentialHandle = SIM.ANEqPotentialHandle;
-            AN.i_oHandle         = @i_oLiFoil;
-            AN.sigmaHandle       = SIM.ANsigmaHandle;
-            AN.D_oHandle         = SIM.AND_oHandle;
-            AN.k_o      = 1E-07;     % [A m^-2],       Exchange current density Rate constant
-            AN.alpha_a  = 0.3;        % [-],            Symmetry factor, annodic 
-            AN.alpha_c  = 0.7;        % [-],            Symmetry factor, cathodic
-            AN.C_dl     = 3e-6;       % [F/m^2],        Double-layer capacitance
-            AN.R_SEI    = 1e-2;       % [Ohm m^2],      Solid electrolyte interface resistance
-            AN.sigma    = 100;       % [S m^-1],       Electrical conductivity (ed phase)
-            AN.D_o      = 3E-13;      % [m^2 s^-1],     Solid-state diffusion coefficient
-            AN.rho      = 0.534*1000; % [kg m^-3],      Density of the electrode material without Li
-            AN.c_p      = 3000;       % [J kg^-1 K^-1], Specific heat capacity  of separator material
-            AN.lambda   = 71.2;       % [W m^-1 K^-1],  Thermal conductivity
-            AN.C_Li_max = AN.rho/AN.MW; % [kmol m^-3], Max concentration of lithium in the active material
-        end
 
 % ---- Separator ----
-    % SEP.rho    = (2266)*1e0; % [kg m^-3],      Density of separator material
-    % SEP.c_p    = (720)*1e0;  % [J kg^-1 K^-1], Specific heat capacity 
-    % % SEP.lambda = 470;        % [W m^-1 K^-1],  Thermal conductivity of separator material
-    % SEP.lambda = (0.6)*1e0;  % [W m^-1 K^-1],  Thermal conductivity of separator material
-    SEP.rho      = (2.266*1000)*1e0; % [kg m^-3],      Testing
-    SEP.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Testing
-    SEP.lambda   = 1.04*1e-3;        % [W m^-1 K^-1],  Testing
+    SEP.rho      = (2266)*1e0; % [kg m^-3],      Density of separator material
+    SEP.c_p      = (720)*1e0;  % [J kg^-1 K^-1], Specific heat capacity
+    SEP.lambda   = (0.6)*1e0;  % [W m^-1 K^-1],  Thermal conductivity of separator material
 
 % ---- Cathode ----
     CA.EqPotentialHandle = SIM.CAEqPotentialHandle;
@@ -375,14 +330,10 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     CA.R_SEI    = 0.00611911635271628;  % [ohm m^2],      Solid electrolyte interface resistance
     CA.sigma    = 3.8;                  % [S m^-1],       Electrical conductivity (am phase)
     CA.D_o      = 5E-13;                % [m^2 s^-1],     Solid-state diffusion coefficient
-    % CA.rho      = (2739.6961)*1e0;      % [kg m^-3],      Density of the electrode material without Li
-    % CA.c_p      = (720)*1e0;            % [J kg^-1 K^-1], Specific heat capacity of cathode material
-    % CA.lambda   = (0.6)*1e0;            % [W m^-1 K^-1],  Thermal conductivity of cathode material
+    CA.rho      = (2739.6961)*1e0;      % [kg m^-3],      Density of the electrode material without Li
+    CA.c_p      = (720)*1e0;            % [J kg^-1 K^-1], Specific heat capacity of cathode material
+    CA.lambda   = (0.6)*1e0;            % [W m^-1 K^-1],  Thermal conductivity of cathode material
     CA.C_Li_max = 40.544149086751;      % [kmol m^-3],    Max concentration of lithium in the active material
-    CA.rho      = (2.266*1000)*1e0; % [kg m^-3],      Testing
-    CA.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Testing
-    CA.lambda   = 1.04*1e-3;        % [W m^-1 K^-1],  Testing
-    
 
 % ---- Electrolyte ----
     EL.tf_numHandle       = SIM.ELtf_numHandle;
@@ -395,12 +346,9 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     EL.C          = 1.0;     % [kmol m^-3],    Li concentration
     EL.tf_num     = 0.363;   % [-],            Transference Number 
     EL.Activity   = 1;       % [-],
-    % EL.rho        = 2266;    % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
-    % EL.c_p        = 720;     % [J kg^-1 K^-1], Specific heat capacity of electrolyte
-    % EL.lambda     = 0.45;    % [W m^-1 K^-1],  Thermal conductivity of electrolyte %sciencedirect.com/science/article/pii/S0735193317300179
-    EL.rho      = (2.266*1000)*1e0; % [kg m^-3],      Testing
-    EL.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Testing
-    EL.lambda   = 1.04*1e-3;        % [W m^-1 K^-1],  Testing
+    EL.rho        = 2266;    % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
+    EL.c_p        = 720;     % [J kg^-1 K^-1], Specific heat capacity of electrolyte
+    EL.lambda     = 470;    % [W m^-1 K^-1],  Thermal conductivity of electrolyte %sciencedirect.com/science/article/pii/S0735193317300179
     
 
 %% Cell Geometry
@@ -424,17 +372,6 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         AN.A_geo        = 1.0;               %      Account for ecentricity of spherical particle
         AN.gamma_brug   = 1.0;               % [-], Bruggeman pre-exponential multiplier
         AN.alpha_brug   = 1.5;               % [-], Bruggeman exponential factor
-        
-        % Lithium Foil Properties
-        if FLAG.AN_LI_FOIL
-            AN.L            = 23.4e-6;       % [m], Direction normal to current flow, thickness of electrode
-            AN.r_p          = 50e-6;         % [m], Outer radius of electrode particle
-            AN.eps_ed       = 0.99;          % [-], Volume fraction of active material in the composite electrode
-            AN.eps_b        = 0.0;           % [-], Volume fraction of binder
-            AN.A_geo        = 1.0;           %      Account for ecentricity of spherical particle
-            AN.gamma_brug   = 1.0;           % [-], Bruggeman pre-exponential multiplier
-            AN.alpha_brug   = 1.5;           % [-], Bruggeman exponential factor
-        end
 
     % ---- Separator ----
         if SIM.cell_geo == 'p'
@@ -445,8 +382,6 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         end
         SEP.L           = 30e-6;             % [m]  Thickness
         SEP.eps         = 1;                 % [-], Porosity (Volume fraction of electrolyte in sep)
-        % SEP.gamma_brug   = 1.0;              % [-], Bruggeman pre-exponential multiplier
-        % SEP.alpha_brug   = 1.5;              % [-], Bruggeman exponential factor
 
     % ---- Cathode ----
         if SIM.cell_geo == 'p'
@@ -464,11 +399,10 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         CA.alpha_brug   = 1.5;               % [-], Bruggeman exponential factor
         
     % ---- Electrolyte ----
-        EL.gamma_brug     = 1.0;               % [-], Bruggeman pre-exponential multiplier
-        %EL.alpha_brug   = 1.5;               % [-], Bruggeman exponential factor
-        EL.alpha_brug_an  = 2.0; % [-], Bruggeman exponential factor
-        EL.alpha_brug_sep = 2.0; % [-], Bruggeman exponential factor
-        EL.alpha_brug_ca  = 2.0; % [-], Bruggeman exponential factor
+        EL.gamma_brug     = 1.0; % [-], Bruggeman pre-exponential multiplier
+        EL.alpha_brug_an  = 1.5; % [-], Bruggeman exponential factor
+        EL.alpha_brug_sep = 1.5; % [-], Bruggeman exponential factor
+        EL.alpha_brug_ca  = 1.5; % [-], Bruggeman exponential factor
 
 
 %% Overall Simulation Parameters
@@ -476,7 +410,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     % Ambient Temperature
     switch FLAG.TempBC
         case 0 % Manual
-            SIM.T_inf = 20 + 273.15; % [K], Ambient temperature
+            SIM.T_inf = 25 + 273.15; % [K], Ambient temperature
         case 1 % Isothermal20
             SIM.T_inf = 20 + 273.15; % [K], Ambient temperature
         case 2 % Anode Cold
@@ -514,7 +448,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     else
         switch FLAG.TempBC
             case 0 % Manual
-                SIM.Temp_init = 20 + 273.15; % [K], Initial temperature of the cell
+                SIM.Temp_init = 25 + 273.15; % [K], Initial temperature of the cell
             case 1 % Isothermal20
                 SIM.Temp_init = 20 + 273.15; % [K], Initial temperature of the cell
             case 4 % Isothermal18
@@ -529,7 +463,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         case 3 % Insulated
             SIM.h = 0; % [W m^-2 K^-1],  Convection coefficient on the ends of the battery (Forced vs natural)
         case 4 % Convection
-            SIM.h = 4; % [W m^-2 K^-1],  Convection coefficient on the ends of the battery (Forced vs natural)
+            SIM.h = 1; % [W m^-2 K^-1],  Convection coefficient on the ends of the battery (Forced vs natural)
     end
     
     % Anode Thermal Boundary Condition
@@ -550,11 +484,11 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
                     SIM.Temp_AN_BC = 22 + 273.15;
             end
         case 2 % Known heat flux
-            SIM.q_AN_BC = -2; % [W m^-2]
+            SIM.q_AN_BC = 1; % [W m^-2]
         case 3 % Insulated
             SIM.q_AN_BC = 0; % [W m^-2]
         case 4 % Convection
-            SIM.h_AN_BC = 4; % [W m^-2 K^-1]
+            SIM.h_AN_BC = 1; % [W m^-2 K^-1]
     end
 
     % Cathode Thermal Boundary Condition
@@ -575,11 +509,11 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
                     SIM.Temp_CA_BC = 22 + 273.15;
             end
         case 2 % Known heat flux
-            SIM.q_CA_BC = -1; % [W m^-2]
+            SIM.q_CA_BC = 1; % [W m^-2]
         case 3 % Insulated
             SIM.q_CA_BC = 0; % [W m^-2]
         case 4 % Convection
-            SIM.h_CA_BC = 4; % [W m^-2 K^-1]
+            SIM.h_CA_BC = 1; % [W m^-2 K^-1]
     end
 
 % Simulation run time
@@ -590,28 +524,16 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
             SIM.initial_offset = SIM.RampThermalGradientTime*2; % [s], How long there is an initial zero current
         else
             SIM.initial_offset = 0;           % [s], How long there is an initial zero current
-        end        
+        end     
     end
 
 % Properties for SOC calcualtion
     if SIM.SimMode ~= 8 % ~PRBS
-        % Properties for SOC calcualtion
         %%% Wiley
         SIM.VoltageMax         = 4.2 ;  % [V] 
         SIM.VoltageMin         = 3.4 ;  % [V] 
         SIM.AnodeFormation_X   = 0.00;  % [-] 
         SIM.CathodeFormation_X = 1.00;  % [-] 
-
-        SIM.OneC_measured      = 22.7; % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
-        SIM.VoltageMax         = [] ;   % [V] 
-        SIM.VoltageMin         = [] ;   % [V] 
-        SIM.AnodeFormation_X   = []; % [-] 
-        SIM.CathodeFormation_X = []; % [-] 
-
-        SIM.AnodeStoich_SOC0     = 0.0700; % [-] 
-        SIM.CathodeStoich_SOC0   = 0.8900; % [-] 
-        SIM.AnodeStoich_SOC100   = 0.8434; % [-] 
-        SIM.CathodeStoich_SOC100 = 0.3400; % [-]
         
         %%% Wiley Half Cell NMC
         % SIM.VoltageMax         = 5.4 ;  % [V] 
@@ -626,39 +548,3 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     end
 
 end
-
-
-%% OOOLLLDDD Properties
-% AN.i_o_a    = 0.5;      % [],             i_o exponent
-    % AN.i_o_b    = 0.5;      % [],             i_o exponent
-    % AN.i_o_c    = 0.5;      % [],             i_o exponent
-    % AN.R_dl     = 0;        % [Ohm],          Double Layer Resistance
-    % AN.MW       = 6.941;      % [kg kmol^-1],   Molecular weight of Li
-    % AN.MW_Lith  = 6.941;      % [kg kmol^-1],   Molecular weight of Li
-    % AN.specCap  = (350)*1e0;  % [Ahr kg^-1],    Specific capacity
-            
-    % CA.i_o_a    = 0.5;    % i_o exponent
-    % CA.i_o_b    = 0.5;    % i_o exponent
-    % CA.i_o_c    = 0.5;    % i_o exponent
-    % CA.k_ct     = 1e-7;   
-    % CA.R_dl     = 0.0005;   % [Ohm],          Double-layer resisitance
-    % CA.MW       = (89.61275)*1e0; % [kg kmol^-1],   Molecular weight of NMC
-    % CA.MW_Lith  = (96.55375)*1e0; % [kg kmol^-1],   Molecular weight of LNMC
-    % CA.specCap  = (170)*1e0;      % [Ahr kg^-1],    Specific capacity
-    
-    % AN.coat_density = 0.06;    % [kg m^-2], Active material coating density
-    % AN.SA_gram      = 4.2;     % [m^2/g], surface area of active material per gram of active material
-    
-    % CA.coat_density = 0.06;  % [kg m^-2], Active material coating density
-    % CA.SA_gram      = 4.2;     % [m^2/g], surface area of active material per gram of active material
-    
-
-
-
-
-
-
-    % EL.rho      = (2.266*1000)*1e0; % [kg m^-3],      Testing
-    % EL.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Testing
-    % EL.lambda   = 1.04*1e-5;        % [W m^-1 K^-1],  Testing
-    

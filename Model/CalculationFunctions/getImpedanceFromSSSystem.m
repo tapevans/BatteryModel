@@ -1,17 +1,17 @@
 %% getImpedanceFromSSSystem
 
-function [Z_results] = getImpedanceFromSSSystem(sys , M , freq , SIM , P)
+function [Z_results] = getImpedanceFromSSSystem(sys , M , omega , SIM , P)
 %% Initialize
     A = sys.A;
     B = sys.B;
     C = sys.C;
     D = sys.D;
 
-    Z = zeros(length(freq),1);
+    Z = zeros(length(omega),1);
 
  %% Calculate Impedance   
-    for i = 1:length(freq)
-        s      = freq(i)*(1i);
+    for i = 1:length(omega)
+        s      = omega(i)*(1i);
         Z_temp = C * ((s*M - A)\B) + D;
         Z(i)   = Z_temp(1); % Hard-coded for cell voltage
     end
@@ -26,7 +26,7 @@ function [Z_results] = getImpedanceFromSSSystem(sys , M , freq , SIM , P)
     Z_angle_deg = asind(imag(Z_new)./Z_mag);
     
 % Save
-    Z_results(:,P.SS.omega)    = freq';
+    Z_results(:,P.SS.omega)    = omega';
     Z_results(:,P.SS.Z_mag)    = Z_mag;
     Z_results(:,P.SS.Z_Re)     = real(Z_new);
     Z_results(:,P.SS.Z_Im)     = imag(Z_new);

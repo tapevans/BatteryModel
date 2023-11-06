@@ -40,7 +40,7 @@ output_init = get_output( t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
 %% Perturb SV
 for i = 1:N.N_SV_tot
     p    = zeros(N.N_SV_tot,1);
-    p(i) = TOL.Rel * SV(i) + TOL.Abs;
+    p(i) = abs(TOL.Rel * SV(i)) + TOL.Abs;
     SV_p = SV + p;
     dSVdt_p  = batt_GovEqn(t,SV_p,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
     output_p = get_output( t,SV_p,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec);
@@ -61,7 +61,7 @@ end
 %% Perturb Inputs
 for i = 1:N.N_In
     p    = zeros(N.N_In,1);
-    p(i) = TOL.Rel * inputs_vec(i) + TOL.Abs; 
+    p(i) = abs(TOL.Rel * inputs_vec(i)) + TOL.Abs; 
     inputs_vec_p = inputs_vec + p;
     dSVdt_p  = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec_p);
     output_p = get_output( t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,inputs_vec_p);

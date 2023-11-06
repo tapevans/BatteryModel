@@ -1,6 +1,6 @@
 %% Function to calculate i_Far
 % The ith index is the faradaic current of the ith CV
-function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props)
+function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props, EL)
 %% Initialize
     i_Far = nan(1 , N.N_CV_tot);
 
@@ -24,8 +24,8 @@ function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props)
           .* ( CA.C_Li_max - SV(P.C_Li_surf_CA,N.CV_Region_CA) ).^CA.alpha_a ...
                           .* SV(P.C_Li_surf_CA,N.CV_Region_CA)  .^CA.alpha_c;
     else
-        i_o_an  = AN.i_oHandle( SV(:,N.CV_Region_AN) , P, AN );
-        i_o_ca  = CA.i_oHandle( SV(:,N.CV_Region_CA) , P, CA );
+        i_o_an  = AN.i_oHandle( SV(:,N.CV_Region_AN) , P, AN , EL);
+        i_o_ca  = CA.i_oHandle( SV(:,N.CV_Region_CA) , P, CA , EL);
     end
     if FLAG.AN_LI_FOIL
         i_o_an = 10; %%%%%%%%%% Hard coded; pulled from https://www.sciencedirect.com/science/article/pii/S0378775312005423

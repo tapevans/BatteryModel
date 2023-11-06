@@ -8,15 +8,16 @@
     
 %% List of Project Folders
     i = 1;
+    Project_Folder{i} = 'TestImpedanceContributions';   i = i+1;
     % Project_Folder{i} = 'SOCTest';   i = i+1;
-    Project_Folder{i} = 'COETest';   i = i+1;
+    % Project_Folder{i} = 'COETest';   i = i+1;
     % Project_Folder{i} = 'ThermalGradient';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFile';   i = i+1;
 
 
-%% Initial Calc
+%% Parameters
     num_Proj = length(Project_Folder);
 
 

@@ -8,7 +8,7 @@ function Res = phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props)
 
 %% Calc Currents and Voltages
     [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , FLAG , i_user_guess , props);
-    i_Far          = iFarCalc( SV , AN , CA , P , N , CONS, FLAG , props);
+    i_Far          = iFarCalc( SV , AN , CA , P , N , CONS, FLAG , props, EL);
     
     E_eq_an  = AN.EqPotentialHandle( SV(P.C_Li_surf_AN , N.CV_Region_AN ) / AN.C_Li_max );
     E_eq_ca  = CA.EqPotentialHandle( SV(P.C_Li_surf_CA , N.CV_Region_CA ) / CA.C_Li_max );

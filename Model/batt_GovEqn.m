@@ -28,7 +28,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Calculate All Fluxes
     [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , FLAG , i_user , props);
     
-    i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props );
+    i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props , EL);
     s_dot = i_Far / CONS.F ;
     
     J_Liion = JLiionCalc( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , i_el , props);
@@ -97,7 +97,12 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         % If Known Temperature BC
            if FLAG.T_BC_AN == 1 && FLAG.COE 
                i = 1;
-               dSVdt_AN(P.T, i) = SV(P.T,i) - SIM.Temp_AN_BC;
+               if FLAG.RampThermalGradient && t<= SIM.RampThermalGradientTime
+                   Temp_AN_BC = AN.m_thermal * t + AN.b_thermal;
+                   dSVdt_AN(P.T, i) = SV(P.T,i) -     Temp_AN_BC;
+               else
+                   dSVdt_AN(P.T, i) = SV(P.T,i) - SIM.Temp_AN_BC;
+               end
            end
 
 
@@ -162,7 +167,12 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
            if FLAG.T_BC_CA == 1 && FLAG.COE 
                i = N.N_CV_CA;
                index_offset     = N.N_CV_AN + N.N_CV_SEP + i;
-               dSVdt_CA(P.T, i) = SV( P.T , index_offset ) - SIM.Temp_CA_BC;
+               if FLAG.RampThermalGradient && t<= SIM.RampThermalGradientTime
+                   Temp_CA_BC = CA.m_thermal * t + CA.b_thermal;
+                   dSVdt_CA(P.T, i) = SV( P.T , index_offset ) -     Temp_CA_BC;
+               else
+                   dSVdt_CA(P.T, i) = SV( P.T , index_offset ) - SIM.Temp_CA_BC;
+               end
            end
 
 
@@ -178,9 +188,9 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 
 %% Used for troubleshooting
-    if t>SIM.initial_offset
-       t;
-    end
+    % if t>SIM.initial_offset
+    %    t;
+    % end
     % if t>SIM.t_ramp
     %    t;
     % end

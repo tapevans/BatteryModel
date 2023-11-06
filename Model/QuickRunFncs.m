@@ -1,6 +1,19 @@
 clear all
 close all
 clc
+
+
+%% Subdirecties to Include
+    % Script's filepath
+        [current_file_path,~,~] = fileparts(mfilename('fullpath'));
+    
+    % Include all folders
+    addpath(genpath(current_file_path)); 
+        % genpath creates a string with all folders and subfolders in a
+        % given directory addpath then adds all of them to the current
+        % workspace
+
+        
 %%
 % Test Initialization
 %%% Mode 1 ---- Polarization ----
@@ -71,7 +84,7 @@ clc;
 clear all;
 close all;
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\COETest\Test213_New_Polar_1.00C_C.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\COETest\444All_Constant_Polar_1.00C_C.mat';
 plotfcn(filename)
 
 

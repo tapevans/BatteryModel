@@ -26,7 +26,7 @@ function plotfcn(filename)
     FLAG.i_Far     = 0; % charge-transfer current density
     FLAG.plotV_SEI = 0; % Voltage across the SEI
     
-    FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
+    FLAG.cellVoltage         = 0; % Terminal voltage of the battery vs time
     FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
     FLAG.V_and_A             = 0;
     FLAG.SOC                 = 0; % SOC vs time
@@ -138,7 +138,7 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
 
 %% Temperature
     if FLAG.TEMP
-        figure
+        f = figure;
         hold on
         for i = 1:length(time_des)
             plot(SIM.x_vec,TemperatureC(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
@@ -155,19 +155,21 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
         xl_AS.LabelHorizontalAlignment = 'center';
         xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
         xl_SC.LabelHorizontalAlignment = 'center';
+
+        % exportgraphics(f,'TemperatureBCRamp_ANCOld.png')
     end
     
 
 %% Mass/Species (Concentration): Li_ion
     % Plot concentrations for desired times
     if FLAG.C_Liion
-        figure
+        f = figure;
         hold on
         for i = 1:N_times
             plot(SIM.x_vec,C_Liion(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southwest';
+        lgn.Location = 'best';
         title('C_{Li^+}')
         xlabel('X Position')
         ylabel('C_{Li^+} (kmol)')
@@ -177,6 +179,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
         xl_AS.LabelHorizontalAlignment = 'center';
         xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
         xl_SC.LabelHorizontalAlignment = 'center';
+
+        % exportgraphics(f,'C_Liion_TBCRamp_ANCOld.png')
     end
     
 
@@ -436,12 +440,14 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
 
 %% Charge Plots: Cell Voltage
     if FLAG.cellVoltage
-        figure
+        f = figure;
         plot(t_soln,cell_voltage,'LineWidth',2)
         title('Cell Voltage')
         xlabel('Time (s)')
         ylabel('Voltage (V)')
         xlim([0,t_soln(end)])
+        
+        exportgraphics(f,'CellVoltage_TBCRamp_ANCOld.png')
     end
     
 
@@ -555,7 +561,7 @@ elseif SIM.SimMode == 3
 %% EIS
     if FLAG.SS_NYQUIST
         figure
-        plot(Z_results(:,P.SS.Z_Re),-Z_results(:,P.SS.Z_Im),'-ok','Linewidth',2)
+        plot(Z_results{P.OM.cell_volt,1}(:,P.SS.Z_Re),-Z_results{P.OM.cell_volt,1}(:,P.SS.Z_Im),'-ok','Linewidth',2)
         title('EIS')
         xlabel('Z_{Re} (Ohm)')
         ylabel('-Z_{Im} (Ohm)')
@@ -571,11 +577,11 @@ elseif SIM.SimMode == 3
         title('Bode')
     
         subplot(2,1,1)
-        semilogx(Z_results(:,P.SS.omega) , Z_results(:,P.SS.Z_dB) , '-ok' , 'LineWidth' , 2)
+        semilogx(Z_results{P.OM.cell_volt,1}(:,P.SS.omega) , Z_results{P.OM.cell_volt,1}(:,P.SS.Z_dB) , '-ok' , 'LineWidth' , 2)
         ylabel('Magnitude (dB)')
     
         subplot(2,1,2)
-        semilogx(Z_results(:,P.SS.omega) , Z_results(:,P.SS.Z_ps_deg) , '-ok' , 'LineWidth' , 2)
+        semilogx(Z_results{P.OM.cell_volt,1}(:,P.SS.omega) , Z_results{P.OM.cell_volt,1}(:,P.SS.Z_ps_deg) , '-ok' , 'LineWidth' , 2)
         ylabel('Phase (degrees)')
         xlabel('Frequency (rad s^{-1})')   
     end

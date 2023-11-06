@@ -30,50 +30,37 @@
     % 7)  Manual Current Profile
     % 8)  PRBS
     % 9)  EIS PRBS Stitching
-    % 10) EIS Ho-Kalman
-    % 0)  Files that are used strictly for data and not to run a simulation
+    % 10) EIS Ho-Kalman   
+    % 0) Files that are used strictly for data and not to run a simulation
 
-function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
+function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_Original(SIM)
 %% Flags
     FLAG.AN_LI_FOIL = 0; % 1 if the anode   is a Li foil
     FLAG.CA_LI_FOIL = 0; % 1 if the cathode is a Li foil %%%%%Not Implemented
     
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
-
-    % FLAG.OffDiagOnsager = 1;
-    %     FLAG.Soret = 1;
     
-    FLAG.COE    = 0; % Cons of Energy (Temperature). 0 if dTdt = 0
+    FLAG.COE    = 1; % Cons of Energy (Temperature). 0 if dTdt = 0
         % Thermal Boundary Conditions
         % 1) Known Temperature  T(0,t)      = T_s
         % 2) Known Heat Flux    -k dTdx|x=0 = q''_s
         % 3) Insulated             dTdx|x=0 = 0
         % 4) Convection         -k dTdx|x=0 = h[T_inf - T(0,t)]
-            FLAG.T_BC_AN      = 3; % BC applied to the face normal to the AN current collector 
-            FLAG.T_BC_CA      = 3; % BC applied to the face normal to the CA current collector 
+            FLAG.T_BC_AN      = 1; % BC applied to the face normal to the AN current collector 
+            FLAG.T_BC_CA      = 2; % BC applied to the face normal to the CA current collector 
             FLAG.T_BC_Outside = 3; % BC applied to the surface of each CV, Can only be 3 or 4
     
         FLAG.HEAT_GEN_TOTAL    = 0; % Heat generation total within the control volume
             FLAG.HEAT_GEN_IONIC    = 1; % Heat generation due to ohmic losses from ionic current (el phase)
             FLAG.HEAT_GEN_ELECTRIC = 1; % Heat generation due to ohmic losses from electronic current (ed phase)
             FLAG.HEAT_GEN_RXN      = 1; % Heat generation from current across R_SEI %%% May not be accurate
-            % FLAG.HEAT_GEN_CHEM_RXN = 0; % Heat generation from a reaction at the SEI %%%%%%%NOT IMPLEMENTED
+            FLAG.HEAT_GEN_CHEM_RXN = 0; % Heat generation from a reaction at the SEI %%%%%%%NOT IMPLEMENTED
 
     FLAG.InitialThermalGradient = 0;
-    FLAG.RampThermalGradient    = 0;
-        SIM.RampThermalGradientTime = 3*60; % [s], time to ramp the BC
-        % FLAG.TempBC
-        %    0) Manual
-        %    1) Iso20
-        %    2) AN Cold
-        %    3) CA Cold
-        %    4) Iso18
-        %    5) Iso22
-        FLAG.TempBC = 5; % Pre-determined temperature BC
             
     FLAG.V_SEI            = 1; % 1 if the overpotential is calculated using V_SEI
-    % FLAG.SEI_growth       = 0; % 1 if the SEI grows over time (increased R_SEI) %%%%%%%NOT IMPLEMENTED
+    FLAG.SEI_growth       = 0; % 1 if the SEI grows over time (increased R_SEI) %%%%%%%NOT IMPLEMENTED
     
     FLAG.Bruggeman = 0; % 1 if properties are adjusted for tortuosity
         FLAG.BRUG_ED       = 1; % Apply BRUG to electrode (active material) parameters
@@ -130,8 +117,9 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
             SIM.Ts = 1; % [s], Sampling rate of the DT system
         end
 	    SIM.TsMultiple   = 5;                     % Sample faster than desired SaveTimeStep, New SaveTimeStep is Ts/TsMultiple
-        SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple; % [s], Sampling rate of the ode output
+        SIM.SaveTimeStep = SIM.Ts/SIM.TsMultiple;   % [s], Sampling rate of the ode output
 
+    % if isfield(SIM,'t_Report') 
     if isfield(SIM,'t_Report') && SIM.SimMode == 9
         if ~isempty(SIM.t_Report)
             FLAG.SaveSolnDiscreteTime = 1;
@@ -151,7 +139,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
 
 %% Numerical Parameters
     % N.N_CV_AN   = 3;  % Number of x-direction anode     control volumes (CV) %%%Nodes now. Centered for now
-    % N.N_CV_SEP  = 3;  % Number of x-direction seperator control volumes (CV)
+    % N.N_CV_SEP  = 3;   % Number of x-direction seperator control volumes (CV)
     % N.N_CV_CA   = 3;  % Number of x-direction cathode   control volumes (CV)
     % N.N_R_AN    = 3;  % Number of r-direction anode     control volumes (CV) %%%No less than 10 should be used
     % N.N_R_CA    = 3;  % Number of r-direction cathode   control volumes (CV) %%%No less than 10 should be used
@@ -206,8 +194,8 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         SIM.t_ramp    = 0;
         
     %%%% Input from batch mode 
-        % SIM.omega      = 1e-2; % [rad/s], Frequency of the sin wave 
-        % SIM.SOC_start = 50;    % [%],     Initial state of charge
+        % SIM.freq      = 1e-2; % [rad/s], frequency of the sin wave 
+        % SIM.SOC_start = 50;   % [%], Initial state of charge
     end
 
 
@@ -394,7 +382,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     EL.kappa      = 0.28;    % [S m^-1],       Ionic conductivity
     EL.C          = 1.0;     % [kmol m^-3],    Li concentration
     EL.tf_num     = 0.363;   % [-],            Transference Number 
-    EL.Activity   = 1;       % [-],
+    EL.Activity   = 1;       % 
     % EL.rho        = 2266;    % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
     % EL.c_p        = 720;     % [J kg^-1 K^-1], Specific heat capacity of electrolyte
     % EL.lambda     = 0.45;    % [W m^-1 K^-1],  Thermal conductivity of electrolyte %sciencedirect.com/science/article/pii/S0735193317300179
@@ -464,67 +452,29 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         CA.alpha_brug   = 1.5;               % [-], Bruggeman exponential factor
         
     % ---- Electrolyte ----
-        EL.gamma_brug     = 1.0;               % [-], Bruggeman pre-exponential multiplier
-        %EL.alpha_brug   = 1.5;               % [-], Bruggeman exponential factor
-        EL.alpha_brug_an  = 2.0; % [-], Bruggeman exponential factor
-        EL.alpha_brug_sep = 2.0; % [-], Bruggeman exponential factor
-        EL.alpha_brug_ca  = 2.0; % [-], Bruggeman exponential factor
+        EL.gamma_brug   = 1.0;               % [-], Bruggeman pre-exponential multiplier
+        EL.alpha_brug   = 1.5;               % [-], Bruggeman exponential factor
 
 
 %% Overall Simulation Parameters
 % Thermal 
-    % Ambient Temperature
-    switch FLAG.TempBC
-        case 0 % Manual
-            SIM.T_inf = 20 + 273.15; % [K], Ambient temperature
-        case 1 % Isothermal20
-            SIM.T_inf = 20 + 273.15; % [K], Ambient temperature
-        case 2 % Anode Cold
-            SIM.T_inf = 20 + 273.15; % [K], Ambient temperature
-        case 3 % Cathode Cold
-            SIM.T_inf = 20 + 273.15; % [K], Ambient temperature
-        case 4 % Isothermal18
-            SIM.T_inf = 18 + 273.15; % [K], Ambient temperature
-        case 5 % Isothermal22
-            SIM.T_inf = 22 + 273.15; % [K], Ambient temperature
-    end
+    SIM.T_inf = 25 + 273.15; % [K], Ambient temperature
 
-    % Cell Initial Temperature Profile
     if FLAG.InitialThermalGradient
-        switch FLAG.TempBC
-            case 0 % Manual
-                SIM.AN_Temp_init = 22 + 273.15; % [K], Anode   temperature
-                SIM.CA_Temp_init = 18 + 273.15; % [K], Cathode temperature
-            case 1 % Isothermal20
-                SIM.AN_Temp_init = 20 + 273.15; % [K], Anode   temperature
-                SIM.CA_Temp_init = 20 + 273.15; % [K], Cathode temperature
-            case 2 % Anode Cold
-                SIM.AN_Temp_init = 18 + 273.15; % [K], Anode   temperature
-                SIM.CA_Temp_init = 22 + 273.15; % [K], Cathode temperature
-            case 3 % Cathode Cold
-                SIM.AN_Temp_init = 22 + 273.15; % [K], Anode   temperature
-                SIM.CA_Temp_init = 18 + 273.15; % [K], Cathode temperature
-            case 4 % Isothermal18
-                SIM.AN_Temp_init = 18 + 273.15; % [K], Anode   temperature
-                SIM.CA_Temp_init = 18 + 273.15; % [K], Cathode temperature
-            case 5 % Isothermal22
-                SIM.AN_Temp_init = 22 + 273.15; % [K], Anode   temperature
-                SIM.CA_Temp_init = 22 + 273.15; % [K], Cathode temperature
-        end
+        %A2C
+            % SIM.AN_Temp_init = 22 + 273.15; % [K], Anode   temperature
+            % SIM.CA_Temp_init = 18 + 273.15; % [K], Cathode temperature
+
+        %C2A
+            SIM.AN_Temp_init = 18 + 273.15; % [K], Anode   temperature
+            SIM.CA_Temp_init = 22 + 273.15; % [K], Cathode temperature
     else
-        switch FLAG.TempBC
-            case 0 % Manual
-                SIM.Temp_init = 20 + 273.15; % [K], Initial temperature of the cell
-            case 1 % Isothermal20
-                SIM.Temp_init = 20 + 273.15; % [K], Initial temperature of the cell
-            case 4 % Isothermal18
-                SIM.Temp_init = 18 + 273.15; % [K], Initial temperature of the cell
-            case 5 % Isothermal22
-                SIM.Temp_init = 22 + 273.15; % [K], Initial temperature of the cell
-        end
+        % SIM.Temp_init = 20 + 273.15; % [K], Center of the gradients 293.15
+        % SIM.Temp_init = 25 + 273.15; % [K], Initial temperature of the cell 298.15
+        % SIM.Temp_init = 15 + 273.15; % [K], Initial temperature of the cell
+        SIM.Temp_init = 25 + 273.15; % [K], Initial temperature of the cell
     end
     
-    % Outside (faces normal to y,z direction) Thermal Boundary Condition
     switch FLAG.T_BC_Outside
         case 3 % Insulated
             SIM.h = 0; % [W m^-2 K^-1],  Convection coefficient on the ends of the battery (Forced vs natural)
@@ -532,50 +482,26 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
             SIM.h = 4; % [W m^-2 K^-1],  Convection coefficient on the ends of the battery (Forced vs natural)
     end
     
-    % Anode Thermal Boundary Condition
-    switch FLAG.T_BC_AN 
-        case 1 % Known Temperature [K]
-            switch FLAG.TempBC
-                case 0 % Manual
-                    SIM.Temp_AN_BC = 25 + 273.15;
-                case 1 % Isothermal20
-                    SIM.Temp_AN_BC = 20 + 273.15;
-                case 2 % Anode Cold
-                    SIM.Temp_AN_BC = 18 + 273.15;
-                case 3 % Cathode Cold
-                    SIM.Temp_AN_BC = 22 + 273.15;
-                case 4 % Isothermal18
-                    SIM.Temp_AN_BC = 18 + 273.15;
-                case 5 % Isothermal22
-                    SIM.Temp_AN_BC = 22 + 273.15;
-            end
+    switch FLAG.T_BC_AN
+        case 1 % Known Temperature
+            % SIM.Temp_AN_BC = 22 + 273.15; % [K], Anode temperature (A2C)
+            % SIM.Temp_AN_BC = 18 + 273.15; % [K], Anode temperature (C2A)
+            SIM.Temp_AN_BC = 25 + 273.15; % [K], Anode temperature
         case 2 % Known heat flux
-            SIM.q_AN_BC = -2; % [W m^-2]
+            SIM.q_AN_BC = 2; % [W m^-2]
         case 3 % Insulated
             SIM.q_AN_BC = 0; % [W m^-2]
         case 4 % Convection
             SIM.h_AN_BC = 4; % [W m^-2 K^-1]
     end
 
-    % Cathode Thermal Boundary Condition
-    switch FLAG.T_BC_CA 
-        case 1 % Known Temperature [K]
-            switch FLAG.TempBC
-                case 0 % Manual
-                    SIM.Temp_CA_BC = 25 + 273.15;
-                case 1 % Isothermal20
-                    SIM.Temp_CA_BC = 20 + 273.15;
-                case 2 % Anode Cold
-                    SIM.Temp_CA_BC = 22 + 273.15;
-                case 3 % Cathode Cold
-                    SIM.Temp_CA_BC = 18 + 273.15;
-                case 4 % Isothermal18
-                    SIM.Temp_CA_BC = 18 + 273.15;
-                case 5 % Isothermal22
-                    SIM.Temp_CA_BC = 22 + 273.15;
-            end
+    switch FLAG.T_BC_CA
+        case 1 % Known Temperature
+            % SIM.Temp_CA_BC = 18 + 273.15; % [K], Cathode temperature (A2C)
+            % SIM.Temp_CA_BC = 22 + 273.15; % [K], Cathode temperature (C2A)
+            SIM.Temp_CA_BC = 25 + 273.15; % [K], Cathode temperature
         case 2 % Known heat flux
-            SIM.q_CA_BC = -1; % [W m^-2]
+            SIM.q_CA_BC = 2; % [W m^-2]
         case 3 % Insulated
             SIM.q_CA_BC = 0; % [W m^-2]
         case 4 % Convection
@@ -583,47 +509,35 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     end
 
 % Simulation run time
-    if SIM.SimMode == 10 % EIS Ho-Kalman
+    if SIM.SimMode == 10
         SIM.initial_offset = SIM.Tsample; % [s], How long there is an initial zero current
-    elseif SIM.SimMode ~= 8 % ~PRBS
+    elseif SIM.SimMode ~= 8
         if FLAG.RampThermalGradient
             SIM.initial_offset = SIM.RampThermalGradientTime*2; % [s], How long there is an initial zero current
         else
             SIM.initial_offset = 0;           % [s], How long there is an initial zero current
-        end        
+        end     
     end
 
-% Properties for SOC calcualtion
-    if SIM.SimMode ~= 8 % ~PRBS
-        % Properties for SOC calcualtion
-        %%% Wiley
-        SIM.VoltageMax         = 4.2 ;  % [V] 
-        SIM.VoltageMin         = 3.4 ;  % [V] 
-        SIM.AnodeFormation_X   = 0.00;  % [-] 
-        SIM.CathodeFormation_X = 1.00;  % [-] 
-
-        SIM.OneC_measured      = 22.7; % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
-        SIM.VoltageMax         = [] ;   % [V] 
-        SIM.VoltageMin         = [] ;   % [V] 
-        SIM.AnodeFormation_X   = []; % [-] 
-        SIM.CathodeFormation_X = []; % [-] 
-
-        SIM.AnodeStoich_SOC0     = 0.0700; % [-] 
-        SIM.CathodeStoich_SOC0   = 0.8900; % [-] 
-        SIM.AnodeStoich_SOC100   = 0.8434; % [-] 
-        SIM.CathodeStoich_SOC100 = 0.3400; % [-]
-        
-        %%% Wiley Half Cell NMC
-        % SIM.VoltageMax         = 5.4 ;  % [V] 
-        % SIM.VoltageMin         = 2.9 ;  % [V] 
-        % SIM.AnodeFormation_X   = 1.00;  % [-] 
-        % SIM.CathodeFormation_X = 0.00;  % [-] 
-    else
-        SIM.VoltageMax         = 5 ;  % [V] 
-        SIM.VoltageMin         = 2 ;  % [V] 
-        SIM.AnodeFormation_X   = 0.00;  % [-] 
-        SIM.CathodeFormation_X = 1.00;  % [-] 
-    end
+if SIM.SimMode ~= 8
+    % Properties for SOC calcualtion
+    %%% Wiley
+    SIM.VoltageMax         = 4.2 ;  % [V] 
+    SIM.VoltageMin         = 3.4 ;  % [V] 
+    SIM.AnodeFormation_X   = 0.00;  % [-] 
+    SIM.CathodeFormation_X = 1.00;  % [-] 
+    
+    %%% Wiley Half Cell NMC
+    % SIM.VoltageMax         = 5.4 ;  % [V] 
+    % SIM.VoltageMin         = 2.9 ;  % [V] 
+    % SIM.AnodeFormation_X   = 1.00;  % [-] 
+    % SIM.CathodeFormation_X = 0.00;  % [-] 
+else
+    SIM.VoltageMax         = 5 ;  % [V] 
+    SIM.VoltageMin         = 2 ;  % [V] 
+    SIM.AnodeFormation_X   = 0.00;  % [-] 
+    SIM.CathodeFormation_X = 1.00;  % [-] 
+end
 
 end
 

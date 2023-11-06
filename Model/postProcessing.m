@@ -174,13 +174,13 @@ if ~postProcessComplete
                   .* ( CA.C_Li_max - SV(P.C_Li_surf_CA,N.CV_Region_CA , i) ).^CA.alpha_a ...
                                   .* SV(P.C_Li_surf_CA,N.CV_Region_CA , i)  .^CA.alpha_c;
             else
-                i_o_an  = AN.i_oHandle( SV(:,N.CV_Region_AN , i) , P, AN );
-                i_o_ca  = CA.i_oHandle( SV(:,N.CV_Region_CA , i) , P, CA );
+                i_o_an  = AN.i_oHandle( SV(:,N.CV_Region_AN , i) , P, AN , EL);
+                i_o_ca  = CA.i_oHandle( SV(:,N.CV_Region_CA , i) , P, CA , EL);
             end
             i_o(i , :) = [i_o_an, NaN(1,N.N_CV_SEP), i_o_ca];
         
         % i_Far
-            i_Far(i , :) = iFarCalc( SV(: , : , i) , AN , CA , P , N , CONS , FLAG , props);
+            i_Far(i , :) = iFarCalc( SV(: , : , i) , AN , CA , P , N , CONS , FLAG , props, EL);
         
         % i_el, i_ed
             [i_ed(i , :) , i_el(i , :) ] = currentCalc( SV(: , : , i) , AN , SEP , CA , EL , P , N , CONS , FLAG , i_user(i,1) , props);
@@ -391,7 +391,13 @@ if ~postProcessComplete
 
     %% Resave data to the .mat file
         clearvars i 
-        save(filename);
+        SIZE_SV = whos('SV');
+        if SIZE_SV.bytes > 1e9
+            save(filename,'-v7.3')
+        else
+            save(filename)
+        end
+        % save(filename);
 end
 end
 

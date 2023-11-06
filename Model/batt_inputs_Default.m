@@ -33,7 +33,7 @@
     % 10) EIS Ho-Kalman
     % 0)  Files that are used strictly for data and not to run a simulation
 
-function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
+function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_Default(SIM)
 %% Flags
     FLAG.AN_LI_FOIL = 0; % 1 if the anode   is a Li foil
     FLAG.CA_LI_FOIL = 0; % 1 if the cathode is a Li foil %%%%%Not Implemented
@@ -310,10 +310,10 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
 
 %% Battery Chemistry (Cell Performance)
 % ---- Anode ----
-    AN.EqPotentialHandle = SIM.ANEqPotentialHandle;
-    AN.i_oHandle         = SIM.ANi_oHandle;
-    AN.sigmaHandle       = SIM.ANsigmaHandle;
-    AN.D_oHandle         = SIM.AND_oHandle;
+    AN.EqPotentialHandle = @E_eqGraphite;
+    AN.i_oHandle         = @i_oC6;
+    AN.sigmaHandle       = @sigmaC6;
+    AN.D_oHandle         = @D_o_Graphite;
     
     AN.k_o      = 3.80589129594505E-09; % [A m^-2],       Exchange current density Rate constant
     AN.alpha_a  = 0.5;                  % [-],            Symmetry factor, annodic 
@@ -336,20 +336,20 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
 
     % Lithium Foil Properties
         if FLAG.AN_LI_FOIL
-            AN.EqPotentialHandle = SIM.ANEqPotentialHandle;
+            AN.EqPotentialHandle = @E_eqLiFoil;
             AN.i_oHandle         = @i_oLiFoil;
-            AN.sigmaHandle       = SIM.ANsigmaHandle;
-            AN.D_oHandle         = SIM.AND_oHandle;
-            AN.k_o      = 1E-07;     % [A m^-2],       Exchange current density Rate constant
-            AN.alpha_a  = 0.3;        % [-],            Symmetry factor, annodic 
-            AN.alpha_c  = 0.7;        % [-],            Symmetry factor, cathodic
-            AN.C_dl     = 3e-6;       % [F/m^2],        Double-layer capacitance
-            AN.R_SEI    = 1e-2;       % [Ohm m^2],      Solid electrolyte interface resistance
-            AN.sigma    = 100;       % [S m^-1],       Electrical conductivity (ed phase)
-            AN.D_o      = 3E-13;      % [m^2 s^-1],     Solid-state diffusion coefficient
-            AN.rho      = 0.534*1000; % [kg m^-3],      Density of the electrode material without Li
-            AN.c_p      = 3000;       % [J kg^-1 K^-1], Specific heat capacity  of separator material
-            AN.lambda   = 71.2;       % [W m^-1 K^-1],  Thermal conductivity
+            AN.sigmaHandle       = @sigmaC6;
+            AN.D_oHandle         = @D_o_Graphite;
+            AN.k_o      = 1E-07;        % [A m^-2],       Exchange current density Rate constant
+            AN.alpha_a  = 0.3;          % [-],            Symmetry factor, annodic 
+            AN.alpha_c  = 0.7;          % [-],            Symmetry factor, cathodic
+            AN.C_dl     = 3e-6;         % [F/m^2],        Double-layer capacitance
+            AN.R_SEI    = 1e-2;         % [Ohm m^2],      Solid electrolyte interface resistance
+            AN.sigma    = 100;          % [S m^-1],       Electrical conductivity (ed phase)
+            AN.D_o      = 3E-13;        % [m^2 s^-1],     Solid-state diffusion coefficient
+            AN.rho      = 0.534*1000;   % [kg m^-3],      Density of the electrode material without Li
+            AN.c_p      = 3000;         % [J kg^-1 K^-1], Specific heat capacity  of separator material
+            AN.lambda   = 71.2;         % [W m^-1 K^-1],  Thermal conductivity
             AN.C_Li_max = AN.rho/AN.MW; % [kmol m^-3], Max concentration of lithium in the active material
         end
 
@@ -363,10 +363,10 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     SEP.lambda   = 1.04*1e-3;        % [W m^-1 K^-1],  Testing
 
 % ---- Cathode ----
-    CA.EqPotentialHandle = SIM.CAEqPotentialHandle;
-    CA.i_oHandle         = SIM.CAi_oHandle;  
-    CA.sigmaHandle       = SIM.CAsigmaHandle;
-    CA.D_oHandle         = SIM.CAD_oHandle;
+    CA.EqPotentialHandle = @E_eqNMC;
+    CA.i_oHandle         = @i_oC6;  
+    CA.sigmaHandle       = @sigmaNMC;
+    CA.D_oHandle         = @D_o_NMC532;
 
     CA.k_o      = 9.72997022033729E-10; % [A m^-2],       Exchange current density Rate constant
     CA.alpha_a  = 0.5;                  % [-],            Symmetry factor, annodic 
@@ -385,10 +385,10 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     
 
 % ---- Electrolyte ----
-    EL.tf_numHandle       = SIM.ELtf_numHandle;
-    EL.ActivityHandle     = SIM.ELActivityHandle;
-    EL.D_o_Li_ionHandle   = SIM.ELD_o_Li_ionHandle;
-    EL.kappaHandle        = SIM.ELkappaHandle;
+    EL.tf_numHandle       = @transferenceNumber;
+    EL.ActivityHandle     = @activity;
+    EL.D_o_Li_ionHandle   = @D_oLiion;
+    EL.kappaHandle        = @kappa;
     
     EL.D_o_Li_ion = 7.5E-11; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
     EL.kappa      = 0.28;    % [S m^-1],       Ionic conductivity
@@ -590,7 +590,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
             SIM.initial_offset = SIM.RampThermalGradientTime*2; % [s], How long there is an initial zero current
         else
             SIM.initial_offset = 0;           % [s], How long there is an initial zero current
-        end        
+        end     
     end
 
 % Properties for SOC calcualtion
@@ -602,16 +602,16 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
         SIM.AnodeFormation_X   = 0.00;  % [-] 
         SIM.CathodeFormation_X = 1.00;  % [-] 
 
-        SIM.OneC_measured      = 22.7; % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
-        SIM.VoltageMax         = [] ;   % [V] 
-        SIM.VoltageMin         = [] ;   % [V] 
-        SIM.AnodeFormation_X   = []; % [-] 
-        SIM.CathodeFormation_X = []; % [-] 
-
-        SIM.AnodeStoich_SOC0     = 0.0700; % [-] 
-        SIM.CathodeStoich_SOC0   = 0.8900; % [-] 
-        SIM.AnodeStoich_SOC100   = 0.8434; % [-] 
-        SIM.CathodeStoich_SOC100 = 0.3400; % [-]
+        % SIM.OneC_measured      = 22.7; % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
+        % SIM.VoltageMax         = [] ;   % [V] 
+        % SIM.VoltageMin         = [] ;   % [V] 
+        % SIM.AnodeFormation_X   = []; % [-] 
+        % SIM.CathodeFormation_X = []; % [-] 
+        % 
+        % SIM.AnodeStoich_SOC0     = 0.0700; % [-] 
+        % SIM.CathodeStoich_SOC0   = 0.8900; % [-] 
+        % SIM.AnodeStoich_SOC100   = 0.8434; % [-] 
+        % SIM.CathodeStoich_SOC100 = 0.3400; % [-]
         
         %%% Wiley Half Cell NMC
         % SIM.VoltageMax         = 5.4 ;  % [V] 
