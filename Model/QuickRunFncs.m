@@ -2,17 +2,6 @@ clear all
 close all
 clc
 
-
-%% Subdirecties to Include
-    % Script's filepath
-        [current_file_path,~,~] = fileparts(mfilename('fullpath'));
-    
-    % Include all folders
-    addpath(genpath(current_file_path)); 
-        % genpath creates a string with all folders and subfolders in a
-        % given directory addpath then adds all of them to the current
-        % workspace
-
         
 %%
 % Test Initialization
@@ -116,7 +105,7 @@ clear all
 close all
 clc
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\COETest\Test213_New_Polar_0.00C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestImpedanceContributions\Standard_SS_EIS_SOC95.mat';
 
 
 load(filename)

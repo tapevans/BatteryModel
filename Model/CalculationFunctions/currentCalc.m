@@ -15,7 +15,7 @@ function [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , 
         i_el(i) = 0;      % No ionic   flux through the current collector
 
     % AN Region
-        if ~FLAG.AN_LI_FOIL
+        % if ~FLAG.AN_LI_FOIL
             for i = N.CV_Region_AN(2:end)
                 sigma    = (props( P.sigma    , i-1 ) + props( P.sigma    , i ))/2;
                 kappa    = (props( P.kappa    , i-1 ) + props( P.kappa    , i ))/2;
@@ -26,7 +26,7 @@ function [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , 
                 i_el(i) = -  kappa*(SV(P.phi_el,i)- SV(P.phi_el,i-1))/(AN.del_x) ...
                           -2*kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + activity )*(tf-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(AN.del_x);
             end
-        end
+        % end
 
 % ---- Separator ----
     % AN/SEP interface
@@ -60,7 +60,7 @@ function [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , 
                   - 2*kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + activity)*(tf-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(CA.del_x/2 + SEP.del_x/2);
         i_ed(i) = 0;      
     % CA region
-        if ~FLAG.CA_LI_FOIL
+        % if ~FLAG.CA_LI_FOIL
             for i = N.CV_Region_CA(2:end)
                 sigma    = (props( P.sigma    , i-1 ) + props( P.sigma    , i ))/2;
                 kappa    = (props( P.kappa    , i-1 ) + props( P.kappa    , i ))/2;
@@ -71,7 +71,7 @@ function [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , 
                 i_el(i) = -   kappa*(SV(P.phi_el,i)- SV(P.phi_el,i-1))/(CA.del_x) ...
                           - 2*kappa*(CONS.R*SV(P.T,i)/CONS.F)*(1 + activity)*(tf-1)*(log(SV(P.C_Liion,i))-log(SV(P.C_Liion,i-1)))/(CA.del_x); 
             end
-        end
+        % end
 
 % Boundary Condition at the CA/CC
     i = N.N_CV_tot + 1;

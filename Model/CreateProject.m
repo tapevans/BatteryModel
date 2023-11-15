@@ -56,15 +56,16 @@ clear all; close all; clc;
 
 
 %% Inputs
-    % FLAG.InputFile
-    %   0) batt_input
-    %   1) batt_input_Wiley_Lui
-    %   2) batt_input_HZ_A
-    %   3) batt_input_HZ_B
-    %   4) batt_input_NREL
-    %   5) batt_input_ToddKingston
-    %   6) batt_input_MPC
-    FLAG.InputFile = 4;
+% InputFile
+    %   -1) batt_inputs_Manual
+    %    0) batt_inputs
+    %    1) batt_inputs_Wiley_Lui
+    %    2) batt_inputs_HZ_A
+    %    3) batt_inputs_HZ_B
+    %    4) batt_inputs_NREL
+    %    5) batt_inputs_ToddKingston
+    %    6) batt_inputs_MPC
+    InputFile = 4;
 
     FLAG_local.folder_overwrite = 0; % 1 if delete folder if it already exists
     FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
@@ -87,10 +88,20 @@ clear all; close all; clc;
     % battery_name = 'Test123';
     
     % folder_name  = 'QuickTest';
-    % battery_name = 'NoisePLots';
+    % battery_name = 'NoisePlots';
     
     folder_name  = 'TestImpedanceContributions';
     battery_name = 'Standard';
+    
+    % folder_name  = 'TestImpedanceSparse';
+    % % battery_name = 'Standard';
+    % % battery_name = 'WithCOE';
+    % battery_name = 'WithCOEWithVarProps';
+
+    % folder_name  = 'SeminarFall2023';
+    % % battery_name = 'M_A';
+    % % battery_name = 'M_B';
+    % battery_name = 'M_C';
 
 
 %% Simulations
@@ -102,9 +113,11 @@ clear all; close all; clc;
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
     % C_rates      = [-1]; 
+    % C_rates      = [-5]; 
+    % C_rates      = -(1:5); 
     % C_rates      = [1/20]; 
     % C_rates      = [1/20 -1/20]; 
-    % C_rates      = [-1/3];
+    % C_rates      = [-1/4];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
 
 % ---- Harmonic Perturbation ----
@@ -239,118 +252,6 @@ clear all; close all; clc;
         % HK_nSamples = 5; % [], Number of relaxation samples (2 inital relax, 1 pulse, nSamples relax)
 
 
-%% Function Handles
-% FLAG.InputFile
-    %   0) batt_input
-    %   1) batt_input_Wiley_Lui
-    %   2) batt_input_HZ_A
-    %   3) batt_input_HZ_B
-    %   4) batt_input_NREL
-    %   5) batt_input_ToddKingston
-    %   6) batt_input_MPC
-    FLAG.InputFile = 4;
-switch FLAG.InputFile
-    case 0 % batt_input
-        inputHandle             = @batt_input;
-        SIM.ANEqPotentialHandle = @E_eqGraphite;
-        SIM.ANi_oHandle         = @i_oC6;
-        SIM.ANsigmaHandle       = @sigmaC6;
-        SIM.AND_oHandle         = @D_o_Graphite;
-        SIM.CAEqPotentialHandle = @E_eqNMC;
-        SIM.CAi_oHandle         = @i_oC6;  
-        SIM.CAsigmaHandle       = @sigmaNMC;
-        SIM.CAD_oHandle         = @D_o_NMC532;
-        SIM.ELtf_numHandle      = @transferenceNumber;
-        SIM.ELActivityHandle    = @activity;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion;
-        SIM.ELkappaHandle       = @kappa;
-    case 1 % batt_input_Wiley_Lui
-        inputHandle             = @batt_input_Wiley_Lui;
-        SIM.ANEqPotentialHandle = @E_eqGraphite;
-        SIM.ANi_oHandle         = @i_oC6;
-        SIM.ANsigmaHandle       = @sigmaC6;
-        SIM.AND_oHandle         = @D_o_Graphite;
-        SIM.CAEqPotentialHandle = @E_eqNMC;
-        SIM.CAi_oHandle         = @i_oC6;  
-        SIM.CAsigmaHandle       = @sigmaNMC;
-        SIM.CAD_oHandle         = @D_o_NMC532;
-        SIM.ELtf_numHandle      = @transferenceNumber;
-        SIM.ELActivityHandle    = @activity;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion;
-        SIM.ELkappaHandle       = @kappa;
-    case 2 % batt_input_HZ_A
-        inputHandle             = @batt_input_HZ_A;
-        SIM.ANEqPotentialHandle = @E_eqGraphite_HZ;
-        SIM.ANi_oHandle         = @i_oC6_HZ;
-        SIM.ANsigmaHandle       = @sigmaC6_HZ;
-        SIM.AND_oHandle         = @D_o_Graphite_HZ;
-        SIM.CAEqPotentialHandle = @E_eqNMC_HZ;
-        SIM.CAi_oHandle         = @i_oC6_HZ;  
-        SIM.CAsigmaHandle       = @sigmaNMC_HZ;
-        SIM.CAD_oHandle         = @D_o_NMC532_HZ;
-        SIM.ELtf_numHandle      = @transferenceNumber_HZ;
-        SIM.ELActivityHandle    = @activity_HZ;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion_HZ;
-        SIM.ELkappaHandle       = @kappa_HZ;
-    case 3 % batt_input_HZ_B
-        inputHandle             = @batt_input_HZ_B;
-        SIM.ANEqPotentialHandle = @E_eqGraphite_HZ;
-        SIM.ANi_oHandle         = @i_oC6_HZ;
-        SIM.ANsigmaHandle       = @sigmaC6_HZ;
-        SIM.AND_oHandle         = @D_o_Graphite_HZ;
-        SIM.CAEqPotentialHandle = @E_eqNMC_HZ;
-        SIM.CAi_oHandle         = @i_oNMC_HZ;  
-        SIM.CAsigmaHandle       = @sigmaNMC_HZ;
-        SIM.CAD_oHandle         = @D_o_NMC532_HZ;
-        SIM.ELtf_numHandle      = @transferenceNumber_HZ;
-        SIM.ELActivityHandle    = @activity_HZ;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion_HZ;
-        SIM.ELkappaHandle       = @kappa_HZ;
-    case 4 % batt_input_NREL
-        inputHandle             = @batt_input_NREL;
-        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
-        SIM.ANi_oHandle         = @i_oC6_NREL;
-        SIM.ANsigmaHandle       = @sigmaC6_NREL;
-        SIM.AND_oHandle         = @D_o_Graphite_NREL;
-        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
-        SIM.CAi_oHandle         = @i_oNMC_NREL;  
-        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
-        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
-        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
-        SIM.ELActivityHandle    = @activity_NREL;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
-        SIM.ELkappaHandle       = @kappa_NREL;
-    case 5 % batt_input_ToddKingston
-        inputHandle             = @batt_input_ToddKingston;
-        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
-        SIM.ANi_oHandle         = @i_oC6_NREL;
-        SIM.ANsigmaHandle       = @sigmaC6_NREL;
-        SIM.AND_oHandle         = @D_o_Graphite_NREL;
-        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
-        SIM.CAi_oHandle         = @i_oNMC_NREL;  
-        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
-        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
-        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
-        SIM.ELActivityHandle    = @activity_NREL;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
-        SIM.ELkappaHandle       = @kappa_NREL;
-    case 6 % batt_input_MPC
-        inputHandle             = @batt_input_MPC;
-        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
-        SIM.ANi_oHandle         = @i_oC6_NREL;
-        SIM.ANsigmaHandle       = @sigmaC6_NREL;
-        SIM.AND_oHandle         = @D_o_Graphite_NREL;
-        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
-        SIM.CAi_oHandle         = @i_oNMC_NREL;  
-        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
-        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
-        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
-        SIM.ELActivityHandle    = @activity_NREL;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
-        SIM.ELkappaHandle       = @kappa_NREL;
-end
-        
-        
 %% Create Folder    
 % Make Folder Path
     save_file_path = [current_file_path filesep 'Results' filesep folder_name];
@@ -418,21 +319,22 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
     if ~isfile([save_file_path filesep filename])
         disp('Making sim')
         SIM.results_filename = filename;
-        SIM.SimMode = 1;
-        SIM.C_rate = abs(C_rates(i));
+        SIM.SimMode          = 1;
+        SIM.C_rate           = abs(C_rates(i));
+        [SIM,inputHandle]    = getFunctionHandles(InputFile,SIM);
         
         % Call Inputs
-        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+            [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
         
         % Call Init
-        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+            [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
         
         % Save Simulation File
-        postProcessComplete = 0;
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+            postProcessComplete = 0;
+            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         
         % Clear Variables
-        clear AN CA SEP EL SIM CONS P N FLAG PROPS
+            clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 end
 
@@ -453,18 +355,23 @@ for i = 1:length(EIS_SIN_freq)
         % Create sim if it doesn't exist
         if ~isfile([save_file_path filesep filename])
             SIM.results_filename = filename;
-            SIM.SimMode = 2;
-            SIM.freq = EIS_SIN_freq(i);
-            SIM.SOC_start = EIS_SOC(j);
+            SIM.SimMode          = 2;
+            SIM.freq             = EIS_SIN_freq(i);
+            SIM.SOC_start        = EIS_SOC(j);
+            [SIM,inputHandle]    = getFunctionHandles(InputFile,SIM);
+
             % Call Inputs
-            [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+                [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
+
             % Call Init
-            [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+                [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+
             % Save File
-            postProcessComplete = 0;
-            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+                postProcessComplete = 0;
+                save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+            
             % Clear Variables
-            clear AN CA SEP EL SIM CONS P N FLAG PROPS
+                clear AN CA SEP EL SIM CONS P N FLAG PROPS
         end
     end
 end
@@ -485,16 +392,21 @@ for i = 1:length(SS_SOC)
     % Create sim if it doesn't exist
     if ~isfile([save_file_path filesep filename])
         SIM.results_filename = filename;
-        SIM.SimMode = 3;
-        SIM.omega = SS_omega;
-        SIM.SOC_start = SS_SOC(i);
+        SIM.SimMode          = 3;
+        SIM.omega            = SS_omega;
+        SIM.SOC_start        = SS_SOC(i);
+        [SIM,inputHandle]    = getFunctionHandles(InputFile,SIM);
+
         % Call Inputs
-            [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+            [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
+
         % Call Init
             [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+
         % Save File
             postProcessComplete = 0;
             save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+        
         % Clear Variables
             clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
@@ -542,21 +454,22 @@ if KBCP
     if ~isfile([save_file_path filesep filename])
         disp('Making sim')
         SIM.results_filename = filename;
-        SIM.SimMode = 4;
-        SIM.SOC_start = KBSOC;
+        SIM.SimMode          = 4;
+        SIM.SOC_start        = KBSOC;
+        [SIM,inputHandle]    = getFunctionHandles(InputFile,SIM);
         
         % Call Inputs
-        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+            [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
         
         % Call Init
-        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+            [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
         
         % Save Simulation File
-        postProcessComplete = 0;
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+            postProcessComplete = 0;
+            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         
         % Clear Variables
-        clear AN CA SEP EL SIM CONS P N FLAG PROPS
+            clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 end
 
@@ -592,12 +505,15 @@ if ManCurrProfile
         SIM.tol_Delta_phi  = MCP.tol_Delta_phi; 
         SIM.max_iterations = MCP.max_iterations;
         SIM.plating_refine = MCP.plating_refine;
-        SIM.SimMode = 7;
+        SIM.SimMode        = 7;
+        [SIM,inputHandle]  = getFunctionHandles(InputFile,SIM);
         
         % Call Inputs
-            [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+            [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
+        
         % Call Init
             [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+        
         % Make the current profile
             if ~MCP.UseExistingProfile
                 profile_save_filepath = [save_file_path filesep filename];
@@ -621,7 +537,8 @@ if ManCurrProfile
         % Save File
             postProcessComplete = 0;
             save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
-        % Clear Variables
+        
+            % Clear Variables
             clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 end
@@ -661,19 +578,20 @@ if doPRBS
         SIM.NumCuts            = NumCuts;
         SIM.REDUCESOLN         = REDUCESOLN;
         SIM.SaveIntermediate   = SaveIntermediate;
+        [SIM,inputHandle]      = getFunctionHandles(InputFile,SIM);
         
         % Call Inputs
-        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+            [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
         
         % Call Init
-        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+            [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
         
         % Save Simulation File
-        postProcessComplete = 0;
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+            postProcessComplete = 0;
+            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         
         % Clear Variables
-        clear AN CA SEP EL SIM CONS P N FLAG PROPS
+            clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 
 end
@@ -718,19 +636,20 @@ if getEIS_PRBS
                 SIM.NumCuts            = EIS_PRBS.NumCuts;
                 SIM.REDUCESOLN         = EIS_PRBS.REDUCESOLN;
                 SIM.SaveIntermediate   = EIS_PRBS.SaveIntermediate;
+                [SIM,inputHandle]      = getFunctionHandles(InputFile,SIM);
 
                 % Call Inputs
-                [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+                    [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
 
                 % Call Init
-                [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+                    [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
 
                 % Save Simulation File
-                postProcessComplete = 0;
-                save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+                    postProcessComplete = 0;
+                    save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
 
                 % Clear Variables
-                clear AN CA SEP EL SIM CONS P N FLAG PROPS
+                    clear AN CA SEP EL SIM CONS P N FLAG PROPS
             end
         end
 
@@ -771,26 +690,155 @@ if getEIS_HoKalman
     if ~isfile([save_file_path filesep filename])
         disp('Making sim')
         SIM.results_filename = filename;
-        SIM.SimMode   = 10;
-        SIM.SOC_start = HK_SOC;
-        SIM.Tsample   = HK_Ts;
-        SIM.freq      = HK_freq;
-        SIM.HK_nSamples = HK_nSamples;
+        SIM.SimMode       = 10;
+        SIM.SOC_start     = HK_SOC;
+        SIM.Tsample       = HK_Ts;
+        SIM.freq          = HK_freq;
+        SIM.HK_nSamples   = HK_nSamples;
+        [SIM,inputHandle] = getFunctionHandles(InputFile,SIM);
         
         % Call Inputs
-        [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+            [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
         
         % Call Init
-        [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+            [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
         
         % Save Simulation File
-        postProcessComplete = 0;
-        save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+            postProcessComplete = 0;
+            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
         
         % Clear Variables
-        clear AN CA SEP EL SIM CONS P N FLAG PROPS
+            clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 
+end
+
+%% Function Handles
+function [SIM,inputHandle] = getFunctionHandles(InputFile,SIM)
+% FLAG.InputFile
+    %   -1) batt_inputs_Manual
+    %    0) batt_inputs
+    %    1) batt_inputs_Wiley_Lui
+    %    2) batt_inputs_HZ_A
+    %    3) batt_inputs_HZ_B
+    %    4) batt_inputs_NREL
+    %    5) batt_inputs_ToddKingston
+    %    6) batt_inputs_MPC
+
+switch InputFile
+    case -1 % batt_input_Manual
+        inputHandle             = @batt_inputs_Manual;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAi_oHandle         = @i_oNMC_NREL; 
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+        SIM.ELActivityHandle    = @activity_NREL;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_NREL;
+    case 0 % batt_input
+        inputHandle             = @batt_inputs;
+        SIM.ANEqPotentialHandle = @E_eqGraphite;
+        SIM.ANi_oHandle         = @i_oC6;
+        SIM.ANsigmaHandle       = @sigmaC6;
+        SIM.AND_oHandle         = @D_o_Graphite;
+        SIM.CAEqPotentialHandle = @E_eqNMC;
+        SIM.CAi_oHandle         = @i_oC6;  
+        SIM.CAsigmaHandle       = @sigmaNMC;
+        SIM.CAD_oHandle         = @D_o_NMC532;
+        SIM.ELtf_numHandle      = @transferenceNumber;
+        SIM.ELActivityHandle    = @activity;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion;
+        SIM.ELkappaHandle       = @kappa;
+    case 1 % batt_input_Wiley_Lui
+        inputHandle             = @batt_inputs_Wiley_Lui;
+        SIM.ANEqPotentialHandle = @E_eqGraphite;
+        SIM.ANi_oHandle         = @i_oC6;
+        SIM.ANsigmaHandle       = @sigmaC6;
+        SIM.AND_oHandle         = @D_o_Graphite;
+        SIM.CAEqPotentialHandle = @E_eqNMC;
+        SIM.CAi_oHandle         = @i_oC6;  
+        SIM.CAsigmaHandle       = @sigmaNMC;
+        SIM.CAD_oHandle         = @D_o_NMC532;
+        SIM.ELtf_numHandle      = @transferenceNumber;
+        SIM.ELActivityHandle    = @activity;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion;
+        SIM.ELkappaHandle       = @kappa;
+    case 2 % batt_input_HZ_A
+        inputHandle             = @batt_inputs_HZ_A;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_HZ;
+        SIM.ANi_oHandle         = @i_oC6_HZ;
+        SIM.ANsigmaHandle       = @sigmaC6_HZ;
+        SIM.AND_oHandle         = @D_o_Graphite_HZ;
+        SIM.CAEqPotentialHandle = @E_eqNMC_HZ;
+        SIM.CAi_oHandle         = @i_oC6_HZ;  
+        SIM.CAsigmaHandle       = @sigmaNMC_HZ;
+        SIM.CAD_oHandle         = @D_o_NMC532_HZ;
+        SIM.ELtf_numHandle      = @transferenceNumber_HZ;
+        SIM.ELActivityHandle    = @activity_HZ;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_HZ;
+        SIM.ELkappaHandle       = @kappa_HZ;
+    case 3 % batt_input_HZ_B
+        inputHandle             = @batt_inputs_HZ_B;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_HZ;
+        SIM.ANi_oHandle         = @i_oC6_HZ;
+        SIM.ANsigmaHandle       = @sigmaC6_HZ;
+        SIM.AND_oHandle         = @D_o_Graphite_HZ;
+        SIM.CAEqPotentialHandle = @E_eqNMC_HZ;
+        SIM.CAi_oHandle         = @i_oNMC_HZ;  
+        SIM.CAsigmaHandle       = @sigmaNMC_HZ;
+        SIM.CAD_oHandle         = @D_o_NMC532_HZ;
+        SIM.ELtf_numHandle      = @transferenceNumber_HZ;
+        SIM.ELActivityHandle    = @activity_HZ;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_HZ;
+        SIM.ELkappaHandle       = @kappa_HZ;
+    case 4 % batt_input_NREL
+        inputHandle             = @batt_inputs_NREL;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+        SIM.ELActivityHandle    = @activity_NREL;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_NREL;
+    case 5 % batt_input_ToddKingston
+        inputHandle             = @batt_inputs_ToddKingston;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+        SIM.ELActivityHandle    = @activity_NREL;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_NREL;
+    case 6 % batt_input_MPC
+        inputHandle             = @batt_inputs_MPC;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+        SIM.ELActivityHandle    = @activity_NREL;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_NREL;
+end
 end
 
 

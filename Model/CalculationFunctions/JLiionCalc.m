@@ -11,7 +11,7 @@ function J_Liion = JLiionCalc( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , i_
         J_Liion(i) = 0; % No flux through current collector
 
     % AN Region
-        if ~FLAG.AN_LI_FOIL
+        % if ~FLAG.AN_LI_FOIL
             for i = N.CV_Region_AN(2:end)
                 D_o_Li_ion = (props( P.D_o_Li_ion , i ) + props( P.D_o_Li_ion , i-1 ))/2;
                 tf         = (props( P.tf_num     , i ) + props( P.tf_num     , i-1 ))/2;
@@ -19,7 +19,7 @@ function J_Liion = JLiionCalc( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , i_
                 J_Liion(i) = - AN.eps_el * D_o_Li_ion * ( SV(P.C_Liion,i) - SV(P.C_Liion,i-1) ) / AN.del_x...
                              + i_el(i) * tf / CONS.F;
             end
-        end
+        % end
 
 % ---- Separator ----
     % AN/SEP interface
@@ -58,7 +58,7 @@ function J_Liion = JLiionCalc( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , i_
                      + i_el(i) * tf / CONS.F;
                 
     % CA region
-        if ~FLAG.CA_LI_FOIL
+        % if ~FLAG.CA_LI_FOIL
             for i = N.CV_Region_CA(2:end)
                 D_o_Li_ion = (props( P.D_o_Li_ion , i ) + props( P.D_o_Li_ion , i-1 ))/2;
                 tf         = (props( P.tf_num     , i ) + props( P.tf_num     , i-1 ))/2;
@@ -66,7 +66,7 @@ function J_Liion = JLiionCalc( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , i_
                 J_Liion(i) = - CA.eps_el * D_o_Li_ion * ( SV(P.C_Liion,i) - SV(P.C_Liion,i-1) ) / CA.del_x...
                              + i_el(i) * tf / CONS.F;
             end
-        end
+        % end
 
 % Boundary Condition at the CA/CC
     i = N.N_CV_tot + 1;

@@ -543,21 +543,21 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
 
 % Properties for SOC calcualtion
     if SIM.SimMode ~= 8 % ~PRBS
-        SIM.OneC_measured        = 22.7; % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
-        SIM.VoltageMax           = [];   % [V] 
-        SIM.VoltageMin           = [];   % [V] 
-        SIM.AnodeFormation_X     = [];   % [-] 
-        SIM.CathodeFormation_X   = [];   % [-] 
+        SIM.OneC_measured        = 22.7;   % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
+        SIM.VoltageMax           = [];     % [V] 
+        SIM.VoltageMin           = [];     % [V] 
+        SIM.AnodeFormation_X     = [];     % [-] 
+        SIM.CathodeFormation_X   = [];     % [-] 
 
         SIM.AnodeStoich_SOC0     = 0.0700; % [-] 
         SIM.CathodeStoich_SOC0   = 0.8900; % [-] 
         SIM.AnodeStoich_SOC100   = 0.8434; % [-] 
         SIM.CathodeStoich_SOC100 = 0.3400; % [-]
     else
-        SIM.VoltageMax         = 5 ;  % [V] 
-        SIM.VoltageMin         = 2 ;  % [V] 
-        SIM.AnodeFormation_X   = 0.00;  % [-] 
-        SIM.CathodeFormation_X = 1.00;  % [-] 
+        SIM.VoltageMax         = 5 ;       % [V] 
+        SIM.VoltageMin         = 2 ;       % [V] 
+        SIM.AnodeFormation_X   = 0.00;     % [-] 
+        SIM.CathodeFormation_X = 1.00;     % [-] 
     end
 
 end

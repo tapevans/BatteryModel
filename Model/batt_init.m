@@ -10,16 +10,16 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
 
 %% Control Volume Modification for Li Foil
 % Adjust Number of CV
-    if FLAG.AN_LI_FOIL
-        N.N_CV_AN = 1; % Single control volume in the x-dir
-        FLAG.R_AN = 0; % 1 if radial gradients are considered
-        N.N_R_AN  = 1; % Number of radial control volumes
-    end
-    if FLAG.CA_LI_FOIL
-        N.N_CV_CA = 1; % Single control volume in the x-dir
-        FLAG.R_CA = 0; % 1 if radial gradients are considered     
-        N.N_R_CA  = 1; % Number of radial control volumes
-    end
+    % if FLAG.AN_LI_FOIL
+    %     N.N_CV_AN = 1; % Single control volume in the x-dir
+    %     FLAG.R_AN = 0; % 1 if radial gradients are considered
+    %     N.N_R_AN  = 1; % Number of radial control volumes
+    % end
+    % if FLAG.CA_LI_FOIL
+    %     N.N_CV_CA = 1; % Single control volume in the x-dir
+    %     FLAG.R_CA = 0; % 1 if radial gradients are considered     
+    %     N.N_R_CA  = 1; % Number of radial control volumes
+    % end
 
 
 %% Control Volume Modification for Distributed
@@ -338,10 +338,10 @@ end
         AN.A_surf_CV  = AN.A_surf_tot / N.N_CV_AN; % [m^2 per CV], Surface area per control volume
         AN.A_s        = AN.A_surf_tot / AN.Vol;    % [m^2_surf / m^3_CV]  Particle surface area per control volume
         
-        if FLAG.AN_LI_FOIL
-            AN.A_surf    = AN.A_c;
-            AN.A_surf_CV = AN.A_surf;
-        end
+        % if FLAG.AN_LI_FOIL
+        %     AN.A_surf    = AN.A_c;
+        %     AN.A_surf_CV = AN.A_surf;
+        % end
 
     % ---- Separator ----
         SEP.V_el      = SEP.eps_el * SEP.Vol;
@@ -360,10 +360,10 @@ end
         CA.A_surf_CV  = CA.A_surf_tot / N.N_CV_CA; % [m^2 per CV], Surface area per control volume
         CA.A_s        = CA.A_surf_tot / CA.Vol;    % [m^2_surf / m^3_CV]  Particle surface area per control volume
     
-        if FLAG.CA_LI_FOIL
-            CA.A_surf    = CA.A_c;
-            CA.A_surf_CV = CA.A_surf;
-        end
+        % if FLAG.CA_LI_FOIL
+        %     CA.A_surf    = CA.A_c;
+        %     CA.A_surf_CV = CA.A_surf;
+        % end
     
     % Vectorize
         SIM.A_surf_CV_vec = [AN.A_surf_CV*ones(1,N.N_CV_AN),...
@@ -387,12 +387,12 @@ end
 %% Capacity Calculations 
 % Max Concentration
     if ~FLAG.preDefined_C_max
-        if ~FLAG.AN_LI_FOIL
-            AN.C_Li_max = AN.rho / AN.MW;
-        end
-        if ~FLAG.CA_LI_FOIL
-            CA.C_Li_max = CA.rho / CA.MW;
-        end
+        % if ~FLAG.AN_LI_FOIL
+        %     AN.C_Li_max = AN.rho / AN.MW;
+        % end
+        % if ~FLAG.CA_LI_FOIL
+        %     CA.C_Li_max = CA.rho / CA.MW;
+        % end
     end
     
 % Capacity Calc
@@ -608,12 +608,12 @@ end
             i = 1;
             index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
             idx = index_offset + P.phi_ed;
-            SIM.OutputMatrix(P.OM.V_CA , idx)     =  1;  
+            SIM.OutputMatrix(P.OM.V_CA , idx)     =  -(1);  
 
             i = 1;
             index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
             idx = index_offset + P.del_phi;
-            SIM.OutputMatrix(P.OM.V_CA , idx)     = -1;        
+            SIM.OutputMatrix(P.OM.V_CA , idx)     = -(-1);        
 
 
 %% Determine Initial State Vector

@@ -38,7 +38,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_MPC(SIM)
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
     
-    FLAG.COE    = 0; % Cons of Energy (Temperature). 0 if dTdt = 0
+    FLAG.COE    = 1; % Cons of Energy (Temperature). 0 if dTdt = 0
         % Thermal Boundary Conditions
         % 1) Known Temperature  T(0,t)      = T_s
         % 2) Known Heat Flux    -k dTdx|x=0 = q''_s

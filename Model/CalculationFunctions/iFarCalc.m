@@ -27,9 +27,9 @@ function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props, EL)
         i_o_an  = AN.i_oHandle( SV(:,N.CV_Region_AN) , P, AN , EL);
         i_o_ca  = CA.i_oHandle( SV(:,N.CV_Region_CA) , P, CA , EL);
     end
-    if FLAG.AN_LI_FOIL
-        i_o_an = 10; %%%%%%%%%% Hard coded; pulled from https://www.sciencedirect.com/science/article/pii/S0378775312005423
-    end
+    % if FLAG.AN_LI_FOIL
+    %     i_o_an = 10; %%%%%%%%%% Hard coded; pulled from https://www.sciencedirect.com/science/article/pii/S0378775312005423
+    % end
     i_o     = [i_o_an, NaN(1,N.N_CV_SEP), i_o_ca];
 
 %% i_Far Calc

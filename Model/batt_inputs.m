@@ -44,7 +44,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     % FLAG.OffDiagOnsager = 1;
     %     FLAG.Soret = 1;
     
-    FLAG.COE    = 0; % Cons of Energy (Temperature). 0 if dTdt = 0
+    FLAG.COE    = 1; % Cons of Energy (Temperature). 0 if dTdt = 0
         % Thermal Boundary Conditions
         % 1) Known Temperature  T(0,t)      = T_s
         % 2) Known Heat Flux    -k dTdx|x=0 = q''_s
@@ -333,6 +333,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     AN.rho      = (2.266*1000)*1e0; % [kg m^-3],      Testing
     AN.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Testing
     AN.lambda   = 1.04*1e-3;        % [W m^-1 K^-1],  Testing
+    AN.rho_bin  = 1825;                % [kg m^-3],      Density of the binder
 
     % Lithium Foil Properties
         if FLAG.AN_LI_FOIL
@@ -382,7 +383,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM)
     CA.rho      = (2.266*1000)*1e0; % [kg m^-3],      Testing
     CA.c_p      = (720)*1e0;        % [J kg^-1 K^-1], Testing
     CA.lambda   = 1.04*1e-3;        % [W m^-1 K^-1],  Testing
-    
+    CA.rho_bin  = 1900;             % [kg m^-3],      Density of the binder
 
 % ---- Electrolyte ----
     EL.tf_numHandle       = SIM.ELtf_numHandle;

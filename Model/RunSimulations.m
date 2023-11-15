@@ -8,6 +8,8 @@
     
 %% List of Project Folders
     i = 1;
+    % Project_Folder{i} = 'SeminarFall2023';   i = i+1;
+    % Project_Folder{i} = 'TestImpedanceSparse';   i = i+1;
     Project_Folder{i} = 'TestImpedanceContributions';   i = i+1;
     % Project_Folder{i} = 'SOCTest';   i = i+1;
     % Project_Folder{i} = 'COETest';   i = i+1;
@@ -62,8 +64,8 @@ for i = 1:num_sim_files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Polarization ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if SIM.SimMode == 1 
             % Simulation Parameters
-            Tol.Abs = 1E-7;
-            Tol.Rel = 1E-7;
+            Tol.Abs = 1E-8;
+            Tol.Rel = 1E-8;
 
             events = @(t,SV) batt_events(t,SV,SIM,P,N,FLAG);
 
