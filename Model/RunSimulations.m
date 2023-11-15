@@ -29,12 +29,9 @@ for i = 1:num_Proj
     oldFolder = cd([pwd filesep 'Results' filesep Project_Folder{i}]);
     list = dir('*.mat*');
     num_files = length(list);
+    sim_filenames = {};
     for j = 1:num_files % Creates a cell array with all simulations' full path name
-        if ~exist('sim_filenames')
-            sim_filenames{1} = [pwd filesep list(j).name];
-        else
-            sim_filenames{end+1,1} = [pwd filesep list(j).name];
-        end
+        sim_filenames{end+1,1} = [pwd filesep list(j).name];
     end
     %Go back to oldFolder
     cd(oldFolder);
@@ -717,6 +714,13 @@ disp('Finished all simulations')
 
 
 %% OOOOOOOLLLLLDDDD Stuff
+
+        % if ~exist('sim_filenames')
+        %     sim_filenames{1} = [pwd filesep list(j).name];
+        % else
+        %     sim_filenames{end+1,1} = [pwd filesep list(j).name];
+        % end
+
 % Polarization
 
             %%%%%%%%%%%%%%% May reimplement this for initial relax without ramp

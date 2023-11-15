@@ -57,14 +57,14 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     FLAG.InitialThermalGradient = 0;
     FLAG.RampThermalGradient    = 0;
         SIM.RampThermalGradientTime = 0; % [s], time to ramp the BC
-        % FLAG.TempBC
-        %    0) Manual
-        %    1) Iso20
-        %    2) AN Cold
-        %    3) CA Cold
-        %    4) Iso18
-        %    5) Iso22
-        FLAG.TempBC = 0; % Pre-determined temperature BC
+    % FLAG.TempBC
+    %    0) Manual
+    %    1) Iso20
+    %    2) AN Cold
+    %    3) CA Cold
+    %    4) Iso18
+    %    5) Iso22
+    FLAG.TempBC = 0; % Pre-determined temperature BC
             
     FLAG.V_SEI            = 1; % 1 if the overpotential is calculated using V_SEI
     % FLAG.SEI_growth       = 0; % 1 if the SEI grows over time (increased R_SEI) %%%%%%%NOT IMPLEMENTED
