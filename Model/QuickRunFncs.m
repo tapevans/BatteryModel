@@ -2,14 +2,28 @@ clear all
 close all
 clc
 
-        
-%%
+
+%
+    inputHandle             = @batt_inputs_NREL;
+    SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+    SIM.ANi_oHandle         = @i_oC6_NREL;
+    SIM.ANsigmaHandle       = @sigmaC6_NREL;
+    SIM.AND_oHandle         = @D_o_Graphite_NREL;
+    SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+    SIM.CAi_oHandle         = @i_oNMC_NREL;  
+    SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+    SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+    SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+    SIM.ELActivityHandle    = @activity_NREL;
+    SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+    SIM.ELkappaHandle       = @kappa_NREL;
+
 % Test Initialization
 %%% Mode 1 ---- Polarization ----
     SIM.SOC_start = 10;   % [%], Initial state of charge
     SIM.SimMode = 1;
-%     SIM.C_rate = 1/20;
-    SIM.C_rate = 0;
+    SIM.C_rate = 1/20;
+    % SIM.C_rate = 0;
     SIM.ChargeOrDischarge = 1;
 
 %%% Mode 2 ---- Harmonic Perturbation ----
@@ -30,8 +44,8 @@ clc
 
 
 
-%%%
-[AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs(SIM);
+%
+[AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
 %
 [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
 
@@ -46,6 +60,7 @@ t = 2;
 i_user = 14;
 SV = SIM.SV_IC;
 dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user);
+
 
 %% Run Single Battery Batch
 clear all
@@ -63,10 +78,13 @@ filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFil
 load(filename,'postProcessComplete')
 postProcessComplete = 0;
 save(filename)
-%% Post-Processing
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestNewInputFileNoise\Test_KPCont_StairStepNoRelaxSOC0.mat';
+
+%% Post-Processing
+clear all; close all; clc;
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\OptiFinal\Standard_Polar_0.25C_C.mat';
 postProcessing(filename)
+
 
 %% Plot Single Results
 clc; 

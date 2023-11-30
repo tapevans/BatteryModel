@@ -90,8 +90,8 @@ clear all; close all; clc;
     % folder_name  = 'QuickTest';
     % battery_name = 'NoisePlots';
     
-    folder_name  = 'TestImpedanceContributions';
-    battery_name = 'Standard';
+    % folder_name  = 'TestImpedanceContributions';
+    % battery_name = 'Standard';
     
     % folder_name  = 'TestImpedanceSparse';
     % % battery_name = 'Standard';
@@ -102,6 +102,12 @@ clear all; close all; clc;
     % % battery_name = 'M_A';
     % % battery_name = 'M_B';
     % battery_name = 'M_C';
+
+    % folder_name  = 'OptiBase';
+    % folder_name  = 'OptiAll';
+    folder_name  = 'OptiFinal';
+    battery_name = 'Standard';
+    % battery_name = 'VaryProps';
 
 
 %% Simulations
@@ -119,6 +125,7 @@ clear all; close all; clc;
     % C_rates      = [1/20 -1/20]; 
     % C_rates      = [-1/4];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
+    % C_rates      = [-1/20  -1 -2]; 
 
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
@@ -137,9 +144,9 @@ clear all; close all; clc;
         EIS_SOC      = [50];  
 
 % ---- State Space EIS ----
-    % SS_SOC = [];
+    SS_SOC = [];
     % SS_SOC = 0:1:100;
-    SS_SOC = [5, 10, 25, 50, 75, 90, 95];
+    % SS_SOC = [5, 10, 25, 50, 75, 90, 95];
     % SS_SOC = [80.46];
     % SS_SOC = [50];
     
@@ -193,10 +200,10 @@ clear all; close all; clc;
         
 
 % ---- PRBS ---- 
-    doPRBS = 0;
+    doPRBS = 1;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
         PRBS_SOC     = 50; % [%],     State of Charge
-        PRBS_Tswitch = 10; % [s],     Switching Time
+        PRBS_Tswitch = 1;  % [s],     Switching Time
         % PRBS_t_Report = 1/200; % Inverse of number of samples per Tswitch
         % %%%%%%%%%% Do I need this^^^^
 
@@ -204,7 +211,7 @@ clear all; close all; clc;
             NumTsRelax = 2;
             NumZeroCrossingUntilNextRelax = 5;
 
-        MakeLongPRBSSignal = 1;
+        MakeLongPRBSSignal = 0;
             DesiredLength  = 4e3;
 
         UseODEextend = 0; %%%%%%%% When do I need to do this?

@@ -8,7 +8,7 @@ function postProcessing(filename)
 %% do post-processing if it hasn't already
 if ~postProcessComplete 
     load(filename)
-    %% Make Desired Times Vector
+%% Make Desired Times Vector
     if FLAG.ReduceSolnTime
         % I want the index of all times before 1 second, every 10 seconds after 1 second up until 500 sec before t_soln(end), All indicies of the last 500 seconds
         FirstTime   = 1;
@@ -39,7 +39,7 @@ if ~postProcessComplete
     end
 
 
-%% Initialize variables
+%% Initialize Variables
     % Ones, Zeros, and NaN vectors for each region
         ones_vec_AN  = ones(1,N.N_CV_AN);
         ones_vec_SEP = ones(1,N.N_CV_SEP);
@@ -84,9 +84,9 @@ if ~postProcessComplete
         Cap          = zeros( N_t_steps , 1 );
         
         C_Liion      = zeros( N_t_steps , N.N_CV_tot );
-        C_Li_surf    = zeros( N_t_steps , N.N_CV_tot );
-        X_Li_surf    = zeros( N_t_steps , N.N_CV_tot );
-        C_Li         = NaN( N.N_R_max , N.N_CV_tot, N_t_steps );
+        C_Li_surf    = NaN(   N_t_steps , N.N_CV_tot );
+        X_Li_surf    = NaN(   N_t_steps , N.N_CV_tot );
+        C_Li         = NaN(   N.N_R_max , N.N_CV_tot, N_t_steps );
         %     J_Liion     = zeros( N_t_steps , N.N_CV_tot + 1);
         % J_Li
         % props
@@ -95,183 +95,212 @@ if ~postProcessComplete
         CoC          = zeros( N_t_steps , N.N_CV_tot );
 
 
-    %% Perform calcs and save results to their variable name
-    if SIM.SimMode == 4
-        i_user = i_user_soln;
-        i_user = i_user(idx);    
-    elseif SIM.SimMode == 5
-        % Pull i_user from RunSimulation loop and make into a vector the
-        % same size as t_soln
-    
-    elseif SIM.SimMode == 6 % Simulink
-        % Pull i_user from sim output
-    
-    elseif SIM.SimMode == 8 % ---- PRBS ----
-        i_user = i_user_soln;
-        i_user = i_user(idx);
-    
-    else
-        i_user_in = nan; %%%%%% Placeholder for now
-        i_user = i_user_calc(t_soln,SIM,FLAG,i_user_in);
-    end
-    i_user = reshape(i_user,[],1); % Ensure it is a column vector    
+%% Calculate i_user
+        if SIM.SimMode == 4
+            i_user = i_user_soln;
+            i_user = i_user(idx);    
+        elseif SIM.SimMode == 5
+            % Pull i_user from RunSimulation loop and make into a vector the
+            % same size as t_soln
+        
+        elseif SIM.SimMode == 6 % Simulink
+            % Pull i_user from sim output
+        
+        elseif SIM.SimMode == 8 % ---- PRBS ----
+            i_user = i_user_soln;
+            i_user = i_user(idx);
+        
+        else
+            i_user_in = nan; %%%%%% Placeholder for now
+            % i_user = i_user_calc(t_soln,SIM,FLAG,i_user_in);
+            i_user = i_user_calc(t_soln, i_user_in, SIM.SimMode, SIM.profile_time, SIM.profile_current, SIM.Amp, SIM, FLAG);
+        end
+        i_user = reshape(i_user,[],1); % Ensure it is a column vector    
 
-    % SV at each time
+
+%% Pre-Thermal Calcs
+% There are 4 phases being considered: ED, EL, SEP, B (Binder)
+    % c_p vector for each control volume
+        c_p_vec_ED  = [AN.c_p*ones_vec_AN          zeros_vec_SEP   CA.c_p*ones_vec_CA];
+        c_p_vec_EL  = [EL.c_p*ones_vec_AN    EL.c_p*ones_vec_SEP   EL.c_p*ones_vec_CA];
+        c_p_vec_SEP = [      zeros_vec_AN   SEP.c_p*ones_vec_SEP         zeros_vec_CA]; 
+        c_p_vec_B   = [AN.c_p*ones_vec_AN          zeros_vec_SEP   CA.c_p*ones_vec_CA];
+
+    % rho vector for each control volume
+        rho_vec_ED  = [AN.rho*ones_vec_AN          zeros_vec_SEP   CA.rho*ones_vec_CA];
+        rho_vec_EL  = [EL.rho*ones_vec_AN    EL.rho*ones_vec_SEP   EL.rho*ones_vec_CA];
+        rho_vec_SEP = [      zeros_vec_AN   SEP.rho*ones_vec_SEP         zeros_vec_CA]; 
+        rho_vec_B   = [AN.rho*ones_vec_AN          zeros_vec_SEP   CA.rho*ones_vec_CA];
+
+    % dVol vector for each control volume's phase
+        dVol_vec_ED  = [AN.eps_ed*AN.dVol*ones_vec_AN                       zeros_vec_SEP   CA.eps_ed*CA.dVol*ones_vec_CA];
+        dVol_vec_EL  = [AN.eps_el*AN.dVol*ones_vec_AN   SEP.eps_el *SEP.dVol*ones_vec_SEP   CA.eps_el*CA.dVol*ones_vec_CA];
+        dVol_vec_SEP = [                 zeros_vec_AN   SEP.eps_sep*SEP.dVol*ones_vec_SEP                    zeros_vec_CA]; 
+        dVol_vec_B   = [AN.eps_b *AN.dVol*ones_vec_AN                       zeros_vec_SEP   CA.eps_b *CA.dVol*ones_vec_CA];
+
+        %%%%% Test on volume calculation (Is there sum equal to the total volume)
+            % Combined_matrix_dVol = [dVol_vec_ED ; dVol_vec_EL ; dVol_vec_SEP ; dVol_vec_B];
+            % % idx = find( isnan(Combined_matrix_dVol) );
+            % % zeros_vec = zeros(1, length(idx) );
+            % % Combined_matrix_dVol(idx) = zeros_vec;
+            % dVol_sum = sum(Combined_matrix_dVol,1);
+            % % dVol_geo = [];
+            % ANSEPCA_Vol = [sum(dVol_sum(N.CV_Region_AN))  sum(dVol_sum(N.CV_Region_SEP))  sum(dVol_sum(N.CV_Region_CA))]
+            % ANSEPCA_Vol_geo = [ AN.L*AN.A_c , SEP.L*SEP.A_c , CA.L*CA.A_c]
+            % vol_tot = sum(ANSEPCA_Vol)
+            % vol_tot_geo = AN.A_c*(AN.L+SEP.L+CA.L)
+
+    % cp*rho*dV for each phase's CV
+        cp_rho_dV_vec_ED  = c_p_vec_ED  .* rho_vec_ED  .* dVol_vec_ED;
+        cp_rho_dV_vec_EL  = c_p_vec_EL  .* rho_vec_EL  .* dVol_vec_EL;
+        cp_rho_dV_vec_SEP = c_p_vec_SEP .* rho_vec_SEP .* dVol_vec_SEP;
+        cp_rho_dV_vec_B   = c_p_vec_B   .* rho_vec_B   .* dVol_vec_B;
+
+
+%% Perform calcs and save results to their variable name ~ perform calcs that depend on props
     for i = 1:N_t_steps
         % Go through the solution vector and reshape every SV to 2D (3D matrix)
-        SV_temp    = SV1Dto2D( SV_soln( idx(i) , : ) , N , P , FLAG );
-        SV( : , : , i ) = addPhiEl2SV(SV_temp,P,N);
+        % SV_temp    = SV1Dto2D( SV_soln( idx(i) , : ) , N , P , FLAG );
+        % SV( : , : , i ) = addPhiEl2SV(SV_temp,P,N);
+        % SV_temp = SV1Dto2D(SV_soln(idx(i),:) , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
+        SV_temp = SV1Dto2D_short(SV_soln(idx(i),:), SIM.SV_nan, N.IDX_1Dto2D);
+        SV( : , : , i ) = addPhiEl2SV(SV_temp, P.phi_ed, P.del_phi, N.CV_Region_SEP, N.N_CV_SEP);
+
+        % Pull out each SV vector
+        [TemperatureK(i,:), del_phi(i,:), phi_ed(i,:), phi_el(i,:), V_1(i,:), V_2, i_PS, C_Liion(i,:), C_Li(:,:,i), C_Li_AN, C_Li_CA, X_AN, X_CA, Ce_norm, Ce_log, eta(i,:), RT_inv_vec] = extractSV(SV( : , : , i ),P.T, P.del_phi, P.phi_ed, P.phi_el, P.V_1, P.V_2, P.i_PS, P.C_Liion, P.C_Li, P.C_Li_surf_AN, P.C_Li_surf_CA, N.CV_Region_AN, N.CV_Region_CA, N.N_R_max, AN.C_Li_max_inv, CA.C_Li_max_inv, EL.C_inv, CONS.R);
         
-        TemperatureK( i , : ) = SV( P.T , : , i );
+        C_Li_surf( i , N.CV_Region_AN ) = C_Li_AN(end,:); 
+        C_Li_surf( i , N.CV_Region_CA ) = C_Li_CA(end,:); 
+
+        X_Li    = C_Li(:,:,i);
+        X_Li( : , N.CV_Region_AN) = X_Li( : , N.CV_Region_AN) / AN.C_Li_max;
+        X_Li( : , N.CV_Region_CA) = X_Li( : , N.CV_Region_CA) / CA.C_Li_max;
         
-        C_Liion( i , : )                = SV( P.C_Liion              , :              , i );
-        C_Li( : , : , i )               = SV( P.C_Li:P.C_Li_surf_max , :              , i );
-        C_Li_surf( i , N.CV_Region_AN ) = SV( P.C_Li_surf_AN         , N.CV_Region_AN , i ); 
-        C_Li_surf( i , N.CV_Region_CA ) = SV( P.C_Li_surf_CA         , N.CV_Region_CA , i ); 
+        X_Li_surf( i , N.CV_Region_AN ) = X_Li( N.N_R_AN , N.CV_Region_AN);
+        X_Li_surf( i , N.CV_Region_CA ) = X_Li( N.N_R_CA , N.CV_Region_CA);
         
-        phi_ed( i , : ) = SV( P.phi_ed , : , i );
-        phi_el( i , : ) = SV( P.phi_el , : , i );
+
+        % Get Properties
+            if FLAG.VARIABLE_PROPS_FROM_HANDLES
+                % props = getProps( SV( : , : , i ) , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
+                props = getProps( C_Liion(i,:), TemperatureK(i,:), X_AN,  X_CA, FLAG.VARIABLE_kappa, ...
+                                FLAG.VARIABLE_D_Liion, FLAG.VARIABLE_activity, FLAG.VARIABLE_tf_num, FLAG.VARIABLE_D_o_AN, FLAG.VARIABLE_D_o_CA, FLAG.Bruggeman,...
+                                P.kappa, P.D_o_Li_ion, P.activity, P.tf_num, P.D_o, ...
+                                N.N_R_AN, N.N_R_CA, N.CV_Region_AN, N.CV_Region_CA, ...
+                                CONS.BRUG, ...
+                                AN.D_oHandle, CA.D_oHandle, ...
+                                PROPS, EL.kappaHandle, EL.D_o_Li_ionHandle, EL.ActivityHandle, EL.tf_numHandle); 
+            else
+                props = PROPS;
+            end
         
-        eta_AN       = SV(P.V_2 , N.CV_Region_AN ,i) - SV(P.V_1 , N.CV_Region_AN ,i);
-        eta_CA       = SV(P.V_2 , N.CV_Region_CA ,i) - SV(P.V_1 , N.CV_Region_CA ,i);
-        eta( i , : ) = [eta_AN  , NaN(1,N.N_CV_SEP) ,eta_CA  ];
+        % Property Vector
+            [sigma_vec, kappa_vec, tf_vec, activity_vec, D_o_Li_ion_vec, lambda_vec, D_o_vec] = extractProps(P.sigma, P.kappa, P.tf_num, P.activity, P.D_o_Li_ion, P.lambda_eff, P.D_o, props);
         
-        V_SEI(   i , : ) = SV( P.V_1    , : , i) - SV( P.phi_el , : , i);
-        del_phi( i , : ) = SV( P.del_phi,:  , i);
-    end            
-    
-    % Mole Fraction Calcs
-        X_Liion = C_Liion / EL.C; % Normalized with respect to the initial concentration
-        X_Li    = C_Li;
-        X_Li( : , N.CV_Region_AN , : ) = X_Li( : , N.CV_Region_AN , : ) / AN.C_Li_max;
-        X_Li( : , N.CV_Region_CA , : ) = X_Li( : , N.CV_Region_CA , : ) / CA.C_Li_max;
-        for i = 1:N_t_steps
-            X_Li_surf( i , N.CV_Region_AN ) = X_Li( N.N_R_AN , N.CV_Region_AN , i );
-            X_Li_surf( i , N.CV_Region_CA ) = X_Li( N.N_R_CA , N.CV_Region_CA , i );
-        end
-    
-    % Electrostatic Related Calcs
-    for i = 1:N_t_steps
-        if FLAG.VARIABLE_PROPS_FROM_HANDLES
-            props = getProps( SV( : , : , i ) , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
-        else
-            props = PROPS;
-        end
+        % Calculate Value at Interface between CV
+            sigma_vec_interface    = getInterfaceXDir(sigma_vec         , SIM.interp_x_interface);
+            kappa_vec_interface    = getInterfaceXDir(kappa_vec         , SIM.interp_x_interface);
+            tf_vec_interface       = getInterfaceXDir(tf_vec            , SIM.interp_x_interface);
+            activity_vec_interface = getInterfaceXDir(activity_vec      , SIM.interp_x_interface);
+            T_interface            = getInterfaceXDir(TemperatureK(i,:) , SIM.interp_x_interface);
+        
+            D_o_vec_interface        = [NaN(1,N.N_CV_tot) ; 0.5*(D_o_vec(1:end-1,:) + D_o_vec(2:end,:)) ; NaN(1,N.N_CV_tot)]; % This assumes constant del_r in both particles
+
+        % Calculate Gradient
+            [phi_ed_diff, phi_ed_grad] = diffAndGradXCalc(phi_ed(i,:)       , SIM.diff_CV_x_vec_inv);
+            [phi_el_diff, phi_el_grad] = diffAndGradXCalc(phi_el(i,:)       , SIM.diff_CV_x_vec_inv);
+            [Ce_log_diff, Ce_log_grad] = diffAndGradXCalc(Ce_log            , SIM.diff_CV_x_vec_inv);
+            [Ce_diff    , Ce_grad    ] = diffAndGradXCalc(C_Liion(i,:)      , SIM.diff_CV_x_vec_inv);
+            [T_diff     , T_grad     ] = diffAndGradXCalc(TemperatureK(i,:) , SIM.diff_CV_x_vec_inv);
+        
+            diff        = C_Li(2:end,:,i) - C_Li(1:end-1,:,i);
+            C_Li_diff   = [NaN(1 , N.N_CV_tot) ; diff ; NaN(1 , N.N_CV_tot)];
+
+        % Calculate Fluxes
+        % i_el, i_ed
+            [i_ed(i , :) , i_el(i , :) ] = currentCalc(  sigma_vec_interface, kappa_vec_interface, T_interface, activity_vec_interface, tf_vec_interface, ...
+                                       phi_ed_grad, phi_el_grad, Ce_log_grad, ...
+                                       CONS.F_inv, CONS.R, ...
+                                       N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, N.N_CV_tot, i_user(i));
+
+        % i_o
+            if FLAG.Newman_i_o
+                disp('Fix this FLAG.Newman_i_o in post-processing')
+                % i_o_an = CONS.F * AN.k_o ...
+                %                    * SV(P.C_Liion     ,N.CV_Region_AN , i)  .^AN.alpha_a ...
+                %   .* ( AN.C_Li_max - SV(P.C_Li_surf_AN,N.CV_Region_AN , i) ).^AN.alpha_a ...
+                %                   .* SV(P.C_Li_surf_AN,N.CV_Region_AN , i)  .^AN.alpha_c;
+                % i_o_ca = CONS.F * CA.k_o ...
+                %                    * SV(P.C_Liion     ,N.CV_Region_CA , i)  .^CA.alpha_a ...
+                %   .* ( CA.C_Li_max - SV(P.C_Li_surf_CA,N.CV_Region_CA , i) ).^CA.alpha_a ...
+                %                   .* SV(P.C_Li_surf_CA,N.CV_Region_CA , i)  .^CA.alpha_c;
+            else
+                i_o_an  = AN.i_oHandle( TemperatureK(i,N.CV_Region_AN), Ce_norm(:,N.CV_Region_AN), X_Li_surf( i , N.CV_Region_AN ) , AN.i_0_ref , AN.alpha_a , AN.alpha_c);
+                i_o_ca  = CA.i_oHandle( TemperatureK(i,N.CV_Region_CA), Ce_norm(:,N.CV_Region_CA), X_Li_surf( i , N.CV_Region_CA ) , CA.i_0_ref , CA.alpha_a , CA.alpha_c);
+            end
+            i_o(i , :) = [i_o_an, NaN(1,N.N_CV_SEP), i_o_ca];
+            
+        % i_Far
+            i_Far(i , :) = iFarCalc( TemperatureK(i,:), Ce_norm, X_AN, X_CA, eta(i,:), RT_inv_vec, AN.i_0_ref , AN.alpha_a, AN.alpha_c, CA.i_0_ref, CA.alpha_a, CA.alpha_c, ...
+                              FLAG.Newman_i_o, CONS.F, ...
+                              N.CV_Region_AN, N.CV_Region_CA, N.N_CV_SEP, AN.i_oHandle , CA.i_oHandle);
         
         % Equilibrium
             Eq_an = AN.EqPotentialHandle( X_Li_surf( i , N.CV_Region_AN ));
             Eq_ca = CA.EqPotentialHandle( X_Li_surf( i , N.CV_Region_CA ));
             Eq (i , : ) = [ Eq_an , NaN(1,N.N_CV_SEP) , Eq_ca ];
-                
-        % i_o
-            if FLAG.Newman_i_o
-                i_o_an = CONS.F * AN.k_o ...
-                                   * SV(P.C_Liion     ,N.CV_Region_AN , i)  .^AN.alpha_a ...
-                  .* ( AN.C_Li_max - SV(P.C_Li_surf_AN,N.CV_Region_AN , i) ).^AN.alpha_a ...
-                                  .* SV(P.C_Li_surf_AN,N.CV_Region_AN , i)  .^AN.alpha_c;
-                i_o_ca = CONS.F * CA.k_o ...
-                                   * SV(P.C_Liion     ,N.CV_Region_CA , i)  .^CA.alpha_a ...
-                  .* ( CA.C_Li_max - SV(P.C_Li_surf_CA,N.CV_Region_CA , i) ).^CA.alpha_a ...
-                                  .* SV(P.C_Li_surf_CA,N.CV_Region_CA , i)  .^CA.alpha_c;
-            else
-                i_o_an  = AN.i_oHandle( SV(:,N.CV_Region_AN , i) , P, AN , EL);
-                i_o_ca  = CA.i_oHandle( SV(:,N.CV_Region_CA , i) , P, CA , EL);
+
+        % Internal Energy
+            intr_egy_vec_ED  = cp_rho_dV_vec_ED  .* TemperatureK( i , : );
+            intr_egy_vec_EL  = cp_rho_dV_vec_EL  .* TemperatureK( i , : );
+            intr_egy_vec_SEP = cp_rho_dV_vec_SEP .* TemperatureK( i , : );
+            intr_egy_vec_B   = cp_rho_dV_vec_B   .* TemperatureK( i , : );
+
+            intr_egy_CV( i , : ) = sum([intr_egy_vec_ED ; intr_egy_vec_EL ; intr_egy_vec_SEP ; intr_egy_vec_B] ,1);
+            intr_egy_tot( i )    = sum(intr_egy_CV( i , : ));
+
+        % Expected Internal Energy
+            if ~isfield(SIM,'h_AN_BC')
+                SIM.h_AN_BC = [];
             end
-            i_o(i , :) = [i_o_an, NaN(1,N.N_CV_SEP), i_o_ca];
-        
-        % i_Far
-            i_Far(i , :) = iFarCalc( SV(: , : , i) , AN , CA , P , N , CONS , FLAG , props, EL);
-        
-        % i_el, i_ed
-            [i_ed(i , :) , i_el(i , :) ] = currentCalc( SV(: , : , i) , AN , SEP , CA , EL , P , N , CONS , FLAG , i_user(i,1) , props);
-        
-    end
+            if ~isfield(SIM,'h_CA_BC')
+                SIM.h_CA_BC = [];
+            end
+
+            [q_cond(i,:) , q_conv(i,:) , q_gen(i,:)] = thermalAllVectors( TemperatureK( i , : ), T_diff, lambda_vec, N.CV_Region_AN, N.N_CV_tot, SIM.del_x_vec_halved_inv, SIM.h, SIM.T_inf, SIM.q_AN_BC, SIM.q_CA_BC, SIM.h_AN_BC, SIM.h_CA_BC, FLAG.T_BC_AN, FLAG.T_BC_CA, FLAG.HEAT_GEN_TOTAL, i_el(i , :), i_ed(i , :), i_Far(i , :));
+            if i == 1
+                intr_egy_tot_exp(i) = intr_egy_tot(i);
+            else
+                % Added Energy
+                    added_egy = 0;
+
+                % AN BC
+                    added_egy = added_egy + q_cond(i-1,1) * AN.A_c * (t_soln(i) - t_soln(i-1)); % [J]
+
+                % CA BC
+                    added_egy = added_egy - q_cond(i-1,end) * CA.A_c * (t_soln(i) - t_soln(i-1)); % [J]
+
+                % Outer BC
+                    added_egy = added_egy - sum(q_conv(i-1,:) .* SIM.A_outside_vec) * (t_soln(i) - t_soln(i-1)); % [J]
+
+                % Internal????????????? Added electrical power?????
+                    % added_egy = added_egy + abs(i_user(i-1,:)*SIM.A_c * cell_voltage(i-1,:)) * (t_soln(i) - t_soln(i-1)); % [J]
+
+                intr_egy_tot_exp(i) = intr_egy_tot_exp(i-1) + added_egy;
+            end
+    end  
+    
+    % SEI Voltage
+        V_SEI = V_1 - phi_el;
+
+    % Normalized Liion Concentration
+        X_Liion = C_Liion / EL.C; % Normalized with respect to the initial concentration
 
     % Cell Voltage
         cell_voltage = phi_ed(:,end) - phi_ed(:,1);
-    
-    % Thermal
-        % There are 4 phases being considered: ED, EL, SEP, B (Binder)
-            % c_p vector for each control volume
-                c_p_vec_ED  = [AN.c_p*ones_vec_AN          zeros_vec_SEP   CA.c_p*ones_vec_CA];
-                c_p_vec_EL  = [EL.c_p*ones_vec_AN    EL.c_p*ones_vec_SEP   EL.c_p*ones_vec_CA];
-                c_p_vec_SEP = [      zeros_vec_AN   SEP.c_p*ones_vec_SEP         zeros_vec_CA]; 
-                c_p_vec_B   = [AN.c_p*ones_vec_AN          zeros_vec_SEP   CA.c_p*ones_vec_CA];
-        
-            % rho vector for each control volume
-                rho_vec_ED  = [AN.rho*ones_vec_AN          zeros_vec_SEP   CA.rho*ones_vec_CA];
-                rho_vec_EL  = [EL.rho*ones_vec_AN    EL.rho*ones_vec_SEP   EL.rho*ones_vec_CA];
-                rho_vec_SEP = [      zeros_vec_AN   SEP.rho*ones_vec_SEP         zeros_vec_CA]; 
-                rho_vec_B   = [AN.rho*ones_vec_AN          zeros_vec_SEP   CA.rho*ones_vec_CA];
-        
-            % dVol vector for each control volume's phase
-                dVol_vec_ED  = [AN.eps_ed*AN.dVol*ones_vec_AN                       zeros_vec_SEP   CA.eps_ed*CA.dVol*ones_vec_CA];
-                dVol_vec_EL  = [AN.eps_el*AN.dVol*ones_vec_AN   SEP.eps_el *SEP.dVol*ones_vec_SEP   CA.eps_el*CA.dVol*ones_vec_CA];
-                dVol_vec_SEP = [                 zeros_vec_AN   SEP.eps_sep*SEP.dVol*ones_vec_SEP                    zeros_vec_CA]; 
-                dVol_vec_B   = [AN.eps_b *AN.dVol*ones_vec_AN                       zeros_vec_SEP   CA.eps_b *CA.dVol*ones_vec_CA];
-        
-                %%%%% Test on volume calculation (Is there sum equal to the total volume)
-                    % Combined_matrix_dVol = [dVol_vec_ED ; dVol_vec_EL ; dVol_vec_SEP ; dVol_vec_B];
-                    % % idx = find( isnan(Combined_matrix_dVol) );
-                    % % zeros_vec = zeros(1, length(idx) );
-                    % % Combined_matrix_dVol(idx) = zeros_vec;
-                    % dVol_sum = sum(Combined_matrix_dVol,1);
-                    % % dVol_geo = [];
-                    % ANSEPCA_Vol = [sum(dVol_sum(N.CV_Region_AN))  sum(dVol_sum(N.CV_Region_SEP))  sum(dVol_sum(N.CV_Region_CA))]
-                    % ANSEPCA_Vol_geo = [ AN.L*AN.A_c , SEP.L*SEP.A_c , CA.L*CA.A_c]
-                    % vol_tot = sum(ANSEPCA_Vol)
-                    % vol_tot_geo = AN.A_c*(AN.L+SEP.L+CA.L)
-        
-            % cp*rho*dV for each phase's CV
-                cp_rho_dV_vec_ED  = c_p_vec_ED  .* rho_vec_ED  .* dVol_vec_ED;
-                cp_rho_dV_vec_EL  = c_p_vec_EL  .* rho_vec_EL  .* dVol_vec_EL;
-                cp_rho_dV_vec_SEP = c_p_vec_SEP .* rho_vec_SEP .* dVol_vec_SEP;
-                cp_rho_dV_vec_B   = c_p_vec_B   .* rho_vec_B   .* dVol_vec_B;
-        
-        % Temperature in Celsius
-                TemperatureC = TemperatureK - 273.15;
 
-        % Internal Energy
-            for i = 1:N_t_steps
-                intr_egy_vec_ED  = cp_rho_dV_vec_ED  .* TemperatureK( i , : );
-                intr_egy_vec_EL  = cp_rho_dV_vec_EL  .* TemperatureK( i , : );
-                intr_egy_vec_SEP = cp_rho_dV_vec_SEP .* TemperatureK( i , : );
-                intr_egy_vec_B   = cp_rho_dV_vec_B   .* TemperatureK( i , : );
-    
-                intr_egy_CV( i , : ) = sum([intr_egy_vec_ED ; intr_egy_vec_EL ; intr_egy_vec_SEP ; intr_egy_vec_B] ,1);
-                intr_egy_tot( i )    = sum(intr_egy_CV( i , : ));
-            end
-
-        % Expected Internal Energy
-            intr_egy_tot_exp(1) = intr_egy_tot( 1 );
-            i = 1;
-            [q_cond(i,:) , q_conv(i,:) , q_gen(i,:)] = thermalAllVectors( SV( : , : , i ) , AN , SEP, CA , EL , SIM , P , N , CONS , FLAG , props, i_el(i , :), i_ed(i , :), i_Far(i , :));
-
-            for i = 2:N_t_steps
-                if FLAG.VARIABLE_PROPS_FROM_HANDLES
-                    props = getProps( SV( : , : , i ) , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
-                else
-                    props = PROPS;
-                end
-                [q_cond(i,:) , q_conv(i,:) , q_gen(i,:)] = thermalAllVectors( SV( : , : , i ) , AN , SEP, CA , EL , SIM , P , N , CONS , FLAG , props, i_el(i , :), i_ed(i , :), i_Far(i , :));
-    
-                % Added Energy
-                    added_egy = 0;
-    
-                    % AN BC
-                        added_egy = added_egy + q_cond(i-1,1) * AN.A_c * (t_soln(i) - t_soln(i-1)); % [J]
-    
-                    % CA BC
-                        added_egy = added_egy - q_cond(i-1,end) * CA.A_c * (t_soln(i) - t_soln(i-1)); % [J]
-    
-                    % Outer BC
-                        added_egy = added_egy - sum(q_conv(i-1,:) .* SIM.A_outside_vec) * (t_soln(i) - t_soln(i-1)); % [J]
-    
-                    % Internal????????????? Added electrical power?????
-                        % added_egy = added_egy + abs(i_user(i-1,:)*SIM.A_c * cell_voltage(i-1,:)) * (t_soln(i) - t_soln(i-1)); % [J]
-    
-                intr_egy_tot_exp(i) = intr_egy_tot_exp(i-1) + added_egy;
-            end
+    % Temperature in Celsius
+        TemperatureC = TemperatureK - 273.15;
     
     % Cell Capacity
         Cap = -SIM.A_c/3600 * cumtrapz( t_soln , i_user );   
@@ -297,7 +326,8 @@ if ~postProcessComplete
         end
     end
 
-    %% Calculate mass at each time step
+
+%% Calculate mass at each time step
     % Volume Vector
     Vol_el = [ AN.dVol_el*ones(1 , N.N_CV_AN) , SEP.dVol_el*ones(1 , N.N_CV_SEP) , CA.dVol_el*ones(1 , N.N_CV_CA)];
     Vol_ed = NaN(N.N_R_max , N.N_CV_tot);
@@ -319,6 +349,7 @@ if ~postProcessComplete
     end
     mass_error = total_mass(:) - total_mass(1);
     
+
     %% Calculations specific to sinusoidal pertebations
     if SIM.SimMode == 2 % ---- Harmonic Perturbation ----
         %% ID Voltage Section
@@ -397,33 +428,5 @@ if ~postProcessComplete
         else
             save(filename)
         end
-        % save(filename);
 end
 end
-
-                    % switch FLAG.T_BC_AN
-                    %     case 1 % Known Temperature
-                    %         added_egy = added_egy + 0;
-                    %     case 2 % Known heat flux
-                    %         added_egy = added_egy + q_cond(i,1) * AN.A_c * (t_soln(i) - t_soln(i-1)); % [J]
-                    %         % added_egy = added_egy + SIM.q_AN_BC * AN.A_c * (t_soln(i) - t_soln(i-1)); % [J]
-                    %     case 3 % Insulated
-                    %         added_egy = added_egy + 0;
-                    %     case 4 % Convection
-                    %         added_egy = added_egy + q_cond(i,1) * AN.A_c * (t_soln(i) - t_soln(i-1)); % [J]
-                    %         % added_egy = added_egy + SIM.h_AN_BC * AN.A_c * (SIM.T_inf - TemperatureK( i-1 , 1 )) * (t_soln(i) - t_soln(i-1)); % [J]
-                    % end
-                    % 
-                    % switch FLAG.T_BC_CA
-                    %     case 1 % Known Temperature
-                    %         added_egy = added_egy + 0;
-                    %     case 2 % Known heat flux
-                    %         added_egy = added_egy + SIM.q_CA_BC * AN.A_c * (t_soln(i) - t_soln(i-1)); % [J]
-                    %     case 3 % Insulated
-                    %         added_egy = added_egy + 0;
-                    %         SIM.q_CA_BC = 0; % [W m^-2]
-                    %     case 4 % Convection
-                    %         added_egy = added_egy + SIM.h_CA_BC * CA.A_c * ( TemperatureK( i-1 , end ) - SIM.T_inf ) * (t_soln(i) - t_soln(i-1)); % [J]
-                    % end
-    
-                    %%%%%%%%%%%%%%%What about my q_flux function?

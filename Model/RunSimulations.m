@@ -8,9 +8,10 @@
     
 %% List of Project Folders
     i = 1;
+    Project_Folder{i} = 'OptiFinal';   i = i+1;
     % Project_Folder{i} = 'SeminarFall2023';   i = i+1;
     % Project_Folder{i} = 'TestImpedanceSparse';   i = i+1;
-    Project_Folder{i} = 'TestImpedanceContributions';   i = i+1;
+    % Project_Folder{i} = 'TestImpedanceContributions';   i = i+1;
     % Project_Folder{i} = 'SOCTest';   i = i+1;
     % Project_Folder{i} = 'COETest';   i = i+1;
     % Project_Folder{i} = 'ThermalGradient';   i = i+1;
@@ -26,18 +27,21 @@
 %% Make a list of all sim file names with full path name
 for i = 1:num_Proj
     % Make a list of simulations in the project folder
-    oldFolder = cd([pwd filesep 'Results' filesep Project_Folder{i}]);
-    list = dir('*.mat*');
-    num_files = length(list);
-    sim_filenames = {};
-    for j = 1:num_files % Creates a cell array with all simulations' full path name
-        sim_filenames{end+1,1} = [pwd filesep list(j).name];
-    end
+        oldFolder = cd([pwd filesep 'Results' filesep Project_Folder{i}]);
+        list = dir('*.mat*');
+        num_files = length(list);
+        sim_filenames = {};
+        for j = 1:num_files % Creates a cell array with all simulations' full path name
+            sim_filenames{end+1,1} = [pwd filesep list(j).name];
+        end
+
     %Go back to oldFolder
-    cd(oldFolder);
+        cd(oldFolder);
 end
 num_sim_files = length(sim_filenames);
 
+previousSimMode = 0; % Used to clear SimMode from persistent memory
+clear batt_GovEqn
 
 %% Run all the simulations
 for i = 1:num_sim_files
@@ -60,9 +64,14 @@ for i = 1:num_sim_files
         tSimStart = tic;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Polarization ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if SIM.SimMode == 1 
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
+
             % Simulation Parameters
-            Tol.Abs = 1E-8;
-            Tol.Rel = 1E-8;
+            Tol.Abs = 1E-7;
+            Tol.Rel = 1E-7;
 
             events = @(t,SV) batt_events(t,SV,SIM,P,N,FLAG);
 
@@ -71,6 +80,9 @@ for i = 1:num_sim_files
                              'Mass'   ,SIM.M,        ...
                              'Events' ,events);%,       ...
                             %'MaxStep',1e2);
+                if isfield(SIM,'JPattern')
+                    options.JPattern = SIM.JPattern;
+                end
             
             i_user = 0;
             tspan = [SIM.profile_time(1), SIM.profile_time(end)];
@@ -88,6 +100,11 @@ for i = 1:num_sim_files
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Harmonic Perturbation ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 2 
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
+
             % Simulation Parameters
             Tol.Abs = 1E-7;
             Tol.Rel = 1E-7;
@@ -99,6 +116,9 @@ for i = 1:num_sim_files
                              'Mass'   ,SIM.M,        ...
                              'Events' ,events);%,       ...
                             %'MaxStep',1e2);
+                if isfield(SIM,'JPattern')
+                    options.JPattern = SIM.JPattern;
+                end
             
             i_user = 0;
             tspan = [SIM.profile_time(1), SIM.profile_time(end)];
@@ -117,11 +137,18 @@ for i = 1:num_sim_files
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- State Space EIS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 3 
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
             [A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
-            %,sys_imp,sys_exp,sys_exp_mod
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Known BC Profile Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 4 
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
             % Initialize Save Variables
                 t_soln      = [];
                 SV_soln     = [];
@@ -176,11 +203,17 @@ for i = 1:num_sim_files
                                     'AbsTol' ,Tol.Abs,      ...
                                     'Mass'   ,SIM.M,        ...
                                     'Events' ,events);%,       ...
-%                                     'MaxStep',1e0);%
+                                    % 'MaxStep',1e0);%
+                    if isfield(SIM,'JPattern')
+                        options.JPattern = SIM.JPattern;
+                    end
 
                 options_CV = odeset('RelTol' ,Tol.Rel,      ...
                                     'AbsTol' ,Tol.Abs,      ...
                                     'Mass'   ,SIM.M);
+                    if isfield(SIM,'JPattern')
+                        options.JPattern = SIM.JPattern;
+                    end
 
                 % call ODE
                     if k~=1
@@ -243,9 +276,18 @@ for i = 1:num_sim_files
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- MOO Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 5
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Manual Current Profile ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 7 
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
+
             % Simulation Parameters
             Tol.Abs = 1E-7;
             Tol.Rel = 1E-7;
@@ -257,6 +299,9 @@ for i = 1:num_sim_files
                              'Mass'   ,SIM.M,        ...
                              'Events' ,events);%,       ...
                             %'MaxStep',1e2);
+                if isfield(SIM,'JPattern')
+                    options.JPattern = SIM.JPattern;
+                end
             
             counter = 0;
             continue_Refinement = 1;
@@ -280,8 +325,9 @@ for i = 1:num_sim_files
                 del_phi = zeros( N_t_steps , N.N_CV_tot );
 
                 for j = 1:length(t_soln)
-                    SV( : , : , j )  = SV1Dto2D( SV_soln( j , : ) , N , P , FLAG );
-% !!!!!!!!!!!!!!!!                    SV( : , : , i ) = addPhiEl2SV(SV_temp,P,N);
+                    % SV( : , : , j ) = SV1Dto2D( SV_soln( j , : ) , N , P , FLAG );
+                    SV( : , : , j ) = SV1Dto2D_short(SV_soln( j , : ), SIM.SV_nan, N.IDX_1Dto2D);
+                    % SV( : , : , i ) = addPhiEl2SV(SV_temp,P,N); %!!!!!!!!!!!!!!!!
                     del_phi( j , : ) = SV( P.del_phi , : , j);
                 end
 
@@ -301,6 +347,11 @@ for i = 1:num_sim_files
             end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- PRBS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 8
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
+
             % Simulation Parameters
             Tol.Abs = 1E-7;
             Tol.Rel = 1E-7;
@@ -312,6 +363,9 @@ for i = 1:num_sim_files
                              'Mass'   ,SIM.M,        ...
                              'MaxStep',0.99*SIM.Tswitch);
                              %'Events' ,events);%,       ...
+                if isfield(SIM,'JPattern')
+                    options.JPattern = SIM.JPattern;
+                end
 
             i_user = 0;
             
@@ -463,6 +517,11 @@ for i = 1:num_sim_files
             % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- EIS from Stitching PRBS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 9
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
+
             % Load in PRBS results
                 NumPRBS = length(PRBS_desTswitch_filenames);
                 % Results = struct(NumPRBS , 1);
@@ -553,6 +612,11 @@ for i = 1:num_sim_files
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- EIS Ho-Kalman ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 10
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
+            
         % Get impulse response
             % Simulation Parameters
             Tol.Abs = 1E-7;
@@ -565,6 +629,9 @@ for i = 1:num_sim_files
                              'Mass'   ,SIM.M,        ...
                              'Events' ,events,       ...
                              'MaxStep',0.5*SIM.Tsample);%
+                if isfield(SIM,'JPattern')
+                    options.JPattern = SIM.JPattern;
+                end
             
             i_user = 0;
             tspan = [0, SIM.profile_time(end)];
@@ -627,6 +694,7 @@ for i = 1:num_sim_files
         
         %% Save results
         SIZE_SV_soln = whos('SV_soln');
+
         % ---- Data Files ----
         if SIM.SimMode == 0
             % Just a data file, don't save
@@ -679,9 +747,9 @@ for i = 1:num_sim_files
             
         else
             if SIZE_SV_soln.bytes > 1e9 % 1 GB = 1e9 bytes
-                save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','-v7.3')
+                save(sim_filenames{i},'t_soln','SV_soln','SOLN','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete','-v7.3')
             else
-                save(sim_filenames{i},'t_soln','SV_soln','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+                save(sim_filenames{i},'t_soln','SV_soln','SOLN','AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
             end
         end
         
@@ -708,51 +776,7 @@ for i = 1:num_sim_files
     end
     simEnd = toc(simStart);
     disp(['Simulation took:' num2str(simEnd) 's'])
-    clearvars -except sim_filenames i k num_sim_files
+    clearvars -except sim_filenames i k num_sim_files previousSimMode
 end
 disp('Finished all simulations')
 
-
-%% OOOOOOOLLLLLDDDD Stuff
-
-        % if ~exist('sim_filenames')
-        %     sim_filenames{1} = [pwd filesep list(j).name];
-        % else
-        %     sim_filenames{end+1,1} = [pwd filesep list(j).name];
-        % end
-
-% Polarization
-
-            %%%%%%%%%%%%%%% May reimplement this for initial relax without ramp
-            % for k = 1:length(SIM.tspan)-1 
-            %     if k == 1
-            %         tspan = [SIM.tspan(k), SIM.tspan(k+1)-1e-8];
-            %         SV_IC = SIM.SV_IC;
-            %         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
-            %         if FLAG.SaveSolnDiscreteTime
-            %             new_tfinal = SOLN.x(end);
-            %             save_time = (0:SIM.SaveTimeStep:new_tfinal)';
-            %             t_soln = save_time;
-            %             SV_soln = (deval(SOLN,save_time))';
-            %         else
-            %             t_soln  = SOLN.x';
-            %             SV_soln = SOLN.y';
-            %         end
-            %     else
-            %         %New IC
-            %         SV_IC = SV_soln(end,:);
-            %         tspan = [SIM.tspan(k), SIM.tspan(k+1)-1e-8];
-            %         SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
-            %         if FLAG.SaveSolnDiscreteTime
-            %             new_tfinal = SOLN.x(end);
-            %             save_time = (0:SIM.SaveTimeStep:new_tfinal)';
-            %             t_soln_int = save_time;
-            %             SV_soln_int = (deval(SOLN,save_time))';
-            %         else
-            %             t_soln_int  = SOLN.x';
-            %             SV_soln_int = SOLN.y';
-            %         end
-            %         t_soln  = [t_soln ; t_soln_int ];
-            %         SV_soln = [SV_soln; SV_soln_int];
-            %     end
-            % end

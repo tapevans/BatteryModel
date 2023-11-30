@@ -3,16 +3,53 @@ function Res = phiFsolveFun(phi,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props)
     i_user_guess = phi(end);
     phi = phi1Dto2D( phi(1:end-1) , N , P , FLAG);
     SV(P.del_phi:P.i_PS , :) = phi(P.ES.del_phi:P.ES.i_PS , :);
-    SV = addPhiEl2SV(SV,P,N);
+    SV = addPhiEl2SV(SV, P.phi_ed, P.del_phi, N.CV_Region_SEP, N.N_CV_SEP);
+    % SV = addPhiEl2SV(SV,P,N);
+
+
+%% Pull out each SV vector
+    [T, del_phi, phi_ed, phi_el, V_1, V_2, i_PS, Ce, C_Li, C_Li_AN, C_Li_CA, X_AN, X_CA, Ce_norm, Ce_log, eta, RT_inv_vec] = extractSV(SV,P.T, P.del_phi, P.phi_ed, P.phi_el, P.V_1, P.V_2, P.i_PS, P.C_Liion, P.C_Li, P.C_Li_surf_AN, P.C_Li_surf_CA, N.CV_Region_AN, N.CV_Region_CA, N.N_R_max, AN.C_Li_max_inv, CA.C_Li_max_inv, EL.C_inv, CONS.R);
+
+
+%% Property Vector
+    [sigma_vec, kappa_vec, tf_vec, activity_vec, D_o_Li_ion_vec, lambda_vec, D_o_vec] = extractProps(P.sigma, P.kappa, P.tf_num, P.activity, P.D_o_Li_ion, P.lambda_eff, P.D_o, props);
+
+
+%% Calculate Value at Interface between CV
+    sigma_vec_interface    = getInterfaceXDir(sigma_vec   , SIM.interp_x_interface);
+    kappa_vec_interface    = getInterfaceXDir(kappa_vec   , SIM.interp_x_interface);
+    tf_vec_interface       = getInterfaceXDir(tf_vec      , SIM.interp_x_interface);
+    activity_vec_interface = getInterfaceXDir(activity_vec, SIM.interp_x_interface);
+    T_interface            = getInterfaceXDir(T           , SIM.interp_x_interface);
+
+    D_o_vec_interface        = [NaN(1,N.N_CV_tot) ; 0.5*(D_o_vec(1:end-1,:) + D_o_vec(2:end,:)) ; NaN(1,N.N_CV_tot)]; % This assumes constant del_r in both particles
+
+    
+%% Calculate Gradient
+    [phi_ed_diff, phi_ed_grad] = diffAndGradXCalc(phi_ed, SIM.diff_CV_x_vec_inv);
+    [phi_el_diff, phi_el_grad] = diffAndGradXCalc(phi_el, SIM.diff_CV_x_vec_inv);
+    [Ce_log_diff, Ce_log_grad] = diffAndGradXCalc(Ce_log, SIM.diff_CV_x_vec_inv);
+    [Ce_diff    , Ce_grad    ] = diffAndGradXCalc(Ce    , SIM.diff_CV_x_vec_inv);
+    [T_diff     , T_grad     ] = diffAndGradXCalc(T     , SIM.diff_CV_x_vec_inv);
+
+    diff        = C_Li(2:end,:) - C_Li(1:end-1,:);
+    C_Li_diff   = [NaN(1 , N.N_CV_tot) ; diff ; NaN(1 , N.N_CV_tot)];
 
 
 %% Calc Currents and Voltages
-    [i_ed , i_el ] = currentCalc( SV , AN , SEP , CA , EL , P , N , CONS , FLAG , i_user_guess , props);
-    i_Far          = iFarCalc( SV , AN , CA , P , N , CONS, FLAG , props, EL);
+    [i_ed , i_el ] = currentCalc(  sigma_vec_interface, kappa_vec_interface, T_interface, activity_vec_interface, tf_vec_interface, ...
+                                   phi_ed_grad, phi_el_grad, Ce_log_grad, ...
+                                   CONS.F_inv, CONS.R, ...
+                                   N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, N.N_CV_tot, i_user_guess);
+
+    i_Far = iFarCalc( T, Ce_norm, X_AN, X_CA, eta, RT_inv_vec, AN.i_0_ref , AN.alpha_a, AN.alpha_c, CA.i_0_ref, CA.alpha_a, CA.alpha_c, ...
+                        FLAG.Newman_i_o, CONS.F, ...
+                        N.CV_Region_AN, N.CV_Region_CA, N.N_CV_SEP, AN.i_oHandle , CA.i_oHandle);
     
     E_eq_an  = AN.EqPotentialHandle( SV(P.C_Li_surf_AN , N.CV_Region_AN ) / AN.C_Li_max );
     E_eq_ca  = CA.EqPotentialHandle( SV(P.C_Li_surf_CA , N.CV_Region_CA ) / CA.C_Li_max );
     E_eq_vec = [ E_eq_an , zeros(1,N.N_CV_SEP) , E_eq_ca];
+    
 
 %% Calculate Residual
 % ---- Anode ----

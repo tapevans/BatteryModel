@@ -1,47 +1,23 @@
 %% Function to calculate i_Far
 % The ith index is the faradaic current of the ith CV
-function i_Far = iFarCalc( SV , AN , CA , P , N , CONS , FLAG , props, EL)
-%% Initialize
-    i_Far = nan(1 , N.N_CV_tot);
+function i_Far = iFarCalc( T, Ce_norm, X_AN, X_CA, eta, RT_inv_vec, AN__i_0_ref , AN__alpha_a, AN__alpha_c, CA__i_0_ref, CA__alpha_a, CA__alpha_c, ...
+    FLAG__Newman_i_o, CONS__F, ...
+    N__CV_Region_AN, N__CV_Region_CA, N__N_CV_SEP, AN__i_oHandle , CA__i_oHandle)
 
-%% Concentration Dependent Parameters
-% % Delta phi
-%     del_phi = SV(P.phi_ed , :) - SV(P.phi_el , :);
-
-% eta
-    eta_AN   = SV(P.V_2 , N.CV_Region_AN ) - SV(P.V_1 , N.CV_Region_AN );
-    eta_CA   = SV(P.V_2 , N.CV_Region_CA ) - SV(P.V_1 , N.CV_Region_CA );
-    eta   = [eta_AN  , NaN(1,N.N_CV_SEP) ,eta_CA  ];
-
-% i_o
-    if FLAG.Newman_i_o
-        i_o_an = CONS.F * AN.k_o ...
-                           * SV(P.C_Liion     ,N.CV_Region_AN)  .^AN.alpha_a ...
-          .* ( AN.C_Li_max - SV(P.C_Li_surf_AN,N.CV_Region_AN) ).^AN.alpha_a ...
-                          .* SV(P.C_Li_surf_AN,N.CV_Region_AN)  .^AN.alpha_c;
-        i_o_ca = CONS.F * CA.k_o ...
-                           * SV(P.C_Liion     ,N.CV_Region_CA)  .^CA.alpha_a ...
-          .* ( CA.C_Li_max - SV(P.C_Li_surf_CA,N.CV_Region_CA) ).^CA.alpha_a ...
-                          .* SV(P.C_Li_surf_CA,N.CV_Region_CA)  .^CA.alpha_c;
+    if FLAG__Newman_i_o
+        % i_o_an = CONS__F * AN.k_o ...
+        %                     * SV(P__C_Liion     ,N__CV_Region_AN)  .^AN__alpha_a ...
+        %   .* ( AN__C_Li_max - SV(P__C_Li_surf_AN,N__CV_Region_AN) ).^AN__alpha_a ...
+        %                    .* SV(P__C_Li_surf_AN,N__CV_Region_AN)  .^AN__alpha_c;
+        % i_o_ca = CONS__F * CA.k_o ...
+        %                     * SV(P__C_Liion     ,N__CV_Region_CA)  .^CA__alpha_a ...
+        %   .* ( CA__C_Li_max - SV(P__C_Li_surf_CA,N__CV_Region_CA) ).^CA__alpha_a ...
+        %                    .* SV(P__C_Li_surf_CA,N__CV_Region_CA)  .^CA__alpha_c;
     else
-        i_o_an  = AN.i_oHandle( SV(:,N.CV_Region_AN) , P, AN , EL);
-        i_o_ca  = CA.i_oHandle( SV(:,N.CV_Region_CA) , P, CA , EL);
+        i_o_an  = AN__i_oHandle( T(:,N__CV_Region_AN) , Ce_norm(:,N__CV_Region_AN) , X_AN(end,:) , AN__i_0_ref , AN__alpha_a, AN__alpha_c);
+        i_o_ca  = CA__i_oHandle( T(:,N__CV_Region_CA) , Ce_norm(:,N__CV_Region_CA) , X_CA(end,:) , CA__i_0_ref , CA__alpha_a, CA__alpha_c);
     end
-    % if FLAG.AN_LI_FOIL
-    %     i_o_an = 10; %%%%%%%%%% Hard coded; pulled from https://www.sciencedirect.com/science/article/pii/S0378775312005423
-    % end
-    i_o     = [i_o_an, NaN(1,N.N_CV_SEP), i_o_ca];
-
-%% i_Far Calc
-% Anode
-    for i = N.CV_Region_AN
-        i_Far(i) = i_o(i) * ( exp( AN.alpha_a*CONS.F*eta(i)/( CONS.R*SV(P.T,i) ))... 
-                            - exp(-AN.alpha_c*CONS.F*eta(i)/( CONS.R*SV(P.T,i) )));
-    end
- 
-% Cathode
-    for i = N.CV_Region_CA
-        i_Far(i) = i_o(i) * ( exp( CA.alpha_a*CONS.F*eta(i)/( CONS.R*SV(P.T,i) ))... 
-                            - exp(-CA.alpha_c*CONS.F*eta(i)/( CONS.R*SV(P.T,i) )));
-    end
+    i_o     = [i_o_an, NaN(1,N__N_CV_SEP), i_o_ca];
+    
+    i_Far = i_o .* ( exp( CA__alpha_a*CONS__F*eta.*RT_inv_vec ) - exp(-CA__alpha_c*CONS__F*eta.*RT_inv_vec ));
 end

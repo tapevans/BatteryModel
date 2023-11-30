@@ -5,14 +5,14 @@ function plotfcn(filename)
 
 %% Plot Flags
 % ---- Polarization ----
-    FLAG.COE       = 1; % Conservation of Energy Check 
+    FLAG.COE       = 0; % Conservation of Energy Check 
     FLAG.COM       = 0; % Conservation of Mass Check
     FLAG.COC       = 0; % Conservation of Charge Check
     
-    FLAG.TEMP      = 1; % Cell Temperature Profile
+    FLAG.TEMP      = 0; % Cell Temperature Profile
     
     FLAG.C_Liion   = 0; % Mass/Species (Concentration Normalized): Li_ion
-    FLAG.X_Li_surf = 0; % Mass/Species (Mole Fraction): Li_surf (x-direction)
+    FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
     FLAG.X_Li_rad  = 0; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
     FLAG.s_dot     = 0; % Li_ion production rate
     
@@ -21,14 +21,14 @@ function plotfcn(filename)
     FLAG.del_phi   = 0; % Delta phi (phi_ed - phi_el)
     FLAG.del_phi_v_time = 0; %@ AN/SEP
     FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
-    FLAG.eta       = 0; % eta
-    FLAG.i_o       = 0; % exchange current density
-    FLAG.i_Far     = 0; % charge-transfer current density
+    FLAG.eta       = 1; % eta
+    FLAG.i_o       = 1; % exchange current density
+    FLAG.i_Far     = 1; % charge-transfer current density
     FLAG.plotV_SEI = 0; % Voltage across the SEI
     
     FLAG.cellVoltage         = 0; % Terminal voltage of the battery vs time
     FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
-    FLAG.V_and_A             = 0;
+    FLAG.V_and_A             = 1;
     FLAG.SOC                 = 0; % SOC vs time
     FLAG.voltage_vs_SOC      = 0; % Terminal voltage of the battery vs SOC
 
@@ -193,7 +193,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southwest';
+        % lgn.Location = 'southwest';
+        lgn.Location = 'best';
         title('x_{Li,surf}')
         xlabel('X Position')
         ylabel('x_{Li,surf} (-)')
@@ -220,7 +221,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
                 plot(r_vec,X_Li(:,CV_vec(j),t_index(i)),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
             end
             lgn = legend;
-            lgn.Location = 'southwest';
+            % lgn.Location = 'southwest';
+            lgn.Location = 'best';
             if CV_vec(j) == 1
                 title('Radial x_{Li} vs Time (CC/AN)')
             elseif CV_vec(j) == N.CV_Region_AN(end)
@@ -246,7 +248,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,s_dot(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'northeast';
+        % lgn.Location = 'northeast';
+        lgn.Location = 'best';
         title('s dot Li^+')
         xlabel('X Position')
         ylabel('s dot Li^+ (kmol m^{-2} s^{-1})')
@@ -267,7 +270,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,phi_ed(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southeast';
+        % lgn.Location = 'southeast';
+        lgn.Location = 'best';
         title('\phi_{ed}')
         xlabel('X Position')
         ylabel('\phi_{ed} (V)')
@@ -288,7 +292,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,phi_el(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southwest';
+        % lgn.Location = 'southwest';
+        lgn.Location = 'best';
         title('\phi_{el}')
         xlabel('X Position')
         ylabel('\phi_{el} (V)')
@@ -309,7 +314,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,del_phi(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southeast';
+        % lgn.Location = 'southeast';
+        lgn.Location = 'best';
         title('\Delta \phi')
         xlabel('X Position')
         ylabel('\Delta \phi (V)')
@@ -341,7 +347,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,Eq(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southeast';
+        % lgn.Location = 'southeast';
+        lgn.Location = 'best';
         title('E^{eq}')
         xlabel('X Position')
         ylabel('E^{eq} (V)')
@@ -362,7 +369,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,eta(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southeast';
+        % lgn.Location = 'southeast';
+        lgn.Location = 'best';
         title('\eta')
         xlabel('X Position')
         ylabel('\eta (V)')
@@ -383,7 +391,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,i_o(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southeast';
+        % lgn.Location = 'southeast';
+        lgn.Location = 'best';
         title('i_o')
         xlabel('X Position')
         ylabel('i_o (A m^{-2})')
@@ -404,7 +413,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,i_Far(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southeast';
+        % lgn.Location = 'southeast';
+        lgn.Location = 'best';
         title('i_{Far}')
         xlabel('X Position')
         ylabel('i_{Far} (A m^{-2})')
@@ -425,7 +435,8 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
             plot(SIM.x_vec,V_SEI(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southeast';
+        % lgn.Location = 'southeast';
+        lgn.Location = 'best';
         title('V_{SEI}')
         xlabel('X Position')
         ylabel('V_{SEI} (V)')
@@ -447,7 +458,7 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
         ylabel('Voltage (V)')
         xlim([0,t_soln(end)])
         
-        exportgraphics(f,'CellVoltage_TBCRamp_ANCOld.png')
+        % exportgraphics(f,'CellVoltage_TBCRamp_ANCOld.png')
     end
     
 
@@ -547,7 +558,8 @@ elseif SIM.SimMode == 2
             end
         end
         lgn = legend;
-        lgn.Location = 'east';
+        % lgn.Location = 'east';
+        lgn.Location = 'best';
         title('X_{Li,surf}')
         xlabel('Time (s)')
         ylabel('X_{Li,surf} (-)')
@@ -665,7 +677,8 @@ elseif SIM.SimMode == 4
             plot(SIM.x_vec, X_Li_surf(t_index(i),:),'-','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
         end
         lgn = legend;
-        lgn.Location = 'southwest';
+        % lgn.Location = 'southwest';
+        lgn.Location = 'best';
         title('x_{Li,surf}')
         xlabel('X Position')
         ylabel('x_{Li,surf} (-)')

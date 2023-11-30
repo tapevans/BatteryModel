@@ -38,7 +38,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
     
-    FLAG.COE    = 0; % Cons of Energy (Temperature). 0 if dTdt = 0
+    FLAG.COE    = 1; % Cons of Energy (Temperature). 0 if dTdt = 0
         % Thermal Boundary Conditions
         % 1) Known Temperature  T(0,t)      = T_s
         % 2) Known Heat Flux    -k dTdx|x=0 = q''_s
@@ -85,7 +85,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     FLAG.preDefined_C_max = 1; % 1 if using the C_max found in the input file
     
     FLAG.CONSTANT_PROPS_FROM_HANDLES = 0; % Uses the initial conditions to solve for the properties and uses those throughout the simulation
-    FLAG.VARIABLE_PROPS_FROM_HANDLES = 1;
+    FLAG.VARIABLE_PROPS_FROM_HANDLES = 0;
         % FLAG.VARIABLE_sigma    = 0;
         FLAG.VARIABLE_kappa    = 1;
         FLAG.VARIABLE_activity = 1;
@@ -108,13 +108,13 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     %     T_s_vec = logspace(T_s_min,T_s_max,N_t_s);
     %     Ts = T_s_vec(25);   % [s], discrete time sampling rate
 
-    FLAG.AddInputNoise = 0;
+    FLAG.AddInputNoise = 1;
         if FLAG.AddInputNoise
-            SIM.Ts      = 1;    % [s], Sampling rate of the DT system
-            SIM.Q_input = 1e-2; % [-], Input noise covariance matrix
+            SIM.Ts      = 1; % [s], Sampling rate of the DT system
+            SIM.Q_input = 0; % [-], Input noise covariance matrix
         end
     
-    FLAG.SaveSolnDiscreteTime = 0; % 1 if evaluate the ode soln at a given sampling rate
+    FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
         if FLAG.AddInputNoise % Force DT save
             FLAG.SaveSolnDiscreteTime = 1;
         end
@@ -137,7 +137,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     
     FLAG.SaveSystemForEst = 0; % 1, if save the system to be used in the estimator ONLY FOR SS EIS (SimMode 3)
     
-    FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
+    FLAG.doPostProcessing = 0;   % 1 if the postprocessing function is performed after a simulation completes
         FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
     FLAG.Plot             = 0;   % 1 if the results plot immediately
         FLAG.PlotUserCurrentProfiles = 0;
@@ -168,6 +168,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     options.FunctionTolerance = 1e-15;
     % options.Display           = 'iter';
     options.Display           = 'none';
+    % options.MaxFunctionEvaluations = 2e5;
     SIM.fsolve_options        = options;
 
 
@@ -554,10 +555,17 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
         SIM.AnodeStoich_SOC100   = 0.8434; % [-] 
         SIM.CathodeStoich_SOC100 = 0.3400; % [-]
     else
-        SIM.VoltageMax         = 5 ;       % [V] 
+        SIM.OneC_measured        = 22.7;   % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
+        % SIM.VoltageMax         = 5 ;       % [V] 
+        SIM.VoltageMax         = [] ;       % [V] 
         SIM.VoltageMin         = 2 ;       % [V] 
         SIM.AnodeFormation_X   = 0.00;     % [-] 
         SIM.CathodeFormation_X = 1.00;     % [-] 
+
+        SIM.AnodeStoich_SOC0     = 0.0700; % [-] 
+        SIM.CathodeStoich_SOC0   = 0.8900; % [-] 
+        SIM.AnodeStoich_SOC100   = 0.8434; % [-] 
+        SIM.CathodeStoich_SOC100 = 0.3400; % [-]
     end
 
 end

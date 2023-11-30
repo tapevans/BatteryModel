@@ -9,8 +9,11 @@
 % * A particle is completely full of lithium %%%%%%%%%%%%%%%%%%Not implemented
 %%
 function [value,isterminal,direction] = batt_events(t,SV,SIM,P,N,FLAG)
-SV = SV1Dto2D(SV , N , P , FLAG);
-CellVoltage = SV(P.phi_ed,end) - SV(P.phi_ed,1);
+% SV = SV1Dto2D(SV , N , P , FLAG);
+% SV = SV1Dto2D(SV , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot,
+% N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
+% CellVoltage = SV(P.phi_ed,end) - SV(P.phi_ed,1);
+CellVoltage = SV(N.IDX_CellVoltage(2)) - SV(N.IDX_CellVoltage(1));
 
 if SIM.SimMode == 4 % Known BC Profile
     MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;

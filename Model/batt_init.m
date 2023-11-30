@@ -31,7 +31,7 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
         N.N_R_CA  = 1;
     end 
     
-    N.N_R_max = max(N.N_R_AN,N.N_R_CA);
+    N.N_R_max = max([N.N_R_AN,N.N_R_CA]);
 
 
 %% Pointers for Tracked Variables
@@ -122,6 +122,8 @@ end
     N.N_SV_SEP = N.N_SV_SEP;
     N.N_SV_CA  = N.N_SV_nR + N.N_R_CA;
 
+    N.N_SV_max = max([N.N_SV_AN , N.N_SV_SEP , N.N_SV_CA]);
+
     N.N_SV_AN_tot  = N.N_CV_AN  * N.N_SV_AN;
     N.N_SV_SEP_tot = N.N_CV_SEP * N.N_SV_SEP;
     N.N_SV_CA_tot  = N.N_CV_CA  * N.N_SV_CA;
@@ -155,17 +157,39 @@ end
     % Overall X-position Vector
         SIM.x_vec      = [AN.x_vec     , SEP.x_vec            , CA.x_vec            ]; % [m], Position of the control volume's center
         SIM.x_half_vec = [AN.x_half_vec, SEP.x_half_vec(2:end), CA.x_half_vec(2:end)]; % [m], Position of the control volume's edges
+        
+        diff = SIM.x_vec(2:end) - SIM.x_vec(1:end-1);
+        SIM.diff_CV_x_vec  = [AN.del_x/2   , diff                 , CA.del_x/2          ]; % [m], Distance between the control volume's center on either side of the interface
+        SIM.del_x_vec = [AN.del_x * ones(1,N.N_CV_AN) , SEP.del_x * ones(1,N.N_CV_SEP) , CA.del_x * ones(1,N.N_CV_CA)];
+        SIM.del_x_vec_halved = 0.5*SIM.del_x_vec;
+
+        SIM.interp_x_interface = nan(1,N.N_CV_tot+1);
+        for i = 2:N.N_CV_tot
+            SIM.interp_x_interface(i) = (SIM.x_half_vec(i) - SIM.x_vec(i-1)) / (SIM.x_vec(i) - SIM.x_vec(i-1));
+        end
     
 % Del-r of each region
     % ---- Anode ----
         AN.del_r = AN.r_p/(N.N_R_AN);
         AN.r_vec = (AN.del_r/2):AN.del_r:AN.r_p-(AN.del_r/2);
         AN.r_half_vec = 0:AN.del_r:AN.r_p;
+        AN.r_half_vec_sq = AN.r_half_vec.^2;
+        diff = AN.r_vec(2:end) - AN.r_vec(1:end-1);
+        AN.del_CV_r_vec = [nan diff nan];
     
     % ---- Cathode ----
         CA.del_r = CA.r_p/(N.N_R_CA);
         CA.r_vec = (CA.del_r/2):CA.del_r:CA.r_p-(CA.del_r/2);
         CA.r_half_vec = 0:CA.del_r:CA.r_p;
+        CA.r_half_vec_sq = CA.r_half_vec.^2;
+        diff = CA.r_vec(2:end) - CA.r_vec(1:end-1);
+        CA.del_CV_r_vec = [nan diff nan];
+
+    AN_del_CV_r_vec_repmat  = repmat((AN.del_CV_r_vec.^(-1))' , 1 , N.N_CV_AN);
+    CA_del_CV_r_vec_repmat  = repmat((CA.del_CV_r_vec.^(-1))' , 1 , N.N_CV_CA);
+    SIM.del_CV_r_inv_mat = NaN(N.N_R_max+1 , N.N_CV_tot);
+    SIM.del_CV_r_inv_mat(1:N.N_R_AN+1 , N.CV_Region_AN ) = AN_del_CV_r_vec_repmat;
+    SIM.del_CV_r_inv_mat(1:N.N_R_CA+1 , N.CV_Region_CA ) = CA_del_CV_r_vec_repmat;
 
 
 %% Various Needed Calculations
@@ -174,12 +198,14 @@ end
     SEP.eps_el  =    SEP.eps;               % Electrolyte Volume Fraction in the separator
     CA.eps_el   = 1 - CA.eps_ed - CA.eps_b; % Electrolyte Volume Fraction in the cathode
     SEP.eps_sep = 1 - SEP.eps_el;           % Separator material Volume Fraction
+    SIM.eps_el_vec = [AN.eps_el * ones(1,N.N_CV_AN) , SEP.eps_el * ones(1,N.N_CV_SEP) , CA.eps_el * ones(1,N.N_CV_CA)];
+    SIM.MassFluxPreCalcResistor = SIM.eps_el_vec ./ SIM.del_x_vec_halved;
 
 % Effective thermal properties
     [AN , SEP , CA] = getEffectiveThermalProps(AN , SEP , CA , EL);
 
 % Initialize PROPS
-    PROPS = zeros( N.N_prop , N.N_CV_tot );
+    PROPS = nan( N.N_prop , N.N_CV_tot );
     
     PROPS( P.sigma      , N.CV_Region_AN ) = AN.sigma * ones( 1 , N.N_CV_AN );
     PROPS( P.sigma      , N.CV_Region_CA ) = CA.sigma * ones( 1 , N.N_CV_CA );
@@ -387,12 +413,6 @@ end
 %% Capacity Calculations 
 % Max Concentration
     if ~FLAG.preDefined_C_max
-        % if ~FLAG.AN_LI_FOIL
-        %     AN.C_Li_max = AN.rho / AN.MW;
-        % end
-        % if ~FLAG.CA_LI_FOIL
-        %     CA.C_Li_max = CA.rho / CA.MW;
-        % end
     end
     
 % Capacity Calc
@@ -531,6 +551,9 @@ end
         % C_Li        @AN/SEP
         % Delta C_Li  @AN/SEP
         % Temperature @AN/SEP
+        % Delta V_AN  (phi_el,ANSEP - 0)
+        % Delta V_SEP (phi_el,CASEP - phi_el,ANSEP)
+        % Delta V_CA  (phi_ed,CA    - phi_el,CASEP)
     SIM.OutputMatrix = zeros(N.N_Out , N.N_SV_tot);
         % Cell Voltage
             idx_phi_ed_AN = P.phi_ed;
@@ -541,6 +564,8 @@ end
 
             SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_AN) = -1;
             SIM.OutputMatrix(P.OM.cell_volt,idx_phi_ed_CA) =  1;
+            N.IDX_CellVoltage = [idx_phi_ed_AN , idx_phi_ed_CA]; % This is used in batt_events
+
         % @AN/SEP
             i = N.N_CV_AN;
             index_offset = (i-1)*N.N_SV_AN;
@@ -685,10 +710,53 @@ end
     SIM.SV_IC_Static  = SV_IC;
 
 
+%% Property Inverse Calcs
+    CONS.F_inv = CONS.F^-1;
+    CONS.R_inv = CONS.R^-1;
+
+    AN.R_SEI_inv = AN.R_SEI^-1;
+    CA.R_SEI_inv = CA.R_SEI^-1;
+
+    AN.C_Li_max_inv = AN.C_Li_max^-1;
+    CA.C_Li_max_inv = CA.C_Li_max^-1;
+
+     AN.del_x_inv =  AN.del_x^-1;
+    SEP.del_x_inv = SEP.del_x^-1;
+     CA.del_x_inv =  CA.del_x^-1;
+
+    AN.del_r_inv = AN.del_r^-1;
+    CA.del_r_inv = CA.del_r^-1;
+
+    AN.A_surf_CV_inv = AN.A_surf_CV^-1;
+    CA.A_surf_CV_inv = CA.A_surf_CV^-1;
+
+    for j = 1:N.N_R_AN
+        AN.r_half_vec_diffcubed(j,1) = AN.r_half_vec(j+1)^3-AN.r_half_vec(j)^3;
+    end
+    AN.r_half_vec_diffcubed_inv = AN.r_half_vec_diffcubed.^-1;
+
+    for j = 1:N.N_R_CA
+        CA.r_half_vec_diffcubed(j,1) = CA.r_half_vec(j+1)^3-CA.r_half_vec(j)^3;
+    end
+    CA.r_half_vec_diffcubed_inv = CA.r_half_vec_diffcubed.^-1;
+
+    EL.C_inv = EL.C^-1;
+
+    SIM.diff_CV_x_vec_inv    = SIM.diff_CV_x_vec.^(-1);
+    SIM.del_x_vec_halved_inv = SIM.del_x_vec_halved.^(-1);
+
+
 %% Solve for better Initial conditions for phi
-    SV = SV1Dto2D(SV_IC , N , P , FLAG);
+    SV = SV1Dto2D(SV_IC , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
     if ( FLAG.CONSTANT_PROPS_FROM_HANDLES || FLAG.VARIABLE_PROPS_FROM_HANDLES)
-        props = getProps( SV , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
+        [T, ~, ~, ~, ~, ~, ~, Ce, ~, ~, ~, X_AN, X_CA, ~, ~, ~, ~] = extractSV(SV,P.T, P.del_phi, P.phi_ed, P.phi_el, P.V_1, P.V_2, P.i_PS, P.C_Liion, P.C_Li, P.C_Li_surf_AN, P.C_Li_surf_CA, N.CV_Region_AN, N.CV_Region_CA, N.N_R_max, AN.C_Li_max_inv, CA.C_Li_max_inv, EL.C_inv, CONS.R);
+        props = getProps( Ce, T, X_AN,  X_CA, FLAG.VARIABLE_kappa, ...
+                        FLAG.VARIABLE_D_Liion, FLAG.VARIABLE_activity, FLAG.VARIABLE_tf_num, FLAG.VARIABLE_D_o_AN, FLAG.VARIABLE_D_o_CA, FLAG.Bruggeman,...
+                        P.kappa, P.D_o_Li_ion, P.activity, P.tf_num, P.D_o, ...
+                        N.N_R_AN, N.N_R_CA, N.CV_Region_AN, N.CV_Region_CA, ...
+                        CONS.BRUG, ...
+                        AN.D_oHandle, CA.D_oHandle, ...
+                        PROPS, EL.kappaHandle, EL.D_o_Li_ionHandle, EL.ActivityHandle, EL.tf_numHandle); 
         if FLAG.CONSTANT_PROPS_FROM_HANDLES
             % Update PROPS to use initial conditions
             PROPS = props;
@@ -724,7 +792,9 @@ end
         end
     else
         i_user_in = nan;
-        i_user = i_user_calc(0,SIM,FLAG,i_user_in); 
+        % i_user = i_user_calc(0,SIM,FLAG,i_user_in);
+        SIM.Amp = 0;
+        i_user = i_user_calc(0, i_user_in, SIM.SimMode, SIM.profile_time, SIM.profile_current, SIM.Amp, SIM, FLAG);
     end
 
 % Create phi vector    
@@ -794,6 +864,12 @@ end
     end
 
     SIM.SV_IC = SV_IC;
+
+
+%% SV Index 1D to 2D
+    SV = SV1Dto2D(SV_IC , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
+    N.IDX_1Dto2D = find(~isnan(SV));
+    SIM.SV_nan   = nan(N.N_SV_max, N.N_CV_tot);
 
 
 %% Mass Matrix
@@ -880,8 +956,6 @@ end
 
 
 %% Make Mass for just diffEq
-% if SIM.SimMode == 4 %%%%%%%%%%%%%%%%%%%%%%%%%%%% TestPurposes
-
 % Make indices vector
     idx_diff = [];
     idx_algb = [];
@@ -951,18 +1025,20 @@ end
             end
     end
 
-    % SIM.M_DiffEq = M(idx_diff,idx_diff);
-    % SIM.M_DiffEq_Inv = inv(SIM.M_DiffEq);
     SIM.diff_idx = idx_diff;
     SIM.algb_idx = idx_algb;
 
     N.N_diff = length(SIM.diff_idx);
     N.N_algb = length(SIM.algb_idx);
-% end
 
 
 %% Set up Jacobian here too (sparse)
-%%%%% Later
+    if N.N_SV_tot == 855
+        data = load('JPattern_sparse855MatlabVaryProp.mat','JPattern_sparse');
+    elseif N.N_SV_tot == 355
+        data = load('JPattern_sparse355MatlabVaryProp.mat','JPattern_sparse');%%!!!!!!!!!!!!!!!
+    end
+    SIM.JPattern = data.JPattern_sparse;
 
 
 end
@@ -988,302 +1064,3 @@ function res = XfromDesPotential(x,V_des,z,y_intcep,AN,CA)
         Eeq_cell = Eeq_ca - Eeq_an;
         res = Eeq_cell - V_des;
 end
-
-
-
-
-
-%% OOOOOOOLLLLLDDDD Stuff
-
-% AN.Cap = (CONS.F/(AN.MW*3600))*AN.V_ed*AN.rho; % [Ahr], Method 1: More theoretical approach
-
-    % AN.Cap_test3 = AN.specCap*AN.V_ed*AN.rho;      % [Ahr], Method 3: Based on something that is more measureable
-
-    % CA.Cap = (CONS.F/(CA.MW*3600))*CA.V_ed*CA.rho; % [Ahr], Method 1: More theoretical approach
-
-    % CA.Cap = CA.specCap*CA.V_ed*CA.rho;            % [Ahr], Method 3: Based on something that is more measureable
-    % CA.Cap = CA.Cap * 0.6;                         % [Ahr], Modified Method 2, assumes only 60 percent of the capacity is being used
-
-    % %%%%%%%Testing
-    % x_min = 0.0592;
-    % x_max = 0.9815;
-    % y_intcep = 0.8612;
-    % 
-    % % Initial Lithiation Fraction
-    % SIM.x_ini = (x_max-x_min)*SIM.SOC_start/100 + x_min;
-    % SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
-    % 
-    % % Determine electrode initial voltage potential
-    % voltage_ini_an = AN.EqPotentialHandle(SIM.x_ini);
-    % voltage_ini_ca = CA.EqPotentialHandle(SIM.y_ini);
-    % voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
-    % 
-    % % Calculate electrode initial active material concentration
-    % concen_ini_an = AN.C_Li_max * SIM.x_ini;
-    % concen_ini_ca = CA.C_Li_max * SIM.y_ini;
-    
-    % %%%%%%%Testing
-    % SOC = 0:1:100;
-    % x_ini = (SIM.x_max-SIM.x_min)*SOC/100 + SIM.x_min;
-    % y_ini = YfromX(x_ini,z,y_intcep);
-    % voltage_an = AN.EqPotentialHandle(x_ini);
-    % voltage_ca = CA.EqPotentialHandle(y_ini);
-    % cell_voltage = voltage_ca - voltage_an;
-    % 
-    % %%%%%%
-    % figure
-    % title('Cell Voltage and X_{surf} vs SOC')
-    % xlabel('SOC (%)')
-    % 
-    % yyaxis left
-    % plot(SOC , cell_voltage , 'Linewidth' , 2 )
-    % ylabel('Cell Voltage (V)')
-    % 
-    % yyaxis right
-    % plot(SOC , x_ini, 'Linewidth' , 2 )
-    % ylabel('X_surf')
-    % 
-    % %%%%%
-    % figure
-    % title('X_{surf} vs SOC')
-    % xlabel('SOC (%)')
-    % 
-    % yyaxis left
-    % plot(SOC , x_ini , 'Linewidth' , 2 )
-    % ylabel('Anode')
-    % 
-    % yyaxis right
-    % plot(SOC , y_ini, 'Linewidth' , 2 )
-    % ylabel('Cathode')
-    
-% User Time Vector and Current
-% % ---- Polarization ----
-%     if SIM.SimMode == 1
-%         % SIM.A_c        = min( AN.A_c, CA.A_c );
-%         % SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-%         SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap*SIM.ChargeOrDischarge; % [A], Load current
-%         SIM.i_user_amp = SIM.I_user_amp/SIM.A_c; % [A m^-2], Load current density (flux)
-% 
-% % ---- Harmonic Perturbation ----
-%     elseif SIM.SimMode == 2
-%         % SIM.A_c        = min( AN.A_c, CA.A_c );
-%         % SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-%         SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap;
-%         SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
-% 
-% % ---- State Space EIS ----
-%     elseif SIM.SimMode == 3
-%         % SIM.A_c        = min( AN.A_c, CA.A_c );
-%         % SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-%         SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap;
-%         SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
-% 
-% % ---- Known BC Profile Controller ----
-%     elseif SIM.SimMode == 4 
-%         % SIM.A_c        = min( AN.A_c, CA.A_c );
-%         % SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-% 
-% % ---- MOO Controller ----
-%     elseif SIM.SimMode == 5
-%         % SIM.A_c        = min( AN.A_c, CA.A_c );
-%         % SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-%         %!!!!!!!! May need to do something here for SV initialization with a
-%         %proper i_user value
-% 
-% % ---- Manual Current Profile ----
-%     elseif SIM.SimMode == 7 
-%         % SIM.A_c        = min( AN.A_c, CA.A_c );
-%         % SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-%         SIM.I_user_amp = SIM.C_rate*SIM.Cell_Cap*SIM.ChargeOrDischarge;
-%         SIM.i_user_amp = SIM.I_user_amp/SIM.A_c;
-%         SIM.i_user_OG  = SIM.i_user_amp;
-% 
-% % ---- PRBS ----
-%     elseif SIM.SimMode == 8
-%         % SIM.A_c        = min( AN.A_c, CA.A_c );
-%         % SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-%         % N_PRBS  = 255;                      % Length of the input           [-]
-%         N_PRBS  = 2^9 - 1;                  % Length of the input           [-] % New PRBS (zero-mean)
-%         TYPE    = 'PRBS';                   % Create a PRBS signal          [-]
-%         BAND    = [0 1];                    % Freq. band                    [s]
-%         LEVELS  = [-1 1];                   % PRBS limits                   [-]
-%         PRBS_gen= idinput(N_PRBS,TYPE,BAND,LEVELS);         % PRBS Demand   [A/m^2]
-%         % t_Demand = ((0:1:SIM.PRBSLength-1)*(SIM.Tswitch))'; % PRBS Demand t [s]
-%         % C_Demand = PRBS_gen(1:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2]
-%         % t_Demand = ((0:1:SIM.PRBSLength-9)*(SIM.Tswitch))'; % PRBS Demand t [s]     % New PRBS (zero-mean)
-%         C_Demand = PRBS_gen(9:SIM.PRBSLength)*SIM.PRBSAmp;  % PRBS Demand C [A/m^2] % New PRBS (zero-mean)
-% 
-%         if SIM.MakeLongPRBSSignal
-%             num_repeats = ceil(SIM.DesiredLength/length(C_Demand));
-%             C_Demand_single = C_Demand;
-%             for i = 1:num_repeats-1
-%                 if mod(i,2)==1
-%                     C_Demand = [C_Demand ; -C_Demand_single];
-%                 else
-%                     C_Demand = [C_Demand ;  C_Demand_single];
-%                 end
-%             end
-%             C_Demand = C_Demand(1:SIM.DesiredLength);
-%         end
-% 
-%         t_Demand = ( ((1:length(C_Demand))-1 )*(SIM.Tswitch))' ;
-% 
-% 
-%         % Append a no-current entry
-%         if SIM.initial_offset > 0
-%             t_Demand = [0; t_Demand+SIM.initial_offset]; % PRBS & entry [s]
-%             C_Demand = [0; C_Demand];                    % PRBS & entry [A/m^2]
-%         end
-% 
-%         % Add Rest between some switches to help with stability
-%             if SIM.AddIntermediateRelaxTime
-%                 % Find Zero-Crossings
-%                     change_idx = find( C_Demand(1:end-1)~=C_Demand(2:end) ); % True when the following idx doesn't match
-%                     change_idx = change_idx + 1; % Change occurs at the value now
-% 
-%                 % Drop first change
-%                     change_idx = change_idx(2:end);
-% 
-%                 % Find Insert index
-%                     mod_idx    = (SIM.NumZeroCrossingUntilNextRelax : SIM.NumZeroCrossingUntilNextRelax : length(change_idx))';
-%                     insert_idx = change_idx(mod_idx);
-% 
-%                 % Create New Current Demand Vector
-%                     C_new     = C_Demand(1:insert_idx(1)-1);
-%                     N_changes = length(insert_idx);
-%                     for i = 1:N_changes-1
-%                         C_new = [C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(i):insert_idx(i+1)-1)];
-%                     end
-%                     C_new = [ C_new ; zeros(SIM.NumTsRelax,1) ; C_Demand(insert_idx(N_changes):end) ];
-% 
-%                 % Create New Time Vector
-%                     t_new = (0:1:length(C_new)-1)*SIM.Tswitch;
-%             else
-%                 C_new = C_Demand;
-%                 t_new = t_Demand;
-%             end
-% 
-%         % Add Ramp Times
-%         SIM.profile_time    = t_new(1);
-%         SIM.profile_current = C_new(1);
-% 
-%         % Step at t^+
-%         for i = 2:length(t_new)
-%             % @ k
-%             SIM.profile_time(end+1,1)    = t_new(i);
-%             SIM.profile_current(end+1,1) = C_new(i-1);
-% 
-%             % After k
-%             SIM.profile_time(end+1,1)    = t_new(i) + SIM.Tswitch * SIM.t_ramp_ratio;
-%             SIM.profile_current(end+1,1) = C_new(i);
-%         end
-%         SIM.profile_time    = SIM.profile_time(1:end-1);
-%         SIM.profile_current = SIM.profile_current(1:end-1);
-% 
-%         % % Test Plot
-%         %     t_test = 0 : (SIM.Tswitch/5) : SIM.Tswitch*5;
-%         %     t_test = t_test + 2* SIM.Tswitch * SIM.t_ramp_ratio; % Shift samples slightly
-%         %     i_user = i_user_calc( t_test , SIM);
-%         %     figure
-%         %     hold on
-%         %     plot(t_test           , i_user              ,'ro','Linewidth',2,'DisplayName','Sampled') % This is what the simulation will actually use
-%         %     plot(SIM.profile_time , SIM.profile_current ,'-k','Linewidth',2,'DisplayName','Data Points')
-%         %     lgn = legend;
-%         %     xlim([0,t_test(end)+SIM.Tswitch])
-% 
-% % ---- EIS from Stitching PRBS ----
-%     elseif SIM.SimMode == 9
-% 
-% % ---- EIS Ho-Kalman ----
-%     elseif SIM.SimMode == 10
-%         % SIM.A_c        = min( AN.A_c, CA.A_c );
-%         % SIM.Cell_Cap   = min( AN.Cap, CA.Cap );
-%         SIM.i_user_amp = 1;
-%         SIM.I_user_amp = SIM.i_user_amp * SIM.A_c;
-% 
-%         t_Demand    = (0:1:SIM.HK_nSamples+3) * SIM.Tsample ; % +3 is for (2 inital relax, 1 pulse)
-%         C_Demand    = zeros( size(t_Demand) );
-%         C_Demand(3) = SIM.i_user_amp;
-% 
-%         % Step at t^+
-%         SIM.profile_time    = t_Demand(1);
-%         SIM.profile_current = C_Demand(1);
-% 
-%         for i = 2:length(t_Demand)
-%             % @ k
-%             SIM.profile_time(end+1,1)    = t_Demand(i);
-%             SIM.profile_current(end+1,1) = C_Demand(i-1);
-% 
-%             % After k
-%             SIM.profile_time(end+1,1)    = t_Demand(i) + SIM.Tsample * SIM.t_ramp_ratio;
-%             SIM.profile_current(end+1,1) = C_Demand(i);
-%         end
-%         SIM.profile_time    = SIM.profile_time(1:end-1);
-%         SIM.profile_current = SIM.profile_current(1:end-1);
-% 
-%         % % Test Plot
-%         %     t_test = 0 : (SIM.Tsample/5) : SIM.Tsample*5;
-%         %     t_test = t_test + 2* SIM.Tsample * SIM.t_ramp_ratio; % Shift samples slightly
-%         %     i_user = i_user_calc( t_test , SIM);
-%         %     figure
-%         %     hold on
-%         %     plot(t_test           , i_user              ,'ro','Linewidth',2,'DisplayName','Sampled') % This is what the simulation will actually use
-%         %     plot(SIM.profile_time , SIM.profile_current ,'-k','Linewidth',2,'DisplayName','Data Points')
-%         %     lgn = legend;
-%         %     xlim([0,t_test(end)+SIM.Tsample])
-%     end
-
-% Determine Simulation Time Vector
-% % ---- Polarization ----
-%     if SIM.SimMode == 1 
-%         if SIM.C_rate == 0
-%             t_final = 30; % [s], Final time
-%         else
-%             t_final = SIM.charge_frac*3600/SIM.C_rate + SIM.initial_offset + SIM.t_ramp; % [s], Final time
-%         end
-%     %     SIM.tspan = [0,SIM.initial_offset, t_final];
-%         SIM.tspan = [0, t_final];
-% 
-% % ---- Harmonic Perturbation ----
-%     elseif SIM.SimMode == 2
-%         SIM.f     = SIM.freq / (2*pi);    % [cycles s^-1],  Time to complete a period or a full sinusoid cycle
-%         SIM.f_s   = (2*SIM.f)*20;         % [samples s^-1], Based on Nyquist sampling theory (minimum is 2*f)
-%         t_sim     = SIM.N_cycles / SIM.f; % [s],            Time required for N_cycles of sinusoidal curves
-%         N_samples = SIM.f_s*t_sim;        % [samples],      Number of samples total
-%         del_time  = t_sim / N_samples;    % [s sample^-1],  Time between each sample %%%%%%% is this also 1/f_s??????????
-% 
-%         sin_time_vector = 0 : del_time : (t_sim-del_time);                     % Vector of time spaces
-%         sin_time_vector = sin_time_vector + SIM.initial_offset; % Add the initial offset
-%         if SIM.initial_offset == 0
-%             SIM.tspan = sin_time_vector;                        % Overall simulation vector
-%         else
-%             SIM.tspan = [0, sin_time_vector];                   % Overall simulation vector
-%         end
-% 
-% % ---- State Space EIS ----
-%         % No t_span needed for this mode
-% 
-% % ---- Known BC Profile Controller ----
-%     elseif SIM.SimMode == 4
-%         % Determine inside RunSimulation from MO_List
-% 
-% % ---- MOO Controller ----
-%     elseif SIM.SimMode == 5
-%         % Determine inside RunSimulation from MO_List
-% 
-% % ---- Manual Current Profile ----
-%     elseif SIM.SimMode == 7 % Manual Current Profile
-%         % Determine inside RunSimulation from MO_List
-% 
-% % ---- PRBS ----
-%     elseif SIM.SimMode == 8 
-%         SIM.tspan = [0, SIM.profile_time(end)];
-% 
-% % ---- EIS from Stitching PRBS ----
-%     elseif SIM.SimMode == 9
-%         % SIM.tspan = [0, SIM.profile_time(end)];
-% 
-% % ---- EIS Ho-Kalman ----
-%     elseif SIM.SimMode == 10
-%         SIM.tspan = [0, SIM.profile_time(end)];
-%     end
