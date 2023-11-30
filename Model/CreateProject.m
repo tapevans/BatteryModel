@@ -123,7 +123,7 @@ clear all; close all; clc;
     % C_rates      = -(1:5); 
     % C_rates      = [1/20]; 
     % C_rates      = [1/20 -1/20]; 
-    % C_rates      = [-1/4];
+    C_rates      = [-1/4];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
     % C_rates      = [-1/20  -1 -2]; 
 
@@ -200,7 +200,7 @@ clear all; close all; clc;
         
 
 % ---- PRBS ---- 
-    doPRBS = 1;
+    doPRBS = 0;
         PRBS_Amp     = 1;  % [A/m^2], Amplitude of PRBS Signal
         PRBS_SOC     = 50; % [%],     State of Charge
         PRBS_Tswitch = 1;  % [s],     Switching Time

@@ -108,13 +108,13 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     %     T_s_vec = logspace(T_s_min,T_s_max,N_t_s);
     %     Ts = T_s_vec(25);   % [s], discrete time sampling rate
 
-    FLAG.AddInputNoise = 1;
+    FLAG.AddInputNoise = 0;
         if FLAG.AddInputNoise
             SIM.Ts      = 1; % [s], Sampling rate of the DT system
             SIM.Q_input = 0; % [-], Input noise covariance matrix
         end
     
-    FLAG.SaveSolnDiscreteTime = 1; % 1 if evaluate the ode soln at a given sampling rate
+    FLAG.SaveSolnDiscreteTime = 0; % 1 if evaluate the ode soln at a given sampling rate
         if FLAG.AddInputNoise % Force DT save
             FLAG.SaveSolnDiscreteTime = 1;
         end
@@ -137,9 +137,9 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     
     FLAG.SaveSystemForEst = 0; % 1, if save the system to be used in the estimator ONLY FOR SS EIS (SimMode 3)
     
-    FLAG.doPostProcessing = 0;   % 1 if the postprocessing function is performed after a simulation completes
+    FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
         FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
-    FLAG.Plot             = 0;   % 1 if the results plot immediately
+    FLAG.Plot             = 1;   % 1 if the results plot immediately
         FLAG.PlotUserCurrentProfiles = 0;
 
 
