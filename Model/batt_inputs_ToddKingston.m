@@ -360,9 +360,10 @@
     EL.rho        = 75;         % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
     EL.c_p        = 1830;       % [J kg^-1 K^-1], Specific heat capacity of electrolyte
     EL.lambda     = 400;        % [W m^-1 K^-1],  Thermal conductivity of electrolyte %sciencedirect.com/science/article/pii/S0735193317300179
-    EL.S_T        = -1.5;        % [-],            Soret coefficient
-    % EL.Beta       = -0.75e-3;   % [V/K],          Seebeck coefficient
-    EL.Beta       = -1e-3;   % [V/K],          Seebeck coefficient
+    EL.S_T        = 1.0;        % [-],            Soret coefficient
+    EL.Beta       = -0.75e-3;   % [V/K],          Seebeck coefficient
+    % EL.S_T        = -1.5;        % [-],            Soret coefficient
+    % EL.Beta       = -1e-3;   % [V/K],          Seebeck coefficient
     EL.dmudc      = 1.0e7;      % change in chemical potential as a function of change in concentration
     
 
