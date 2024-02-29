@@ -7,7 +7,7 @@
     % Data taken from Verma et al. "Galvanostatic Intermittent 
     % Titration and Performance Based Analysis of 
     % LiNi0.5Co0.2Mn0.3O2 Cathode", J. Electrochem. Soc.
-function [D_o] = D_o_NMC532_HZ(X , T)
+function [D_o] = D_o_NMC532_NREL(X , T)
     RR  = 8314.472; % [J kmol^-1 K^-1], Gas Constant
 
     % T       = SV(P.T , :);

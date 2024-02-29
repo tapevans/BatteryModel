@@ -36,14 +36,16 @@ function [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,F
 
 %% Pointers for Tracked Variables
     i = 1;
-    P.T         = i; i = i + 1;
-    P.del_phi   = i; i = i + 1; % This row will be del_phi for the AN and CA, then phi_el for the SEP for initialization. Inside fsolve and GovnEqns, phi_el and del_phi are restructured properly.
-    P.phi_ed    = i; i = i + 1;
-    P.V_1       = i; i = i + 1;
-    P.V_2       = i; i = i + 1;
-    P.i_PS      = i; i = i + 1;
-    P.C_Liion   = i; i = i + 1;
-    P.C_Li      = i; i = i + 1;
+    P.T       = i; i = i + 1;
+    P.del_phi = i; i = i + 1; % This row will be del_phi for the AN and CA, then phi_el for the SEP for initialization. Inside fsolve and GovnEqns, phi_el and del_phi are restructured properly.
+    P.phi_ed  = i; i = i + 1;
+    P.V_1     = i; i = i + 1;
+    P.V_2     = i; i = i + 1;
+    P.i_PS    = i; i = i + 1;
+    P.CTRGrow = i; i = i + 1; % Charge Transfer Resistence Growth
+    P.NPartic = i; i = i + 1;
+    P.C_Liion = i; i = i + 1;
+    P.C_Li    = i; i = i + 1;
     
 	P.C_Li_surf_AN  = P.C_Li + N.N_R_AN - 1;
 	P.C_Li_surf_CA  = P.C_Li + N.N_R_CA - 1;
@@ -122,19 +124,26 @@ end
     N.N_SV_SEP = N.N_SV_SEP;
     N.N_SV_CA  = N.N_SV_nR + N.N_R_CA;
 
-    N.N_SV_max = max([N.N_SV_AN , N.N_SV_SEP , N.N_SV_CA]);
-
     N.N_SV_AN_tot  = N.N_CV_AN  * N.N_SV_AN;
     N.N_SV_SEP_tot = N.N_CV_SEP * N.N_SV_SEP;
     N.N_SV_CA_tot  = N.N_CV_CA  * N.N_SV_CA;
 
     N.N_SV_tot = N.N_SV_AN_tot + N.N_SV_SEP_tot + N.N_SV_CA_tot;
-    N.N_CV_tot = N.N_CV_AN + N.N_CV_SEP + N.N_CV_CA;
+    N.N_CV_tot = N.N_CV_AN     + N.N_CV_SEP     + N.N_CV_CA;
 
 % Regional Indexing 
-    N.CV_Region_AN  =                          1 : N.N_CV_AN;              % AN CVs
+    N.CV_Region_AN  =                          1 : N.N_CV_AN;              % AN  CVs
     N.CV_Region_SEP = N.N_CV_AN              + 1 : N.N_CV_AN + N.N_CV_SEP; % SEP CVs
-    N.CV_Region_CA  = N.N_CV_AN + N.N_CV_SEP + 1 : N.N_CV_tot;             % CA CVs
+    N.CV_Region_CA  = N.N_CV_AN + N.N_CV_SEP + 1 : N.N_CV_tot;             % CA  CVs
+
+    N.N_SV_max = max([N.N_SV_AN , N.N_SV_SEP , N.N_SV_CA]);
+
+%%%%%%%%%%%%% Testing
+onlyAtSep = zeros(1,N.N_CV_tot);
+onlyAtSep(N.CV_Region_AN(end)) = 1;
+onlyAtSep(N.CV_Region_CA(1))   = 1;
+SIM.onlyAtSep = onlyAtSep;
+%%%%%%%%%%%%% Testing
 
 
 %% Numerical Discretization
@@ -158,9 +167,9 @@ end
         SIM.x_vec      = [AN.x_vec     , SEP.x_vec            , CA.x_vec            ]; % [m], Position of the control volume's center
         SIM.x_half_vec = [AN.x_half_vec, SEP.x_half_vec(2:end), CA.x_half_vec(2:end)]; % [m], Position of the control volume's edges
         
-        diff = SIM.x_vec(2:end) - SIM.x_vec(1:end-1);
-        SIM.diff_CV_x_vec  = [AN.del_x/2   , diff                 , CA.del_x/2          ]; % [m], Distance between the control volume's center on either side of the interface
-        SIM.del_x_vec = [AN.del_x * ones(1,N.N_CV_AN) , SEP.del_x * ones(1,N.N_CV_SEP) , CA.del_x * ones(1,N.N_CV_CA)];
+        diff                 = SIM.x_vec(2:end) - SIM.x_vec(1:end-1);
+        SIM.diff_CV_x_vec    = [AN.del_x/2   , diff                 , CA.del_x/2          ]; % [m], Distance between the control volume's center on either side of the interface
+        SIM.del_x_vec        = [AN.del_x * ones(1,N.N_CV_AN) , SEP.del_x * ones(1,N.N_CV_SEP) , CA.del_x * ones(1,N.N_CV_CA)];
         SIM.del_x_vec_halved = 0.5*SIM.del_x_vec;
 
         SIM.interp_x_interface = nan(1,N.N_CV_tot+1);
@@ -170,33 +179,33 @@ end
     
 % Del-r of each region
     % ---- Anode ----
-        AN.del_r = AN.r_p/(N.N_R_AN);
-        AN.r_vec = (AN.del_r/2):AN.del_r:AN.r_p-(AN.del_r/2);
-        AN.r_half_vec = 0:AN.del_r:AN.r_p;
+        AN.del_r         = AN.r_p/(N.N_R_AN);
+        AN.r_vec         = (AN.del_r/2):AN.del_r:AN.r_p-(AN.del_r/2);
+        AN.r_half_vec    = 0:AN.del_r:AN.r_p;
         AN.r_half_vec_sq = AN.r_half_vec.^2;
-        diff = AN.r_vec(2:end) - AN.r_vec(1:end-1);
-        AN.del_CV_r_vec = [nan diff nan];
+        diff             = AN.r_vec(2:end) - AN.r_vec(1:end-1);
+        AN.del_CV_r_vec  = [nan diff nan];
     
     % ---- Cathode ----
-        CA.del_r = CA.r_p/(N.N_R_CA);
-        CA.r_vec = (CA.del_r/2):CA.del_r:CA.r_p-(CA.del_r/2);
-        CA.r_half_vec = 0:CA.del_r:CA.r_p;
+        CA.del_r         = CA.r_p/(N.N_R_CA);
+        CA.r_vec         = (CA.del_r/2):CA.del_r:CA.r_p-(CA.del_r/2);
+        CA.r_half_vec    = 0:CA.del_r:CA.r_p;
         CA.r_half_vec_sq = CA.r_half_vec.^2;
-        diff = CA.r_vec(2:end) - CA.r_vec(1:end-1);
-        CA.del_CV_r_vec = [nan diff nan];
+        diff             = CA.r_vec(2:end) - CA.r_vec(1:end-1);
+        CA.del_CV_r_vec  = [nan diff nan];
 
-    AN_del_CV_r_vec_repmat  = repmat((AN.del_CV_r_vec.^(-1))' , 1 , N.N_CV_AN);
-    CA_del_CV_r_vec_repmat  = repmat((CA.del_CV_r_vec.^(-1))' , 1 , N.N_CV_CA);
-    SIM.del_CV_r_inv_mat = NaN(N.N_R_max+1 , N.N_CV_tot);
+     AN_del_CV_r_vec_repmat = repmat((AN.del_CV_r_vec.^(-1))' , 1 , N.N_CV_AN);
+     CA_del_CV_r_vec_repmat = repmat((CA.del_CV_r_vec.^(-1))' , 1 , N.N_CV_CA);
+    SIM.del_CV_r_inv_mat    = NaN(N.N_R_max+1 , N.N_CV_tot);
     SIM.del_CV_r_inv_mat(1:N.N_R_AN+1 , N.CV_Region_AN ) = AN_del_CV_r_vec_repmat;
     SIM.del_CV_r_inv_mat(1:N.N_R_CA+1 , N.CV_Region_CA ) = CA_del_CV_r_vec_repmat;
 
 
 %% Various Needed Calculations
 % Electrolyte volume fraction
-    AN.eps_el   = 1 - AN.eps_ed - AN.eps_b; % Electrolyte Volume Fraction in the anode
+     AN.eps_el  = 1 - AN.eps_ed - AN.eps_b; % Electrolyte Volume Fraction in the anode
     SEP.eps_el  =    SEP.eps;               % Electrolyte Volume Fraction in the separator
-    CA.eps_el   = 1 - CA.eps_ed - CA.eps_b; % Electrolyte Volume Fraction in the cathode
+     CA.eps_el  = 1 - CA.eps_ed - CA.eps_b; % Electrolyte Volume Fraction in the cathode
     SEP.eps_sep = 1 - SEP.eps_el;           % Separator material Volume Fraction
     SIM.eps_el_vec = [AN.eps_el * ones(1,N.N_CV_AN) , SEP.eps_el * ones(1,N.N_CV_SEP) , CA.eps_el * ones(1,N.N_CV_CA)];
     SIM.MassFluxPreCalcResistor = SIM.eps_el_vec ./ SIM.del_x_vec_halved;
@@ -301,6 +310,41 @@ end
             CA.m_thermal = (SIM.Temp_CA_BC - SIM.Temp_init)/SIM.RampThermalGradientTime;
     end
 
+% Soret and Seebeck Coefficient Initialization
+    if ~FLAG.Soret || ~FLAG.OffDiagOnsager
+        EL.S_T = 0.0;
+    end
+    if ~FLAG.Seebeck || ~FLAG.OffDiagOnsager
+        EL.Beta = 0;
+    end
+
+
+%% Degradation Calcs
+% CTRG
+    % Set up constant vector for specific CV, Rates, and overall
+    %%%% Very basic at the moment
+    if FLAG.CTRGrowth
+        SIM.CTRG_cons_vec = [AN.ChgTranResGrowthRate*ones(1,N.N_CV_AN) , zeros(1 , N.N_CV_SEP ) , CA.ChgTranResGrowthRate*ones(1,N.N_CV_CA)];
+        % Decide which CV 
+            % SIM.CTRG_cons_vec =  ones(1,N.N_CV_tot);
+    else
+        SIM.CTRG_cons_vec = zeros(1,N.N_CV_tot);
+    end
+    SIM.R_SEI_0     = [AN.R_SEI*ones(1,N.N_CV_AN) , zeros(1 , N.N_CV_SEP ) , CA.R_SEI*ones(1,N.N_CV_CA)];
+    SIM.R_SEI_0_inv = SIM.R_SEI_0.^(-1);
+
+% AM Loss
+    %%%% Very basic at the moment
+    if FLAG.AMLoss
+        SIM.AML_cons_vec = -[AN.AMLossRate*ones(1,N.N_CV_AN) , zeros(1 , N.N_CV_SEP ) , CA.AMLossRate*ones(1,N.N_CV_CA)];
+        % Decide which CV 
+            % SIM.AML_cons_vec =  ones(1,N.N_CV_tot);
+    else
+        SIM.AML_cons_vec = zeros(1,N.N_CV_tot);
+    end
+
+% Plating
+
 
 %% Geometry Calcs
 % A_c       ~ cross-sectional area in the x-direction
@@ -321,10 +365,10 @@ end
 
 % ---- Separator ----
     if SIM.cell_geo == 'p'
-        SEP.A_c  = SEP.del_z * SEP.del_y;
+        SEP.A_c       = SEP.del_z * SEP.del_y;
         SEP.A_outside = (2*SEP.del_z + 2*SEP.del_y)*SEP.del_x;
     elseif SIM.cell_geo == 'c'
-        SEP.A_c  = pi * (SEP.diam / 2)^2;
+        SEP.A_c       = pi * (SEP.diam / 2)^2;
         SEP.A_outside = pi *  SEP.diam * SEP.del_x;
     end
     SEP.Vol  = SEP.A_c * SEP.L;
@@ -332,10 +376,10 @@ end
 
 % ---- Cathode ----
     if SIM.cell_geo == 'p'
-        CA.A_c  = CA.del_z * CA.del_y;
+        CA.A_c       = CA.del_z * CA.del_y;
         CA.A_outside = (2*CA.del_z + 2*CA.del_y)*CA.del_x;
     elseif SIM.cell_geo == 'c'
-        CA.A_c  = pi * (CA.diam / 2)^2;
+        CA.A_c       = pi * (CA.diam / 2)^2;
         CA.A_outside = pi *  CA.diam * CA.del_x;
     end
     CA.Vol  = CA.A_c * CA.L;
@@ -393,8 +437,14 @@ end
     
     % Vectorize
         SIM.A_surf_CV_vec = [AN.A_surf_CV*ones(1,N.N_CV_AN),...
-                                        zeros(1,N.N_CV_SEP),...
+                                         zeros(1,N.N_CV_SEP),...
                              CA.A_surf_CV*ones(1,N.N_CV_CA)];
+
+        SIM.A_surf_CV_vec_inv = SIM.A_surf_CV_vec.^(-1);
+
+        SIM.A_s_CV_vec = [AN.A_s*ones(1,N.N_CV_AN),...
+                                zeros(1,N.N_CV_SEP),...
+                          CA.A_s*ones(1,N.N_CV_CA)];
     
 % Radial Volume
     % ---- Anode ----
@@ -465,7 +515,9 @@ if isempty(SIM.VoltageMax)
 
 else
     % Capacity Ratio
-            z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
+        z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
+        z_known = 0.8613;  %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+        z       = z_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
 
     %% Mole Fraction Calculation
     % x and y are the anode and cathode mole fractions respectively
@@ -483,11 +535,13 @@ else
     
     % y-intercept
         y_intcep = F_y + z * F_x;
+        y_intcep_known = 0.8728;         %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+        y_intcep       = y_intcep_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
     
     % y mole fraction at x limits
-        A_x = 0;
+        A_x =  0;
         A_y = -z*A_x + y_intcep;
-        B_x = 1;
+        B_x =  1;
         B_y = -z*B_x + y_intcep;
     
     % Mole fractions at V_max
@@ -530,6 +584,7 @@ end
 %% Determine Minimum Parameters
     SIM.A_c      = min( AN.A_c, CA.A_c );
     SIM.Cell_Cap = min( AN.Cap, CA.Cap );
+    SIM.Cell_Cap = 74.6/1000; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
 
 
 %% User Time Vector and Current
@@ -649,19 +704,23 @@ end
         index_offset = (i-1)*N.N_SV_AN; 
         CV_offset    = i;
         % Temp
-            SV_IC(index_offset + P.T)       =  Temp_vec(CV_offset);
+            SV_IC(index_offset + P.T)          =  Temp_vec(CV_offset);
         % delta phi
-            SV_IC(index_offset + P.del_phi) =  voltage_ini_an;
+            SV_IC(index_offset + P.del_phi)    =  voltage_ini_an;
         % phi_ed
-            SV_IC(index_offset + P.phi_ed)  =  0;
+            SV_IC(index_offset + P.phi_ed)     =  0;
         % V_1
-            SV_IC(index_offset + P.V_1)     = -voltage_ini_an;
+            SV_IC(index_offset + P.V_1)        = -voltage_ini_an;
         % V_2
-            SV_IC(index_offset + P.V_2)     = -voltage_ini_an;
+            SV_IC(index_offset + P.V_2)        = -voltage_ini_an;
         % i_PS
-            SV_IC(index_offset + P.i_PS)    =  0;
+            SV_IC(index_offset + P.i_PS)       =  0;
+        % Chg Trans Resis Growth
+            SV_IC(index_offset + P.CTRGrow)    =  0;
+        % N Particles
+            SV_IC(index_offset + P.NPartic)    =  AN.Np_CV;
         % C_Li^+
-            SV_IC(index_offset + P.C_Liion) =  EL.C; 
+            SV_IC(index_offset + P.C_Liion)    =  EL.C; 
         % C_Li
             for j = 1:N.N_R_AN
                 SV_IC(index_offset+P.C_Li+j-1) = concen_ini_an;
@@ -673,11 +732,11 @@ end
         index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
         CV_offset    = i + N.N_CV_AN;
         % Temp
-            SV_IC(index_offset + P.SEP.T)           =  Temp_vec(CV_offset);
+            SV_IC(index_offset + P.SEP.T)       =  Temp_vec(CV_offset);
         % phi_el
-            SV_IC(index_offset + P.SEP.phi_el)      = -voltage_ini_an;
+            SV_IC(index_offset + P.SEP.phi_el)  = -voltage_ini_an;
         % C_Li^+
-            SV_IC(index_offset + P.SEP.C_Liion)     =  EL.C;
+            SV_IC(index_offset + P.SEP.C_Liion) =  EL.C;
     end
     
 % ---- Cathode ----
@@ -685,22 +744,27 @@ end
         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
         CV_offset    = i + N.N_CV_AN + N.N_CV_SEP;
         % Temp
-            SV_IC(index_offset + P.T)       =  Temp_vec(CV_offset);
+            SV_IC(index_offset + P.T)          =  Temp_vec(CV_offset);
         % delta phi
-            SV_IC(index_offset + P.del_phi) =  voltage_ini_ca;
+            SV_IC(index_offset + P.del_phi)    =  voltage_ini_ca;
         % phi_ed
-            SV_IC(index_offset + P.phi_ed)  =  voltage_ini_cell;
+            SV_IC(index_offset + P.phi_ed)     =  voltage_ini_cell;
         % V_1
-            SV_IC(index_offset + P.V_1)     = -voltage_ini_an;
+            SV_IC(index_offset + P.V_1)        = -voltage_ini_an;
         % V_2
-            SV_IC(index_offset + P.V_2)     = -voltage_ini_an;
+            SV_IC(index_offset + P.V_2)        = -voltage_ini_an; 
         % i_PS
-            SV_IC(index_offset + P.i_PS)    =  0; 
+            SV_IC(index_offset + P.i_PS)       =  0; 
+        % Chg Trans Resis Growth
+            SV_IC(index_offset + P.CTRGrow)    =  0;
+        % N Particles
+            SV_IC(index_offset + P.NPartic)    =  CA.Np_CV;
         % C_Li^+    
-            SV_IC(index_offset + P.C_Liion) =  EL.C;
+            SV_IC(index_offset + P.C_Liion)    =  EL.C;
         % C_Li
             for j = 1:N.N_R_CA
-                SV_IC(index_offset+N.N_SV_nR+j) = concen_ini_ca;
+                % SV_IC(index_offset+N.N_SV_nR+j) = concen_ini_ca;
+                SV_IC(index_offset+P.C_Li+j-1) = concen_ini_ca;
             end
     end
 
@@ -708,6 +772,12 @@ end
 %% Save the Equilibrium Values of the Output
     SIM.OutputAtEquil = SIM.OutputMatrix*SV_IC;
     SIM.SV_IC_Static  = SV_IC;
+
+
+%% SV Index 1D to 2D
+    SV = SV1Dto2D(SV_IC , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
+    N.IDX_1Dto2D = find(~isnan(SV));
+    SIM.SV_nan   = nan(N.N_SV_max, N.N_CV_tot);
 
 
 %% Property Inverse Calcs
@@ -744,12 +814,85 @@ end
 
     SIM.diff_CV_x_vec_inv    = SIM.diff_CV_x_vec.^(-1);
     SIM.del_x_vec_halved_inv = SIM.del_x_vec_halved.^(-1);
+    SIM.dVol_inv             = SIM.CV_vec.^(-1);
+
+
+%% Solve for better Initial conditions for C_Liion
+    if FLAG.InitialThermalGradient
+        % SV = SV1Dto2D(SV_IC , N , P , FLAG);
+        SV = SV1Dto2D_short(SV_IC, SIM.SV_nan, N.IDX_1Dto2D);
+        if ( FLAG.CONSTANT_PROPS_FROM_HANDLES || FLAG.VARIABLE_PROPS_FROM_HANDLES)
+            [T, ~, ~, ~, ~, ~, ~, ~, Ce, ~, ~, ~, X_AN, X_CA, ~, ~, ~, ~,~,~] = extractSV(SV,P.T, P.del_phi, P.phi_ed, P.phi_el, P.V_1, P.V_2, P.i_PS, P.CTRGrow, P.NPartic, P.C_Liion, P.C_Li, P.C_Li_surf_AN, P.C_Li_surf_CA, N.CV_Region_AN, N.CV_Region_CA, N.N_R_max, AN.C_Li_max_inv, CA.C_Li_max_inv, EL.C_inv, CONS.R);
+            props = getProps( Ce, T, X_AN,  X_CA, FLAG.VARIABLE_kappa, ...
+                            FLAG.VARIABLE_D_Liion, FLAG.VARIABLE_activity, FLAG.VARIABLE_tf_num, FLAG.VARIABLE_D_o_AN, FLAG.VARIABLE_D_o_CA, FLAG.Bruggeman,...
+                            P.kappa, P.D_o_Li_ion, P.activity, P.tf_num, P.D_o, ...
+                            N.N_R_AN, N.N_R_CA, N.CV_Region_AN, N.CV_Region_CA, ...
+                            CONS.BRUG, ...
+                            AN.D_oHandle, CA.D_oHandle, ...
+                            PROPS, EL.kappaHandle, EL.D_o_Li_ionHandle, EL.ActivityHandle, EL.tf_numHandle); 
+            if FLAG.CONSTANT_PROPS_FROM_HANDLES
+                % Update PROPS to use initial conditions
+                PROPS = props;
+            end
+        else
+           props = PROPS; 
+        end
+    
+    % Set i_user
+        i_user = 0;
+    
+    % C_Liion Vector
+        C_Liion_guess = linspace(EL.C - 1/2 , EL.C + 1/2 , N.N_CV_tot);
+    
+    % Total Initial Mass in the Elyte
+        Vol_el = [ AN.dVol_el*ones(1 , N.N_CV_AN) , SEP.dVol_el*ones(1 , N.N_CV_SEP) , CA.dVol_el*ones(1 , N.N_CV_CA)];
+        C_init = SV(P.C_Liion,:);
+        m_0    = C_init*Vol_el';
+        
+    % Solve for better C_Liion values
+        CLiion_soln = fsolve(@(CLiion) C_LiionFsolveFun(CLiion,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,i_user,props,m_0,Vol_el) , C_Liion_guess , SIM.fsolve_options);
+    
+    % % Plot Results %%%!!!!!!! These were actually very insightful
+    %     figure
+    %     plot(SIM.x_vec , CLiion_soln)
+    %     % figure
+    %     % plot(SIM.x_vec , SV(P.T,:))
+
+    
+    %% Fix C_Liion for Initial State Vector
+    % ---- Anode ----
+        for i = 1:N.N_CV_AN
+            index_offset = (i-1)*N.N_SV_AN; 
+            idx_CV       = i;
+            % C_Li^+
+                SV_IC(index_offset + P.C_Liion) =      CLiion_soln(idx_CV);
+        end
+    
+    % ---- Separator ----
+        for i = 1:N.N_CV_SEP
+            index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
+            idx_CV       = i + N.N_CV_AN;
+            % C_Li^+
+                SV_IC(index_offset + P.SEP.C_Liion) =  CLiion_soln(idx_CV);
+        end
+    
+    % ---- Cathode ----
+        for i = 1:N.N_CV_CA
+            index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
+            idx_CV       = i + N.N_CV_AN + N.N_CV_SEP;
+            % C_Li^+    
+                SV_IC(index_offset + P.C_Liion) =      CLiion_soln(idx_CV);
+        end
+    
+        SIM.SV_IC = SV_IC;
+    end
 
 
 %% Solve for better Initial conditions for phi
-    SV = SV1Dto2D(SV_IC , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
+    % SV = SV1Dto2D(SV_IC , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
+    SV = SV1Dto2D_short(SV_IC, SIM.SV_nan, N.IDX_1Dto2D);
     if ( FLAG.CONSTANT_PROPS_FROM_HANDLES || FLAG.VARIABLE_PROPS_FROM_HANDLES)
-        [T, ~, ~, ~, ~, ~, ~, Ce, ~, ~, ~, X_AN, X_CA, ~, ~, ~, ~] = extractSV(SV,P.T, P.del_phi, P.phi_ed, P.phi_el, P.V_1, P.V_2, P.i_PS, P.C_Liion, P.C_Li, P.C_Li_surf_AN, P.C_Li_surf_CA, N.CV_Region_AN, N.CV_Region_CA, N.N_R_max, AN.C_Li_max_inv, CA.C_Li_max_inv, EL.C_inv, CONS.R);
+        [T, ~, ~, ~, ~, ~, ~, ~, Ce, ~, ~, ~, X_AN, X_CA, ~, ~, ~, ~,~,~] = extractSV(SV,P.T, P.del_phi, P.phi_ed, P.phi_el, P.V_1, P.V_2, P.i_PS, P.CTRGrow, P.NPartic, P.C_Liion, P.C_Li, P.C_Li_surf_AN, P.C_Li_surf_CA, N.CV_Region_AN, N.CV_Region_CA, N.N_R_max, AN.C_Li_max_inv, CA.C_Li_max_inv, EL.C_inv, CONS.R);
         props = getProps( Ce, T, X_AN,  X_CA, FLAG.VARIABLE_kappa, ...
                         FLAG.VARIABLE_D_Liion, FLAG.VARIABLE_activity, FLAG.VARIABLE_tf_num, FLAG.VARIABLE_D_o_AN, FLAG.VARIABLE_D_o_CA, FLAG.Bruggeman,...
                         P.kappa, P.D_o_Li_ion, P.activity, P.tf_num, P.D_o, ...
@@ -867,9 +1010,9 @@ end
 
 
 %% SV Index 1D to 2D
-    SV = SV1Dto2D(SV_IC , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
-    N.IDX_1Dto2D = find(~isnan(SV));
-    SIM.SV_nan   = nan(N.N_SV_max, N.N_CV_tot);
+%     SV = SV1Dto2D(SV_IC , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
+%     N.IDX_1Dto2D = find(~isnan(SV));
+%     SIM.SV_nan   = nan(N.N_SV_max, N.N_CV_tot);
 
 
 %% Mass Matrix
@@ -880,19 +1023,23 @@ end
     for i = 1:N.N_CV_AN
         index_offset = (i-1)*N.N_SV_AN;
         % Temp
-            M(index_offset+P.T       , index_offset+P.T )        =  AN.rho_eff * AN.c_p_eff * AN.dVol; 
+            M(index_offset+P.T       , index_offset+P.T       ) =  AN.rho_eff * AN.c_p_eff * AN.dVol; 
         % del_phi
-            M(index_offset+P.del_phi , index_offset+P.del_phi )  =  AN.C_dl;
+            M(index_offset+P.del_phi , index_offset+P.del_phi ) =  AN.C_dl;
         % phi_ed 
-            M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
+            M(index_offset+P.phi_ed  , index_offset+P.phi_ed  ) =  sim_cap; 
         % V_1
-            M(index_offset+P.V_1     , index_offset+P.V_1    )   =  sim_cap; 
+            M(index_offset+P.V_1     , index_offset+P.V_1     ) =  sim_cap; 
         % V_2
-            M(index_offset+P.V_2     , index_offset+P.V_2    )   =  sim_cap; 
+            M(index_offset+P.V_2     , index_offset+P.V_2     ) =  sim_cap; 
         % i_PS
-            M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
+            M(index_offset+P.i_PS    , index_offset+P.i_PS    ) =  sim_cap;
+        % Chg Trans Resis Growth
+            M(index_offset+P.CTRGrow , index_offset+P.CTRGrow ) =  1;
+        % N Particles
+            M(index_offset+P.NPartic , index_offset+P.NPartic ) =  1;
         % C_Li^+
-            M(index_offset+P.C_Liion , index_offset+P.C_Liion)   =  AN.eps_el; 
+            M(index_offset+P.C_Liion , index_offset+P.C_Liion ) =  AN.eps_el; 
         % C_Li
             for j = 1:N.N_R_AN
                 M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
@@ -903,30 +1050,34 @@ end
     for i = 1:N.N_CV_SEP
         index_offset = (i-1)*N.N_SV_SEP + N.N_SV_AN_tot;
         % Temp
-            M(index_offset+P.SEP.T       , index_offset+P.SEP.T )        =  SEP.rho_eff * SEP.c_p_eff * SEP.dVol;
+            M(index_offset+P.SEP.T       , index_offset+P.SEP.T       ) =  SEP.rho_eff * SEP.c_p_eff * SEP.dVol;
         % phi_el
-            M(index_offset+P.SEP.phi_el  , index_offset+P.SEP.phi_el )   =  sim_cap;
+            M(index_offset+P.SEP.phi_el  , index_offset+P.SEP.phi_el  ) =  sim_cap;
         % C_Li^+
-            M(index_offset+P.SEP.C_Liion , index_offset+P.SEP.C_Liion )  =  SEP.eps_el; 
+            M(index_offset+P.SEP.C_Liion , index_offset+P.SEP.C_Liion ) =  SEP.eps_el; 
     end
 
 % ---- Cathode ----
     for i = 1:N.N_CV_CA
         index_offset = (i-1)*N.N_SV_CA + N.N_SV_AN_tot + N.N_SV_SEP_tot;
         % Temp
-            M(index_offset+P.T       , index_offset+P.T )        =  CA.rho_eff * CA.c_p_eff * CA.dVol;
+            M(index_offset+P.T       , index_offset+P.T       ) =  CA.rho_eff * CA.c_p_eff * CA.dVol;
         % del_phi
-            M(index_offset+P.del_phi , index_offset+P.del_phi )  =  CA.C_dl;
+            M(index_offset+P.del_phi , index_offset+P.del_phi ) =  CA.C_dl;
         % phi_ed
-            M(index_offset+P.phi_ed  , index_offset+P.phi_ed )   =  sim_cap; 
+            M(index_offset+P.phi_ed  , index_offset+P.phi_ed  ) =  sim_cap; 
         % V_1
-            M(index_offset+P.V_1     , index_offset+P.V_1    )   =  sim_cap; 
+            M(index_offset+P.V_1     , index_offset+P.V_1     ) =  sim_cap; 
         % V_2
-            M(index_offset+P.V_2     , index_offset+P.V_2    )   =  sim_cap; 
+            M(index_offset+P.V_2     , index_offset+P.V_2     ) =  sim_cap; 
         % i_PS
-            M(index_offset+P.i_PS    , index_offset+P.i_PS   )   =  sim_cap;
+            M(index_offset+P.i_PS    , index_offset+P.i_PS    ) =  sim_cap;
+        % Chg Trans Resis Growth
+            M(index_offset+P.CTRGrow , index_offset+P.CTRGrow ) =  1;
+        % N Particles
+            M(index_offset+P.NPartic , index_offset+P.NPartic ) =  1;
         % C_Li^+
-            M(index_offset+P.C_Liion , index_offset+P.C_Liion )  =  CA.eps_el; 
+            M(index_offset+P.C_Liion , index_offset+P.C_Liion ) =  CA.eps_el; 
         % C_Li
             for j = 1:N.N_R_CA
                 M(index_offset+P.C_Li+j-1 , index_offset+P.C_Li+j-1) = 1;
@@ -979,6 +1130,10 @@ end
             idx_algb(end+1) = index_offset + P.V_2;
         % i_PS
             idx_algb(end+1) = index_offset + P.i_PS;
+        % Chg Trans Resis Growth
+            idx_diff(end+1) = index_offset + P.CTRGrow;
+        % N Particles
+            idx_diff(end+1) = index_offset + P.NPartic;
         % C_Li^+
             idx_diff(end+1) = index_offset + P.C_Liion;
         % C_Li
@@ -1017,6 +1172,10 @@ end
             idx_algb(end+1) = index_offset + P.V_2;
         % i_PS
             idx_algb(end+1) = index_offset + P.i_PS;
+        % Chg Trans Resis Growth
+            idx_diff(end+1) = index_offset + P.CTRGrow;
+        % N Particles
+            idx_diff(end+1) = index_offset + P.NPartic;
         % C_Li^+
             idx_diff(end+1) = index_offset + P.C_Liion;
         % C_Li
@@ -1033,11 +1192,12 @@ end
 
 
 %% Set up Jacobian here too (sparse)
-    if N.N_SV_tot == 855
-        data = load('JPattern_sparse855MatlabVaryProp.mat','JPattern_sparse');
-    elseif N.N_SV_tot == 355
-        data = load('JPattern_sparse355MatlabVaryProp.mat','JPattern_sparse');%%!!!!!!!!!!!!!!!
-    end
+    % if N.N_SV_tot == 855
+    %     data = load('JPattern_sparse855MatlabVaryProp.mat','JPattern_sparse');
+    % elseif N.N_SV_tot == 355
+    %     data = load('JPattern_sparse355MatlabVaryProp.mat','JPattern_sparse');%%!!!!!!!!!!!!!!!
+    % end
+    data = load('JPattern_sparse915MatlabVaryProp.mat','JPattern_sparse');
     SIM.JPattern = data.JPattern_sparse;
 
 

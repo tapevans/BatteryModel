@@ -70,23 +70,28 @@ if ~postProcessComplete
 
         %%%% (Later think about chemical potential energy)
         
-        phi_el       = zeros( N_t_steps , N.N_CV_tot );
-        phi_ed       = zeros( N_t_steps , N.N_CV_tot );
-        V_SEI        = zeros( N_t_steps , N.N_CV_tot );
         del_phi      = zeros( N_t_steps , N.N_CV_tot );
+        phi_ed       = zeros( N_t_steps , N.N_CV_tot );
+        phi_el       = zeros( N_t_steps , N.N_CV_tot );
+        V_1          = zeros( N_t_steps , N.N_CV_tot );
+        V_2          = zeros( N_t_steps , N.N_CV_tot );
+        % V_SEI        = zeros( N_t_steps , N.N_CV_tot );
         eta          = zeros( N_t_steps , N.N_CV_tot );
         i_Far        = zeros( N_t_steps , N.N_CV_tot );
         i_o          = zeros( N_t_steps , N.N_CV_tot );
         Eq           = zeros( N_t_steps , N.N_CV_tot );
+        CTR_growth   = zeros( N_t_steps , N.N_CV_tot );
+        N_Particles  = zeros( N_t_steps , N.N_CV_tot );
         
         i_el         = zeros( N_t_steps , N.N_CV_tot + 1);
         i_ed         = zeros( N_t_steps , N.N_CV_tot + 1);
-        Cap          = zeros( N_t_steps , 1 );
+        % Cap          = zeros( N_t_steps , 1 );
         
         C_Liion      = zeros( N_t_steps , N.N_CV_tot );
         C_Li_surf    = NaN(   N_t_steps , N.N_CV_tot );
         X_Li_surf    = NaN(   N_t_steps , N.N_CV_tot );
         C_Li         = NaN(   N.N_R_max , N.N_CV_tot, N_t_steps );
+        X_Li         = NaN(   N.N_R_max , N.N_CV_tot, N_t_steps );
         %     J_Liion     = zeros( N_t_steps , N.N_CV_tot + 1);
         % J_Li
         % props
@@ -159,6 +164,10 @@ if ~postProcessComplete
 
 %% Perform calcs and save results to their variable name ~ perform calcs that depend on props
     for i = 1:N_t_steps
+        % i
+        % if i == 556
+        %     i
+        % end
         % Go through the solution vector and reshape every SV to 2D (3D matrix)
         % SV_temp    = SV1Dto2D( SV_soln( idx(i) , : ) , N , P , FLAG );
         % SV( : , : , i ) = addPhiEl2SV(SV_temp,P,N);
@@ -167,29 +176,33 @@ if ~postProcessComplete
         SV( : , : , i ) = addPhiEl2SV(SV_temp, P.phi_ed, P.del_phi, N.CV_Region_SEP, N.N_CV_SEP);
 
         % Pull out each SV vector
-        [TemperatureK(i,:), del_phi(i,:), phi_ed(i,:), phi_el(i,:), V_1(i,:), V_2, i_PS, C_Liion(i,:), C_Li(:,:,i), C_Li_AN, C_Li_CA, X_AN, X_CA, Ce_norm, Ce_log, eta(i,:), RT_inv_vec] = extractSV(SV( : , : , i ),P.T, P.del_phi, P.phi_ed, P.phi_el, P.V_1, P.V_2, P.i_PS, P.C_Liion, P.C_Li, P.C_Li_surf_AN, P.C_Li_surf_CA, N.CV_Region_AN, N.CV_Region_CA, N.N_R_max, AN.C_Li_max_inv, CA.C_Li_max_inv, EL.C_inv, CONS.R);
+        [TemperatureK(i,:), ~, del_phi(i,:), phi_ed(i,:), phi_el(i,:), V_1(i,:), V_2(i,:), ~, C_Liion(i,:), C_Li(:,:,i), C_Li_AN, C_Li_CA, X_AN, X_CA, Ce_norm, ~, eta(i,:), RT_inv_vec , CTR_growth(i,:) , N_Particles(i,:)] = extractSV(SV( : , : , i ),P.T, P.del_phi, P.phi_ed, P.phi_el, P.V_1, P.V_2, P.i_PS, P.CTRGrow, P.NPartic, P.C_Liion, P.C_Li, P.C_Li_surf_AN, P.C_Li_surf_CA, N.CV_Region_AN, N.CV_Region_CA, N.N_R_max, AN.C_Li_max_inv, CA.C_Li_max_inv, EL.C_inv, CONS.R);
+
+        % R_SEI_growth( i , : ) = SV( P.R_SEI_grow , : , i );
+        % Cap_loss( i , : )     = SV( P.Cap_loss   , : , i );
+        % AM_loss( i , : )      = SV( P.AM_loss    , : , i );
         
         C_Li_surf( i , N.CV_Region_AN ) = C_Li_AN(end,:); 
         C_Li_surf( i , N.CV_Region_CA ) = C_Li_CA(end,:); 
 
-        X_Li    = C_Li(:,:,i);
-        X_Li( : , N.CV_Region_AN) = X_Li( : , N.CV_Region_AN) / AN.C_Li_max;
-        X_Li( : , N.CV_Region_CA) = X_Li( : , N.CV_Region_CA) / CA.C_Li_max;
+        X_Li(:,:,i) =  C_Li(:,:,i);
+        X_Li( : , N.CV_Region_AN, i) = X_Li( : , N.CV_Region_AN , i) / AN.C_Li_max;
+        X_Li( : , N.CV_Region_CA, i) = X_Li( : , N.CV_Region_CA , i) / CA.C_Li_max;
         
-        X_Li_surf( i , N.CV_Region_AN ) = X_Li( N.N_R_AN , N.CV_Region_AN);
-        X_Li_surf( i , N.CV_Region_CA ) = X_Li( N.N_R_CA , N.CV_Region_CA);
+        X_Li_surf( i , N.CV_Region_AN ) = X_Li( N.N_R_AN , N.CV_Region_AN , i);
+        X_Li_surf( i , N.CV_Region_CA ) = X_Li( N.N_R_CA , N.CV_Region_CA , i);
         
 
         % Get Properties
             if FLAG.VARIABLE_PROPS_FROM_HANDLES
                 % props = getProps( SV( : , : , i ) , AN , SEP, CA , EL , P , N , CONS , FLAG , PROPS);
-                props = getProps( C_Liion(i,:), TemperatureK(i,:), X_AN,  X_CA, FLAG.VARIABLE_kappa, ...
-                                FLAG.VARIABLE_D_Liion, FLAG.VARIABLE_activity, FLAG.VARIABLE_tf_num, FLAG.VARIABLE_D_o_AN, FLAG.VARIABLE_D_o_CA, FLAG.Bruggeman,...
-                                P.kappa, P.D_o_Li_ion, P.activity, P.tf_num, P.D_o, ...
-                                N.N_R_AN, N.N_R_CA, N.CV_Region_AN, N.CV_Region_CA, ...
-                                CONS.BRUG, ...
-                                AN.D_oHandle, CA.D_oHandle, ...
-                                PROPS, EL.kappaHandle, EL.D_o_Li_ionHandle, EL.ActivityHandle, EL.tf_numHandle); 
+                props = getProps( C_Liion(i,:), TemperatureK(i,:), X_AN,  X_CA, FLAG.VARIABLE_kappa                                                             , ...
+                                FLAG.VARIABLE_D_Liion, FLAG.VARIABLE_activity, FLAG.VARIABLE_tf_num, FLAG.VARIABLE_D_o_AN, FLAG.VARIABLE_D_o_CA, FLAG.Bruggeman , ...
+                                P.kappa, P.D_o_Li_ion, P.activity, P.tf_num, P.D_o                                                                              , ...
+                                N.N_R_AN, N.N_R_CA, N.CV_Region_AN, N.CV_Region_CA                                                                              , ...
+                                CONS.BRUG                                                                                                                       , ...
+                                AN.D_oHandle, CA.D_oHandle                                                                                                      , ...
+                                PROPS, EL.kappaHandle, EL.D_o_Li_ionHandle, EL.ActivityHandle, EL.tf_numHandle                                                       ); 
             else
                 props = PROPS;
             end
@@ -198,18 +211,21 @@ if ~postProcessComplete
             [sigma_vec, kappa_vec, tf_vec, activity_vec, D_o_Li_ion_vec, lambda_vec, D_o_vec] = extractProps(P.sigma, P.kappa, P.tf_num, P.activity, P.D_o_Li_ion, P.lambda_eff, P.D_o, props);
         
         % Calculate Value at Interface between CV
-            sigma_vec_interface    = getInterfaceXDir(sigma_vec         , SIM.interp_x_interface);
-            kappa_vec_interface    = getInterfaceXDir(kappa_vec         , SIM.interp_x_interface);
-            tf_vec_interface       = getInterfaceXDir(tf_vec            , SIM.interp_x_interface);
-            activity_vec_interface = getInterfaceXDir(activity_vec      , SIM.interp_x_interface);
-            T_interface            = getInterfaceXDir(TemperatureK(i,:) , SIM.interp_x_interface);
+            sigma_vec_interface      = getInterfaceXDir(sigma_vec         , SIM.interp_x_interface);
+            kappa_vec_interface      = getInterfaceXDir(kappa_vec         , SIM.interp_x_interface);
+            tf_vec_interface         = getInterfaceXDir(tf_vec            , SIM.interp_x_interface);
+            activity_vec_interface   = getInterfaceXDir(activity_vec      , SIM.interp_x_interface);
+            D_o_Li_ion_vec_interface = getInterfaceXDir(D_o_Li_ion_vec    , SIM.interp_x_interface);
+            T_interface              = getInterfaceXDir(TemperatureK(i,:) , SIM.interp_x_interface);
+            Ce_interface             = getInterfaceXDir(C_Liion(i,:)      , SIM.interp_x_interface);
         
             D_o_vec_interface        = [NaN(1,N.N_CV_tot) ; 0.5*(D_o_vec(1:end-1,:) + D_o_vec(2:end,:)) ; NaN(1,N.N_CV_tot)]; % This assumes constant del_r in both particles
+            dmudc_vec_interface      = dmudc_Latz( Ce_interface , T_interface, tf_vec_interface , activity_vec_interface);
 
         % Calculate Gradient
             [phi_ed_diff, phi_ed_grad] = diffAndGradXCalc(phi_ed(i,:)       , SIM.diff_CV_x_vec_inv);
             [phi_el_diff, phi_el_grad] = diffAndGradXCalc(phi_el(i,:)       , SIM.diff_CV_x_vec_inv);
-            [Ce_log_diff, Ce_log_grad] = diffAndGradXCalc(Ce_log            , SIM.diff_CV_x_vec_inv);
+            % [Ce_log_diff, Ce_log_grad] = diffAndGradXCalc(Ce_log            , SIM.diff_CV_x_vec_inv);
             [Ce_diff    , Ce_grad    ] = diffAndGradXCalc(C_Liion(i,:)      , SIM.diff_CV_x_vec_inv);
             [T_diff     , T_grad     ] = diffAndGradXCalc(TemperatureK(i,:) , SIM.diff_CV_x_vec_inv);
         
@@ -218,10 +234,10 @@ if ~postProcessComplete
 
         % Calculate Fluxes
         % i_el, i_ed
-            [i_ed(i , :) , i_el(i , :) ] = currentCalc(  sigma_vec_interface, kappa_vec_interface, T_interface, activity_vec_interface, tf_vec_interface, ...
-                                       phi_ed_grad, phi_el_grad, Ce_log_grad, ...
-                                       CONS.F_inv, CONS.R, ...
-                                       N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, N.N_CV_tot, i_user(i));
+            [i_ed(i , :) , i_el(i , :) ] = currentCalc( sigma_vec_interface, kappa_vec_interface, dmudc_vec_interface, tf_vec_interface, ...
+                                                          phi_ed_grad, phi_el_grad, Ce_grad,T_grad                                       , ...
+                                                          CONS.F_inv, EL.Beta                                                            , ...
+                                                          N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, N.N_CV_tot, i_user(i)              );
 
         % i_o
             if FLAG.Newman_i_o
@@ -265,6 +281,12 @@ if ~postProcessComplete
             end
             if ~isfield(SIM,'h_CA_BC')
                 SIM.h_CA_BC = [];
+            end
+            if ~isfield(SIM,'q_AN_BC')
+                SIM.q_AN_BC = [];
+            end
+            if ~isfield(SIM,'q_CA_BC')
+                SIM.q_CA_BC = [];
             end
 
             [q_cond(i,:) , q_conv(i,:) , q_gen(i,:)] = thermalAllVectors( TemperatureK( i , : ), T_diff, lambda_vec, N.CV_Region_AN, N.N_CV_tot, SIM.del_x_vec_halved_inv, SIM.h, SIM.T_inf, SIM.q_AN_BC, SIM.q_CA_BC, SIM.h_AN_BC, SIM.h_CA_BC, FLAG.T_BC_AN, FLAG.T_BC_CA, FLAG.HEAT_GEN_TOTAL, i_el(i , :), i_ed(i , :), i_Far(i , :));
@@ -314,6 +336,11 @@ if ~postProcessComplete
 
     % s_dot
         s_dot = i_Far / CONS.F ;
+
+    % Incremental Capacity
+        DelVoltage = cell_voltage(3:end) - cell_voltage(1:end-2);
+        DelCap     =          Cap(3:end) -          Cap(1:end-2);
+        dQdV       = DelCap ./ DelVoltage;
 
     % Conservation of Charge Check
     % Divergence of the sum of current flux should equal 0

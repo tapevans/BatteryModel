@@ -65,7 +65,7 @@ clear all; close all; clc;
     %    4) batt_inputs_NREL
     %    5) batt_inputs_ToddKingston
     %    6) batt_inputs_MPC
-    InputFile = 4;
+    InputFile = 5;
 
     FLAG_local.folder_overwrite = 0; % 1 if delete folder if it already exists
     FLAG_local.folder_add       = 1; % 1 if just want to add simulations to folder
@@ -73,57 +73,27 @@ clear all; close all; clc;
         % be used for the folder
     
     FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
-    
-    % % folder_name  = 'TestNewInputFile';
-    % folder_name  = 'TestNewInputFileNoise';
-    % % folder_name  = 'TestNewInputFileNoise_SplitSim';
-    % battery_name = 'Test';
-    
-    % folder_name  = 'ThermalGradient';
-    % battery_name = 'NoThermalGradient';
-    % % battery_name = '4C_A2C_ThermalGradient';
-    % % battery_name = '4C_C2A_ThermalGradient';
-    
-    % folder_name  = 'COETest';
-    % battery_name = 'Test123';
-    
-    % folder_name  = 'QuickTest';
-    % battery_name = 'NoisePlots';
-    
-    % folder_name  = 'TestImpedanceContributions';
-    % battery_name = 'Standard';
-    
-    % folder_name  = 'TestImpedanceSparse';
-    % % battery_name = 'Standard';
-    % % battery_name = 'WithCOE';
-    % battery_name = 'WithCOEWithVarProps';
 
-    % folder_name  = 'SeminarFall2023';
-    % % battery_name = 'M_A';
-    % % battery_name = 'M_B';
-    % battery_name = 'M_C';
-
-    % folder_name  = 'OptiBase';
-    % folder_name  = 'OptiAll';
-    folder_name  = 'OptiFinal';
-    battery_name = 'Standard';
-    % battery_name = 'VaryProps';
+% Test Degradation
+    folder_name  = 'TK_TestDeg';
+    battery_name = 'Test';
+    % battery_name = 'TestAMLoss';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    C_rates      = [];
+    % C_rates      = [];
     % C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
-    % C_rates      = [-1]; 
+    C_rates      = [-1]; 
     % C_rates      = [-5]; 
     % C_rates      = -(1:5); 
     % C_rates      = [1/20]; 
     % C_rates      = [1/20 -1/20]; 
-    C_rates      = [-1/4];
+    % C_rates      = [-1/4];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
     % C_rates      = [-1/20  -1 -2]; 
 
@@ -174,7 +144,13 @@ clear all; close all; clc;
     KBCP   = 0;
         KBCPProfileOverwrite = 0;
         % KBCPProfileFilename = 'StairStepNoRelax';
-        KBCPProfileFilename = 'GITT';
+        % KBCPProfileFilename = 'GITT';
+        KBCPProfileFilename = 'Chg_Dchg_1Cycles';
+        % KBCPProfileFilename = 'Chg_Dchg_2Cycles';
+        % KBCPProfileFilename = 'Chg_Dchg_4Cycles';
+        % KBCPProfileFilename = 'Chg_Dchg_17Cycles';
+        % KBCPProfileFilename = 'Chg_Dchg_20Cycles';
+        % KBCPProfileFilename = 'Chg_Dchg_10Cycles';
 
     % Initial SOC
         % KBSOC = 81.93;
@@ -827,10 +803,10 @@ switch InputFile
         SIM.CAi_oHandle         = @i_oNMC_NREL;  
         SIM.CAsigmaHandle       = @sigmaNMC_NREL;
         SIM.CAD_oHandle         = @D_o_NMC532_NREL;
-        SIM.ELtf_numHandle      = @transferenceNumber_NREL;
-        SIM.ELActivityHandle    = @activity_NREL;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
-        SIM.ELkappaHandle       = @kappa_NREL;
+        SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
+        SIM.ELActivityHandle    = @activity_Landesfeind;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;
+        SIM.ELkappaHandle       = @kappa_Landesfeind;
     case 6 % batt_input_MPC
         inputHandle             = @batt_inputs_MPC;
         SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
@@ -931,3 +907,38 @@ end
         % KBCPProfileFilename = 'CCCV_2C';
         % KBCPProfileFilename = '5minImpulseLongResponse';
         % KBCPProfileFilename = 'LongTau_wStep';
+    
+    % % folder_name  = 'TestNewInputFile';
+    % folder_name  = 'TestNewInputFileNoise';
+    % % folder_name  = 'TestNewInputFileNoise_SplitSim';
+    % battery_name = 'Test';
+    
+    % folder_name  = 'ThermalGradient';
+    % battery_name = 'NoThermalGradient';
+    % % battery_name = '4C_A2C_ThermalGradient';
+    % % battery_name = '4C_C2A_ThermalGradient';
+    
+    % folder_name  = 'COETest';
+    % battery_name = 'Test123';
+    
+    % folder_name  = 'QuickTest';
+    % battery_name = 'NoisePlots';
+    
+    % folder_name  = 'TestImpedanceContributions';
+    % battery_name = 'Standard';
+    
+    % folder_name  = 'TestImpedanceSparse';
+    % % battery_name = 'Standard';
+    % % battery_name = 'WithCOE';
+    % battery_name = 'WithCOEWithVarProps';
+
+    % folder_name  = 'SeminarFall2023';
+    % % battery_name = 'M_A';
+    % % battery_name = 'M_B';
+    % battery_name = 'M_C';
+
+    % % folder_name  = 'OptiBase';
+    % % folder_name  = 'OptiAll';
+    % folder_name  = 'OptiFinal';
+    % battery_name = 'Standard';
+    % % battery_name = 'VaryProps';

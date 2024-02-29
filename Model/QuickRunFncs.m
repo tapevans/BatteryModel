@@ -4,19 +4,27 @@ clc
 
 
 %
-    inputHandle             = @batt_inputs_NREL;
+    inputHandle             = @batt_inputs_ToddKingston;
+    % inputHandle             = @batt_inputs_NREL;
     SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
     SIM.ANi_oHandle         = @i_oC6_NREL;
     SIM.ANsigmaHandle       = @sigmaC6_NREL;
     SIM.AND_oHandle         = @D_o_Graphite_NREL;
-    SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+    
+    SIM.CAEqPotentialHandle = @E_eqNMC622_TK;
     SIM.CAi_oHandle         = @i_oNMC_NREL;  
     SIM.CAsigmaHandle       = @sigmaNMC_NREL;
     SIM.CAD_oHandle         = @D_o_NMC532_NREL;
-    SIM.ELtf_numHandle      = @transferenceNumber_NREL;
-    SIM.ELActivityHandle    = @activity_NREL;
-    SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
-    SIM.ELkappaHandle       = @kappa_NREL;
+    
+    % SIM.ELtf_numHandle      = @transferenceNumber_NREL;
+    % SIM.ELActivityHandle    = @activity_NREL;
+    % SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+    % SIM.ELkappaHandle       = @kappa_NREL;
+    SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
+    SIM.ELActivityHandle    = @activity_Landesfeind;
+    % SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind_half;
+    SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;
+    SIM.ELkappaHandle       = @kappa_Landesfeind;
 
 % Test Initialization
 %%% Mode 1 ---- Polarization ----
@@ -56,10 +64,10 @@ clc
     % cell_voltage = SIM.OutputAtEquil(1)
 
 %% Test Governing Eqns Output
-t = 2;
-i_user = 14;
-SV = SIM.SV_IC;
-dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user);
+    t = 2;
+    i_user = 14;
+    SV = SIM.SV_IC;
+    dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user);
 
 
 %% Run Single Battery Batch
@@ -91,7 +99,7 @@ clc;
 clear all;
 close all;
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\COETest\444All_Constant_Polar_1.00C_C.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_TestDeg\Test_Polar_1.00C_C.mat';
 plotfcn(filename)
 
 

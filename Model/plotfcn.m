@@ -6,13 +6,13 @@ function plotfcn(filename)
 %% Plot Flags
 % ---- Polarization ----
     FLAG.COE       = 0; % Conservation of Energy Check 
-    FLAG.COM       = 0; % Conservation of Mass Check
-    FLAG.COC       = 0; % Conservation of Charge Check
+    FLAG.COM       = 1; % Conservation of Mass Check
+    FLAG.COC       = 1; % Conservation of Charge Check
     
-    FLAG.TEMP      = 0; % Cell Temperature Profile
+    FLAG.TEMP      = 1; % Cell Temperature Profile
     
-    FLAG.C_Liion   = 0; % Mass/Species (Concentration Normalized): Li_ion
-    FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
+    FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
+    FLAG.X_Li_surf = 0; % Mass/Species (Mole Fraction): Li_surf (x-direction)
     FLAG.X_Li_rad  = 0; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
     FLAG.s_dot     = 0; % Li_ion production rate
     
@@ -21,16 +21,19 @@ function plotfcn(filename)
     FLAG.del_phi   = 0; % Delta phi (phi_ed - phi_el)
     FLAG.del_phi_v_time = 0; %@ AN/SEP
     FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
-    FLAG.eta       = 1; % eta
-    FLAG.i_o       = 1; % exchange current density
-    FLAG.i_Far     = 1; % charge-transfer current density
+    FLAG.eta       = 0; % eta
+    FLAG.i_o       = 0; % exchange current density
+    FLAG.i_Far     = 0; % charge-transfer current density
     FLAG.plotV_SEI = 0; % Voltage across the SEI
+    FLAG.N_Particles         = 1;
     
-    FLAG.cellVoltage         = 0; % Terminal voltage of the battery vs time
+    FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
     FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
-    FLAG.V_and_A             = 1;
+    FLAG.V_and_A             = 0;
     FLAG.SOC                 = 0; % SOC vs time
     FLAG.voltage_vs_SOC      = 0; % Terminal voltage of the battery vs SOC
+
+    FLAG.N_Particles         = 1;
 
 % ---- Harmonic Perturbation ----
     FLAG.V_and_A_EIS   = 1;
@@ -440,6 +443,33 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
         title('V_{SEI}')
         xlabel('X Position')
         ylabel('V_{SEI} (V)')
+        xlim([0,SIM.x_half_vec(end)])
+        
+        xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');
+        xl_AS.LabelHorizontalAlignment = 'center';
+        xl_SC = xline(SIM.x_half_vec(N.N_CV_AN+N.N_CV_SEP+1),'-',{'Separator','Cathode'},'HandleVisibility','off');
+        xl_SC.LabelHorizontalAlignment = 'center';     
+    end  
+
+
+%% N_Particles
+    if FLAG.N_Particles
+        figure
+        ax = gca;
+        set(ax, 'YScale', 'log')
+        % ylim([1e6,5e8])
+        grid on
+        hold on
+        for i = 1:N_times
+            % semilogy(SIM.x_vec([N.CV_Region_AN,N.CV_Region_CA]),N_Particles(t_index(i),[N.CV_Region_AN,N.CV_Region_CA]),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+            semilogy(SIM.x_vec , N_Particles(t_index(i),:),'-o','LineWidth',2,'DisplayName',['t = ' , num2str(t_soln(t_index(i))) , 's'])
+        end
+        lgn = legend;
+        % lgn.Location = 'southeast';
+        lgn.Location = 'best';
+        title('N_{Particles}')
+        xlabel('X Position')
+        ylabel('N_{Particles}')
         xlim([0,SIM.x_half_vec(end)])
         
         xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');

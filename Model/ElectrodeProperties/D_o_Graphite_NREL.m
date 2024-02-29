@@ -2,7 +2,7 @@
 % Graphite Diffusion Coefficient Function
 % Expression for diffusion coefficient of graphite [m^2 s^-1]
 
-function [D_o] = D_o_Graphite_HZ(X , T)
+function [D_o] = D_o_Graphite_NREL(X , T)
     RR      = 8314.472; % [J kmol^-1 K^-1], Gas Constant
     % T       = SV(P.T , :);
     T_inv   = T.^-1;

@@ -4,8 +4,6 @@
 function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Persistent 
     persistent AN__A_c
-    persistent AN__A_s
-    persistent AN__A_surf_CV_inv
     persistent AN__alpha_a
     persistent AN__alpha_c
     persistent AN__b_thermal
@@ -18,11 +16,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     persistent AN__m_thermal
     persistent AN__r_half_vec_diffcubed_inv
     persistent AN__r_half_vec_sq
-    persistent AN__R_SEI_inv
 
     persistent CA__A_c 
-    persistent CA__A_s 
-    persistent CA__A_surf_CV_inv
     persistent CA__alpha_a
     persistent CA__alpha_c
     persistent CA__b_thermal
@@ -35,7 +30,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     persistent CA__m_thermal
     persistent CA__r_half_vec_diffcubed_inv
     persistent CA__r_half_vec_sq
-    persistent CA__R_SEI_inv
 
     persistent CONS__BRUG
     persistent CONS__F
@@ -43,13 +37,19 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     persistent CONS__R
 
     persistent EL__ActivityHandle
+    persistent EL__Beta
     persistent EL__C_inv
     persistent EL__D_o_Li_ionHandle
     persistent EL__kappaHandle
+    persistent EL__ST
     persistent EL__tf_numHandle
 
+    persistent FLAG__AMLoss
+    persistent FLAG__AML_Dep
     persistent FLAG__Bruggeman
-    persistent FLAG__COE
+    persistent FLAG__COE      
+    persistent FLAG__CTRGrowth
+    persistent FLAG__CTRG_Dep 
     persistent FLAG__HEAT_GEN_TOTAL 
     persistent FLAG__Newman_i_o
     persistent FLAG__RampThermalGradient
@@ -78,7 +78,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     persistent N__N_SV_CA
     persistent N__N_SV_SEP
 
-    persistent P__activity 
+    persistent P__activity
+    persistent P__CTRGrow
     persistent P__C_Li 
     persistent P__C_Li_surf_AN
     persistent P__C_Li_surf_CA
@@ -89,6 +90,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     persistent P__i_PS 
     persistent P__kappa 
     persistent P__lambda_eff 
+    persistent P__NPartic
     persistent P__phi_ed 
     persistent P__phi_el
     persistent P__SEP__C_Liion
@@ -103,28 +105,40 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     persistent SEP__del_x_inv 
 
     persistent SIM__A_c 
+    persistent SIM__AML_cons_vec
+    persistent SIM__A_s_CV_vec
+    persistent SIM__A_surf_CV_vec
+    persistent SIM__A_surf_CV_vec_inv
     persistent SIM__A_outside_vec
     persistent SIM__Amp
+    persistent SIM__C_Li_diff_threshold
+    persistent SIM__CTRG_cons_vec
+    persistent SIM__delPhi_threshold
     persistent SIM__del_CV_r_inv_mat
     persistent SIM__del_x_vec_halved_inv
+    persistent SIM__dVol_inv
     persistent SIM__diff_CV_x_vec_inv
     persistent SIM__h
     persistent SIM__h_AN_BC
     persistent SIM__h_CA_BC
-    persistent SIM__interp_x_interface
-    persistent SIM__MassFluxPreCalcResistor
     persistent SIM__profile_current
     persistent SIM__profile_time
     persistent SIM__q_AN_BC
     persistent SIM__q_CA_BC
     persistent SIM__RampThermalGradientTime
+    persistent SIM__R_SEI_0
+    persistent SIM__R_SEI_0_inv
     persistent SIM__SimMode 
     persistent SIM__SV_nan
     persistent SIM__T_inf
     persistent SIM__Temp_AN_BC 
     persistent SIM__Temp_CA_BC 
 
+    persistent zero_CV_vec
+
+    % persistent AN__A_s
     % persistent AN__A_surf_CV
+    % persistent AN__A_surf_CV_inv
     % persistent AN__C_Li_max
     % persistent AN__c_p_eff
     % persistent AN__del_CV_r_vec
@@ -133,12 +147,15 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     % persistent AN__eps_el
     % persistent AN__lambda_eff
     % persistent AN__r_half_vec
+    % persistent AN__R_SEI_inv
     % persistent AN__R_SEI
     % persistent AN__r_vec
     % persistent AN__rho_eff
     % persistent AN__sigma
 
+    % persistent CA__A_s 
     % persistent CA__A_surf_CV
+    % persistent CA__A_surf_CV_inv
     % persistent CA__C_Li_max
     % persistent CA__c_p_eff
     % persistent CA__del_CV_r_vec
@@ -148,6 +165,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     % persistent CA__lambda_eff
     % persistent CA__r_half_vec
     % persistent CA__R_SEI 
+    % persistent CA__R_SEI_inv
     % persistent CA__r_vec
     % persistent CA__rho_eff
     % persistent CA__sigma
@@ -175,10 +193,16 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     % persistent SIM__del_x_vec_halved
     % persistent SIM__diff_CV_x_vec
     % persistent SIM__eps_el_vec
+    % persistent SIM__interp_x_interface
+    % persistent SIM__MassFluxPreCalcResistor
 
     if isempty(AN__C_Li_max_inv)
+        FLAG__AMLoss                        = FLAG.AMLoss;
+        FLAG__AML_Dep                       = FLAG.AML_Dep;
         FLAG__Bruggeman                     = FLAG.Bruggeman;
         FLAG__COE                           = FLAG.COE;
+        FLAG__CTRGrowth                     = FLAG.CTRGrowth;
+        FLAG__CTRG_Dep                      = FLAG.CTRG_Dep;
         FLAG__HEAT_GEN_TOTAL                = FLAG.HEAT_GEN_TOTAL;
         FLAG__Newman_i_o                    = FLAG.Newman_i_o;
         FLAG__RampThermalGradient           = FLAG.RampThermalGradient;
@@ -193,8 +217,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         FLAG__VARIABLE_tf_num               = FLAG.VARIABLE_tf_num;
 
         AN__A_c                     = AN.A_c;
-        AN__A_s                     = AN.A_s;
-        AN__A_surf_CV_inv           = AN.A_surf_CV_inv;
         AN__alpha_a                 = AN.alpha_a;
         AN__alpha_c                 = AN.alpha_c;
         AN__C_Li_max_inv            = AN.C_Li_max_inv;
@@ -205,11 +227,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         AN__i_oHandle               = AN.i_oHandle;
         AN__r_half_vec_diffcubed_inv= AN.r_half_vec_diffcubed_inv;
         AN__r_half_vec_sq           = AN.r_half_vec_sq;
-        AN__R_SEI_inv               = AN.R_SEI_inv;
 
         CA__A_c                     = CA.A_c;
-        CA__A_s                     = CA.A_s;
-        CA__A_surf_CV_inv           = CA.A_surf_CV_inv;
         CA__alpha_a                 = CA.alpha_a;
         CA__alpha_c                 = CA.alpha_c;
         CA__C_Li_max_inv            = CA.C_Li_max_inv;
@@ -220,7 +239,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         CA__i_oHandle               = CA.i_oHandle;
         CA__r_half_vec_diffcubed_inv= CA.r_half_vec_diffcubed_inv;
         CA__r_half_vec_sq           = CA.r_half_vec_sq;
-        CA__R_SEI_inv               = CA.R_SEI_inv;
 
         CONS__BRUG                  = CONS.BRUG;
         CONS__F                     = CONS.F;
@@ -228,9 +246,11 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         CONS__R                     = CONS.R;
 
         EL__ActivityHandle          = EL.ActivityHandle;
+        EL__Beta                    = EL.Beta;
         EL__C_inv                   = EL.C_inv;
         EL__D_o_Li_ionHandle        = EL.D_o_Li_ionHandle;
         EL__kappaHandle             = EL.kappaHandle;
+        EL__ST                      = EL.S_T;
         EL__tf_numHandle            = EL.tf_numHandle;
 
         N__CV_Region_AN             = N.CV_Region_AN;
@@ -249,6 +269,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         N__N_SV_SEP                 = N.N_SV_SEP;
 
         P__activity                 = P.activity; 
+        P__CTRGrow                  = P.CTRGrow;
         P__C_Li                     = P.C_Li;
         P__C_Li_surf_AN             = P.C_Li_surf_AN;
         P__C_Li_surf_CA             = P.C_Li_surf_CA;
@@ -259,6 +280,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         P__i_PS                     = P.i_PS;
         P__kappa                    = P.kappa; 
         P__lambda_eff               = P.lambda_eff; 
+        P__NPartic                  = P.NPartic;
         P__phi_ed                   = P.phi_ed; 
         P__phi_el                   = P.phi_el;
         P__SEP__C_Liion             = P.SEP.C_Liion;
@@ -273,21 +295,29 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         SEP__del_x_inv              = SEP.del_x_inv;
 
         SIM__A_c                    = SIM.A_c;
+        SIM__AML_cons_vec           = SIM.AML_cons_vec;
+        SIM__A_s_CV_vec             = SIM.A_s_CV_vec;
+        SIM__A_surf_CV_vec          = SIM.A_surf_CV_vec;
+        SIM__A_surf_CV_vec_inv      = SIM.A_surf_CV_vec_inv;
         SIM__A_outside_vec          = SIM.A_outside_vec;
+        SIM__C_Li_diff_threshold    = SIM.C_Li_diff_threshold;
+        SIM__CTRG_cons_vec          = SIM.CTRG_cons_vec;
+        SIM__delPhi_threshold       = SIM.delPhi_threshold;
         SIM__del_CV_r_inv_mat       = SIM.del_CV_r_inv_mat;
         SIM__del_x_vec_halved_inv   = SIM.del_x_vec_halved_inv;
+        SIM__dVol_inv               = SIM.dVol_inv;
         SIM__diff_CV_x_vec_inv      = SIM.diff_CV_x_vec_inv;
         SIM__h                      = SIM.h;
-        SIM__interp_x_interface     = SIM.interp_x_interface;
-        SIM__MassFluxPreCalcResistor= SIM.MassFluxPreCalcResistor;
         SIM__profile_current        = SIM.profile_current;
         SIM__profile_time           = SIM.profile_time;
-        SIM__q_AN_BC                = SIM.q_AN_BC;
-        SIM__q_CA_BC                = SIM.q_CA_BC;
         SIM__RampThermalGradientTime= SIM.RampThermalGradientTime;
+        SIM__R_SEI_0                = SIM.R_SEI_0;
+        SIM__R_SEI_0_inv            = SIM.R_SEI_0_inv;
         SIM__SimMode                = SIM.SimMode;
         SIM__SV_nan                 = SIM.SV_nan;
         SIM__T_inf                  = SIM.T_inf;
+
+        zero_CV_vec                 = zeros(1,N.N_CV_tot);
 
         if isfield(SIM , 'Amp')
             SIM__Amp = SIM.Amp;
@@ -308,7 +338,15 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
             CA__m_thermal = CA.m_thermal;
             CA__b_thermal = CA.b_thermal;
         end
-
+        if isfield(SIM , 'q_AN_BC')
+            SIM__q_AN_BC = SIM.q_AN_BC;
+        end
+        if isfield(SIM , 'q_CA_BC')
+            SIM__q_CA_BC = SIM.q_CA_BC;
+        end
+        
+        % AN__A_s                     = AN.A_s;
+        % AN__A_surf_CV_inv           = AN.A_surf_CV_inv;
         % AN__A_surf_CV = AN.A_surf_CV;
         % AN__C_Li_max = AN.C_Li_max;
         % AN__c_p_eff = AN.c_p_eff;
@@ -319,10 +357,13 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         % AN__lambda_eff = AN.lambda_eff;
         % AN__r_half_vec = AN.r_half_vec;
         % AN__R_SEI = AN.R_SEI;
+        % AN__R_SEI_inv               = AN.R_SEI_inv;
         % AN__r_vec = AN.r_vec;
         % AN__rho_eff = AN.rho_eff;
         % AN__sigma = AN.sigma;
 
+        % CA__A_s                     = CA.A_s;
+        % CA__A_surf_CV_inv           = CA.A_surf_CV_inv;
         % CA__A_surf_CV = CA.A_surf_CV;
         % CA__C_Li_max = CA.C_Li_max;
         % CA__c_p_eff = CA.c_p_eff;
@@ -333,6 +374,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         % CA__lambda_eff = CA.lambda_eff;
         % CA__r_half_vec = CA.r_half_vec;
         % CA__R_SEI = CA.R_SEI; 
+        % CA__R_SEI_inv               = CA.R_SEI_inv;
         % CA__r_vec = CA.r_vec;
         % CA__rho_eff = CA.rho_eff;
         % CA__sigma = CA.sigma;
@@ -360,6 +402,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         % SIM__del_x_vec_halved = SIM.del_x_vec_halved;
         % SIM__diff_CV_x_vec = SIM.diff_CV_x_vec;
         % SIM__eps_el_vec = SIM.eps_el_vec;
+        % SIM__interp_x_interface     = SIM.interp_x_interface;
+        % SIM__MassFluxPreCalcResistor= SIM.MassFluxPreCalcResistor;
     end
 
 
@@ -370,7 +414,7 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
         
 %% Pull out each SV vector
-    [T, del_phi, phi_ed, phi_el, V_1, V_2, i_PS, Ce, C_Li, C_Li_AN, C_Li_CA, X_AN, X_CA, Ce_norm, Ce_log, eta, RT_inv_vec] = extractSV(SV,P__T, P__del_phi, P__phi_ed, P__phi_el, P__V_1, P__V_2, P__i_PS, P__C_Liion, P__C_Li, P__C_Li_surf_AN, P__C_Li_surf_CA, N__CV_Region_AN, N__CV_Region_CA, N__N_R_max, AN__C_Li_max_inv, CA__C_Li_max_inv, EL__C_inv, CONS__R);
+    [T, T_inv_vec, del_phi, phi_ed, phi_el, V_1, V_2, i_PS, Ce, C_Li, C_Li_AN, C_Li_CA, X_AN, X_CA, Ce_norm, Ce_log, eta, RT_inv_vec , CTRG , N_Particles] = extractSV(SV,P__T, P__del_phi, P__phi_ed, P__phi_el, P__V_1, P__V_2, P__i_PS, P__CTRGrow, P__NPartic, P__C_Liion, P__C_Li, P__C_Li_surf_AN, P__C_Li_surf_CA, N__CV_Region_AN, N__CV_Region_CA, N__N_R_max, AN__C_Li_max_inv, CA__C_Li_max_inv, EL__C_inv, CONS__R);
     
 
 %% Obtain Property Values
@@ -392,19 +436,23 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 
 %% Calculate Value at Interface between CV
-    sigma_vec_interface    = getInterfaceXDir(sigma_vec   , SIM__interp_x_interface);
-    kappa_vec_interface    = getInterfaceXDir(kappa_vec   , SIM__interp_x_interface);
-    tf_vec_interface       = getInterfaceXDir(tf_vec      , SIM__interp_x_interface);
-    activity_vec_interface = getInterfaceXDir(activity_vec, SIM__interp_x_interface);
-    T_interface            = getInterfaceXDir(T           , SIM__interp_x_interface);
+    sigma_vec_interface      = getInterfaceXDir(sigma_vec      , SIM.interp_x_interface);
+    kappa_vec_interface      = getInterfaceXDir(kappa_vec      , SIM.interp_x_interface);
+    tf_vec_interface         = getInterfaceXDir(tf_vec         , SIM.interp_x_interface);
+    activity_vec_interface   = getInterfaceXDir(activity_vec   , SIM.interp_x_interface);
+    D_o_Li_ion_vec_interface = getInterfaceXDir(D_o_Li_ion_vec , SIM.interp_x_interface);
+    T_interface              = getInterfaceXDir(T              , SIM.interp_x_interface);
+    T_interface_inv_vec      = getInterfaceXDir(T_inv_vec      , SIM.interp_x_interface);
+    Ce_interface             = getInterfaceXDir(Ce             , SIM.interp_x_interface);
 
-    D_o_vec_interface        = [NaN(1,N__N_CV_tot) ; 0.5*(D_o_vec(1:end-1,:) + D_o_vec(2:end,:)) ; NaN(1,N__N_CV_tot)]; % This assumes constant del_r in both particles
+    D_o_vec_interface        = [NaN(1,N.N_CV_tot) ; 0.5*(D_o_vec(1:end-1,:) + D_o_vec(2:end,:)) ; NaN(1,N.N_CV_tot)]; % This assumes constant del_r in both particles
+    dmudc_vec_interface      = dmudc_Latz( Ce_interface , T_interface, tf_vec_interface , activity_vec_interface);
 
     
 %% Calculate Gradient
     [phi_ed_diff, phi_ed_grad] = diffAndGradXCalc(phi_ed, SIM__diff_CV_x_vec_inv);
     [phi_el_diff, phi_el_grad] = diffAndGradXCalc(phi_el, SIM__diff_CV_x_vec_inv);
-    [Ce_log_diff, Ce_log_grad] = diffAndGradXCalc(Ce_log, SIM__diff_CV_x_vec_inv);
+    % [Ce_log_diff, Ce_log_grad] = diffAndGradXCalc(Ce_log, SIM__diff_CV_x_vec_inv);
     [Ce_diff    , Ce_grad    ] = diffAndGradXCalc(Ce    , SIM__diff_CV_x_vec_inv);
     [T_diff     , T_grad     ] = diffAndGradXCalc(T     , SIM__diff_CV_x_vec_inv);
 
@@ -424,10 +472,10 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 %% Calculate All Fluxes
 % currentCalc
-    [i_ed , i_el ] = currentCalc(  sigma_vec_interface, kappa_vec_interface, T_interface, activity_vec_interface, tf_vec_interface, ...
-                                   phi_ed_grad, phi_el_grad, Ce_log_grad, ...
-                                   CONS__F_inv, CONS__R, ...
-                                   N__CV_Region_AN, N__CV_Region_SEP, N__CV_Region_CA, N__N_CV_tot, i_user);
+    [i_ed , i_el ] = currentCalc(   sigma_vec_interface, kappa_vec_interface, dmudc_vec_interface, tf_vec_interface, ...
+                                    phi_ed_grad, phi_el_grad, Ce_grad,T_grad                                       , ...
+                                    CONS__F_inv, EL__Beta                                                          , ...
+                                    N__CV_Region_AN, N__CV_Region_SEP, N__CV_Region_CA, N__N_CV_tot, i_user             );
 
 % iFarCalc
     i_Far = iFarCalc( T, Ce_norm, X_AN, X_CA, eta, RT_inv_vec, AN__i_0_ref , AN__alpha_a, AN__alpha_c, CA__i_0_ref, CA__alpha_a, CA__alpha_c, ...
@@ -438,7 +486,9 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     s_dot = i_Far * CONS__F_inv ;
 
 % JLiionCalc
-    J_Liion = JLiionCalc( Ce_diff, D_o_Li_ion_vec, tf_vec_interface, N__CV_Region_AN, N__N_CV_tot, CONS__F_inv, SIM__MassFluxPreCalcResistor, i_el);
+    J_Liion = JLiionCalc(  D_o_Li_ion_vec_interface , tf_vec_interface, Ce_interface , ...
+                           Ce_grad , T_grad , i_el , T_interface_inv_vec             , ...
+                           N__CV_Region_AN, N__N_CV_tot, CONS__F_inv , EL__ST             );
 
 % JLiCalc
     J_Li    = JLiCalc( C_Li_diff, D_o_vec_interface, N__N_CV_tot, N__N_R_AN, N__N_R_CA, N__CV_Region_AN, N__CV_Region_CA, SIM__del_CV_r_inv_mat, s_dot);
@@ -460,6 +510,31 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     E_eq_vec = [ E_eq_an , zeros(1,N__N_CV_SEP) , E_eq_ca];
 
 
+%% Calculate Degradation
+% Chg Trans Resis Growth
+    if FLAG__CTRGrowth
+        [CTR_GrowthRate] = ChgTransResisGrowth(del_phi , SIM__delPhi_threshold , SIM__CTRG_cons_vec , FLAG__CTRG_Dep);
+        [~, R_SEI_vec_inv] = calcChgTransResis(CTRG , SIM__R_SEI_0);
+    else
+        CTR_GrowthRate = zero_CV_vec;
+        R_SEI_vec_inv  = SIM__R_SEI_0_inv;
+    end
+
+% Active Material Loss
+    if FLAG__AMLoss
+        [AM_LossRate] = NParticlesLoss(C_Li_diff(end-1,:) , SIM__C_Li_diff_threshold , SIM__AML_cons_vec , FLAG__AML_Dep);
+        [~, A_surf_CV_vec_inv , A_s_vec ] = SurfAreaCalcs(N_Particles , SIM__A_surf_CV_vec , SIM__dVol_inv);
+    else
+        AM_LossRate       = zero_CV_vec;
+        % A_surf_CV_vec = SIM__A_surf_CV_vec;
+        A_surf_CV_vec_inv = SIM__A_surf_CV_vec_inv;
+        A_s_vec           = SIM__A_s_CV_vec;
+    end
+
+% Plating
+    % Not implemented yet
+    
+
 %% Solving for dSVdt
 %% ---- Anode ----
     dSVdt_AN = zeros(N__N_SV_AN,N__N_CV_AN);
@@ -472,8 +547,10 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         % phi_el                    
             % dSVdt_AN(P__del_phi , i) =  (AN__A_c / AN__A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
             %                           - (SV(P__V_1,i) - SV(P__phi_el,i))/AN__R_SEI;
-            dSVdt_AN(P__del_phi , i) =  (AN__A_c * AN__A_surf_CV_inv)*(i_el(i+1) - i_el(i)  ) ...
-                                      - ( V_1(i) - phi_el(i) )*AN__R_SEI_inv;
+            % dSVdt_AN(P__del_phi , i) =  (AN__A_c * AN__A_surf_CV_inv)*(i_el(i+1) - i_el(i)  ) ...
+            %                           - ( V_1(i) - phi_el(i) )*AN__R_SEI_inv;
+            dSVdt_AN(P__del_phi , i) =  (AN__A_c * A_surf_CV_vec_inv(i))*(i_el(i+1) - i_el(i)  ) ...
+                                      - ( V_1(i) - phi_el(i) )*R_SEI_vec_inv(i);
                             
         % phi_ed                                        
             dSVdt_AN(P__phi_ed , i) =   i_ed(i  ) + i_el(i  )...
@@ -482,7 +559,9 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         % V_1                    
             % dSVdt_AN(P__V_1    , i) = - (SV(P__V_1,i) - SV(P__phi_el,i))/AN__R_SEI ...
             %                           +  i_Far(i);
-            dSVdt_AN(P__V_1    , i) = - ( V_1(i) - phi_el(i) )*AN__R_SEI_inv ...
+            % dSVdt_AN(P__V_1    , i) = - ( V_1(i) - phi_el(i) )*AN__R_SEI_inv ...
+            %                           +  i_Far(i);
+            dSVdt_AN(P__V_1    , i) = - ( V_1(i) - phi_el(i) )*R_SEI_vec_inv(i) ...
                                       +  i_Far(i);
                             
         % V_2                    
@@ -492,12 +571,20 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 	    % i_PS                    
             % dSVdt_AN(P__i_PS   , i) =    SV(P__phi_ed,i) - SV(P__V_2,i) -  E_eq_vec(i);
             dSVdt_AN(P__i_PS   , i) =    phi_ed(i) - V_2(i) -  E_eq_vec(i);
+        
+	    % Chg Trans Resis Growth
+            dSVdt_AN(P__CTRGrow , i) = CTR_GrowthRate(1,i);
+        
+	    % N Particles
+            dSVdt_AN(P__NPartic , i) = AM_LossRate(1,i);
                             
 	    % C_Li^+
             % dSVdt_AN(P__C_Liion, i) = -(J_Liion(i+1) - J_Liion(i))/ AN__del_x...
             %                           + s_dot(i) * AN__A_s;
+            % dSVdt_AN(P__C_Liion, i) = -(J_Liion(i+1) - J_Liion(i)) * AN__del_x_inv...
+            %                           + s_dot(i) * AN__A_s;
             dSVdt_AN(P__C_Liion, i) = -(J_Liion(i+1) - J_Liion(i)) * AN__del_x_inv...
-                                      + s_dot(i) * AN__A_s;
+                                      + s_dot(i) * A_s_vec(i);
                     
         % C_Li
             for j = 1:N__N_R_AN
@@ -555,8 +642,10 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         % phi_el
             % dSVdt_CA(P__del_phi , i) =  (CA__A_c / CA__A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
             %                             - (SV(P__V_1,index_offset) - SV(P__phi_el,index_offset))/CA__R_SEI;
-            dSVdt_CA(P__del_phi , i) =  (CA__A_c * CA__A_surf_CV_inv)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
-                                        - ( V_1(index_offset) - phi_el(index_offset) )*CA__R_SEI_inv;
+            % dSVdt_CA(P__del_phi , i) =  (CA__A_c * CA__A_surf_CV_inv)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
+            %                             - ( V_1(index_offset) - phi_el(index_offset) )*CA__R_SEI_inv;
+            dSVdt_CA(P__del_phi , i) =  (CA__A_c * A_surf_CV_vec_inv(index_offset))*(i_el(index_offset+1) - i_el(index_offset)  ) ...
+                                        - ( V_1(index_offset) - phi_el(index_offset) )*R_SEI_vec_inv(index_offset);
         
 	    % phi_ed                    
             dSVdt_CA(P__phi_ed , i)  =   i_ed(index_offset  ) + i_el(index_offset  )...
@@ -565,7 +654,9 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 	    % V_1                    
             % dSVdt_CA(P__V_1    , i)  = - (SV(P__V_1,index_offset) - SV(P__phi_el,index_offset))/CA__R_SEI ...
             %                            +  i_Far(index_offset);
-            dSVdt_CA(P__V_1    , i)  = - ( V_1(index_offset) - phi_el(index_offset) )*CA__R_SEI_inv ...
+            % dSVdt_CA(P__V_1    , i)  = - ( V_1(index_offset) - phi_el(index_offset) )*CA__R_SEI_inv ...
+            %                            +  i_Far(index_offset);
+            dSVdt_CA(P__V_1    , i)  = - ( V_1(index_offset) - phi_el(index_offset) )*R_SEI_vec_inv(index_offset) ...
                                        +  i_Far(index_offset);
         
 	    % V_2                    
@@ -576,11 +667,19 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
             dSVdt_CA(P__i_PS   , i)  =    phi_ed(index_offset) - V_2(index_offset) ...
                                        -  E_eq_vec(index_offset);
         
+	    % Chg Trans Resis Growth
+            dSVdt_CA(P__CTRGrow , i) = CTR_GrowthRate(1,index_offset);
+        
+	    % N Particles
+            dSVdt_CA(P__NPartic , i) = AM_LossRate(1,index_offset);
+        
         % C_Li^+
             % dSVdt_CA(P__C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset))/ CA__del_x...
             %                           + s_dot(index_offset) * CA__A_s;
+            % dSVdt_CA(P__C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset)) * CA__del_x_inv...
+            %                           + s_dot(index_offset) * CA__A_s;
             dSVdt_CA(P__C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset)) * CA__del_x_inv...
-                                      + s_dot(index_offset) * CA__A_s;
+                                      + s_dot(index_offset) * A_s_vec(1,index_offset);
         % C_Li
             for j = 1:N__N_R_CA
                     % dSVdt_CA(P__C_Li+j-1, i) = -3*(CA__r_half_vec(j+1)^2 * J_Li(j+1,index_offset) - CA__r_half_vec(j)^2 * J_Li(j,index_offset)) ...
@@ -616,9 +715,9 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 
 %% Used for troubleshooting
-    % if t>SIM.initial_offset
-    %    t;
-    % end
+    if t>SIM.initial_offset
+       t;
+    end
     % if t>SIM.t_ramp
     %    t;
     % end

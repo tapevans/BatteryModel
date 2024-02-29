@@ -1,0 +1,5 @@
+batt_init.m
+ * Hardcoded (For Todd Kingston Battery)
+   - Capacity Ratio (Line 487)
+   - y-intcep (Line 497)
+   - Cell Capacity (Line 545)

@@ -8,7 +8,7 @@
     
 %% List of Project Folders
     i = 1;
-    Project_Folder{i} = 'OptiFinal';   i = i+1;
+    % Project_Folder{i} = 'OptiFinal';   i = i+1;
     % Project_Folder{i} = 'SeminarFall2023';   i = i+1;
     % Project_Folder{i} = 'TestImpedanceSparse';   i = i+1;
     % Project_Folder{i} = 'TestImpedanceContributions';   i = i+1;
@@ -18,6 +18,7 @@
     % Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFile';   i = i+1;
+    Project_Folder{i} = 'TK_TestDeg';   i = i+1;
 
 
 %% Parameters
