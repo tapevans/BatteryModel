@@ -72,10 +72,10 @@
         FLAG.TempBC = 2; % Pre-determined temperature BC
             
     FLAG.V_SEI        = 1; % 1 if the overpotential is calculated using V_SEI
-    FLAG.CTRGrowth    = 0; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
-        FLAG.CTRG_Dep = 0; % 1 if CTRG is dependent on state variables
+    FLAG.CTRGrowth    = 1; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
+        FLAG.CTRG_Dep = 1; % 1 if CTRG is dependent on state variables
     FLAG.AMLoss       = 1; % 1 if there is active material loss over time (decrease effective surface area (reduced number of particles) ) 
-        FLAG.AML_Dep  = 0; % 1 if AML is dependent on state variables
+        FLAG.AML_Dep  = 1; % 1 if AML is dependent on state variables
     
     FLAG.Bruggeman = 1; % 1 if properties are adjusted for tortuosity
         FLAG.BRUG_ED = 1; % Apply BRUG to electrode (active material) parameters
@@ -317,8 +317,8 @@
     AN.c_p        = 706.9;       % [J kg^-1 K^-1],     Specific heat capacity of active material
     AN.lambda     = 400;         % [W m^-1 K^-1],      Thermal conductivity
     AN.C_Li_max   = 30;          % [kmol m^-3],        Max concentration of lithium in the active material
-    AN.AMLossRate = 1e1;         % [N_particles s^-1], Loss of active material rate
-    AN.ChgTranResGrowthRate = 1e-5; % [ohm m^2 s^-1],  Solid electrolyte interface resistance growth rate
+    AN.AMLossRate = 1e-1;        % [N_particles s^-1], Loss of active material rate
+    AN.ChgTranResGrowthRate = 1e-6; % [ohm m^2 s^-1],  Solid electrolyte interface resistance growth rate
 
 % ---- Separator ----
     SEP.rho    = 1107;     % [kg m^-3],      Density of separator material
@@ -343,8 +343,8 @@
     CA.c_p        = 538;        % [J kg^-1 K^-1],     Specific heat capacity of cathode material
     CA.lambda     = 400;        % [W m^-1 K^-1],      Thermal conductivity of cathode material
     CA.C_Li_max   = 49.6;       % [kmol m^-3],        Max concentration of lithium in the active material
-    CA.AMLossRate = 1e1;        % [N_particles s^-1], Loss of active material rate
-    CA.ChgTranResGrowthRate = 1e-5; % [ohm m^2 s^-1], Solid electrolyte interface resistance growth rate
+    CA.AMLossRate = 1e-1;       % [N_particles s^-1], Loss of active material rate
+    CA.ChgTranResGrowthRate = 1e-6; % [ohm m^2 s^-1], Solid electrolyte interface resistance growth rate
 
 % ---- Electrolyte ----
     EL.tf_numHandle       = SIM.ELtf_numHandle;

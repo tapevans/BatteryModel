@@ -107,8 +107,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     persistent SIM__A_c 
     persistent SIM__AML_cons_vec
     persistent SIM__A_s_CV_vec
-    persistent SIM__A_surf_CV_vec
     persistent SIM__A_surf_CV_vec_inv
+    persistent SIM__A_surf_single_vec
     persistent SIM__A_outside_vec
     persistent SIM__Amp
     persistent SIM__C_Li_diff_threshold
@@ -135,66 +135,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
     persistent SIM__Temp_CA_BC 
 
     persistent zero_CV_vec
-
-    % persistent AN__A_s
-    % persistent AN__A_surf_CV
-    % persistent AN__A_surf_CV_inv
-    % persistent AN__C_Li_max
-    % persistent AN__c_p_eff
-    % persistent AN__del_CV_r_vec
-    % persistent AN__del_r_vec
-    % persistent AN__del_x
-    % persistent AN__eps_el
-    % persistent AN__lambda_eff
-    % persistent AN__r_half_vec
-    % persistent AN__R_SEI_inv
-    % persistent AN__R_SEI
-    % persistent AN__r_vec
-    % persistent AN__rho_eff
-    % persistent AN__sigma
-
-    % persistent CA__A_s 
-    % persistent CA__A_surf_CV
-    % persistent CA__A_surf_CV_inv
-    % persistent CA__C_Li_max
-    % persistent CA__c_p_eff
-    % persistent CA__del_CV_r_vec
-    % persistent CA__del_r_vec
-    % persistent CA__del_x 
-    % persistent CA__eps_el
-    % persistent CA__lambda_eff
-    % persistent CA__r_half_vec
-    % persistent CA__R_SEI 
-    % persistent CA__R_SEI_inv
-    % persistent CA__r_vec
-    % persistent CA__rho_eff
-    % persistent CA__sigma
-
-    % persistent CONS__R_inv
-
-    % persistent EL__C
-
-    % persistent N__N_prop
-    % persistent N__N_SV_AN_tot
-    % persistent N__N_SV_max
-    % persistent N__N_SV_nR
-    % persistent N__N_SV_SEP_tot
-
-    % persistent P__c_p_eff
-    % persistent P__R_SEI
-    % persistent P__rho_eff
-
-    % persistent SEP__c_p_eff
-    % persistent SEP__del_x
-    % persistent SEP__eps_el
-    % persistent SEP__lambda_eff
-    % persistent SEP__rho_eff
-
-    % persistent SIM__del_x_vec_halved
-    % persistent SIM__diff_CV_x_vec
-    % persistent SIM__eps_el_vec
-    % persistent SIM__interp_x_interface
-    % persistent SIM__MassFluxPreCalcResistor
 
     if isempty(AN__C_Li_max_inv)
         FLAG__AMLoss                        = FLAG.AMLoss;
@@ -297,8 +237,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         SIM__A_c                    = SIM.A_c;
         SIM__AML_cons_vec           = SIM.AML_cons_vec;
         SIM__A_s_CV_vec             = SIM.A_s_CV_vec;
-        SIM__A_surf_CV_vec          = SIM.A_surf_CV_vec;
         SIM__A_surf_CV_vec_inv      = SIM.A_surf_CV_vec_inv;
+        SIM__A_surf_single_vec      = SIM.A_surf_single_vec;
         SIM__A_outside_vec          = SIM.A_outside_vec;
         SIM__C_Li_diff_threshold    = SIM.C_Li_diff_threshold;
         SIM__CTRG_cons_vec          = SIM.CTRG_cons_vec;
@@ -344,72 +284,11 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
         if isfield(SIM , 'q_CA_BC')
             SIM__q_CA_BC = SIM.q_CA_BC;
         end
-        
-        % AN__A_s                     = AN.A_s;
-        % AN__A_surf_CV_inv           = AN.A_surf_CV_inv;
-        % AN__A_surf_CV = AN.A_surf_CV;
-        % AN__C_Li_max = AN.C_Li_max;
-        % AN__c_p_eff = AN.c_p_eff;
-        % AN__del_CV_r_vec = AN.del_CV_r_vec;
-        % AN__del_r_vec = AN.del_r_vec;
-        % AN__del_x = AN.del_x;
-        % AN__eps_el = AN.eps_el;
-        % AN__lambda_eff = AN.lambda_eff;
-        % AN__r_half_vec = AN.r_half_vec;
-        % AN__R_SEI = AN.R_SEI;
-        % AN__R_SEI_inv               = AN.R_SEI_inv;
-        % AN__r_vec = AN.r_vec;
-        % AN__rho_eff = AN.rho_eff;
-        % AN__sigma = AN.sigma;
-
-        % CA__A_s                     = CA.A_s;
-        % CA__A_surf_CV_inv           = CA.A_surf_CV_inv;
-        % CA__A_surf_CV = CA.A_surf_CV;
-        % CA__C_Li_max = CA.C_Li_max;
-        % CA__c_p_eff = CA.c_p_eff;
-        % CA__del_CV_r_vec = CA.del_CV_r_vec;
-        % CA__del_r_vec = CA.del_r_vec;
-        % CA__del_x = CA.del_x;
-        % CA__eps_el = CA.eps_el;
-        % CA__lambda_eff = CA.lambda_eff;
-        % CA__r_half_vec = CA.r_half_vec;
-        % CA__R_SEI = CA.R_SEI; 
-        % CA__R_SEI_inv               = CA.R_SEI_inv;
-        % CA__r_vec = CA.r_vec;
-        % CA__rho_eff = CA.rho_eff;
-        % CA__sigma = CA.sigma;
-
-        % CONS__R_inv = CONS.R_inv;
-
-        % EL__C = EL.C;
-
-        % N__N_prop = N.N_prop; 
-        % N__N_SV_AN_tot = N.N_SV_AN_tot;
-        % N__N_SV_max = N.N_SV_max;
-        % N__N_SV_nR = N.N_SV_nR;
-        % N__N_SV_SEP_tot = N.N_SV_SEP_tot;
-
-        % P__c_p_eff = P.c_p_eff; 
-        % P__R_SEI = P.R_SEI; 
-        % P__rho_eff = P.rho_eff; 
-
-        % SEP__c_p_eff = SEP.c_p_eff;
-        % SEP__del_x = SEP.del_x;
-        % SEP__eps_el = SEP.eps_el;
-        % SEP__lambda_eff = SEP.lambda_eff;
-        % SEP__rho_eff = SEP.rho_eff;
-        
-        % SIM__del_x_vec_halved = SIM.del_x_vec_halved;
-        % SIM__diff_CV_x_vec = SIM.diff_CV_x_vec;
-        % SIM__eps_el_vec = SIM.eps_el_vec;
-        % SIM__interp_x_interface     = SIM.interp_x_interface;
-        % SIM__MassFluxPreCalcResistor= SIM.MassFluxPreCalcResistor;
     end
 
 
 %% Organize (reshape) the SV
     SV = SV1Dto2D_short(SV, SIM__SV_nan, N__IDX_1Dto2D);
-    % SV = SV1Dto2D(SV , N__N_SV_max, N__N_CV_tot, N__N_SV_AN_tot, N__N_SV_SEP_tot, N__N_SV_AN, N__N_SV_SEP, N__N_SV_CA, N__N_CV_AN, N__N_CV_SEP, N__N_CV_CA, N__CV_Region_AN, N__CV_Region_SEP, N__CV_Region_CA, P__T, P__del_phi, P__C_Liion, P__SEP__T, P__SEP__phi_el, P__SEP__C_Liion);
     SV = addPhiEl2SV(SV, P__phi_ed, P__del_phi, N__CV_Region_SEP, N__N_CV_SEP);
 
         
@@ -452,7 +331,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 %% Calculate Gradient
     [phi_ed_diff, phi_ed_grad] = diffAndGradXCalc(phi_ed, SIM__diff_CV_x_vec_inv);
     [phi_el_diff, phi_el_grad] = diffAndGradXCalc(phi_el, SIM__diff_CV_x_vec_inv);
-    % [Ce_log_diff, Ce_log_grad] = diffAndGradXCalc(Ce_log, SIM__diff_CV_x_vec_inv);
     [Ce_diff    , Ce_grad    ] = diffAndGradXCalc(Ce    , SIM__diff_CV_x_vec_inv);
     [T_diff     , T_grad     ] = diffAndGradXCalc(T     , SIM__diff_CV_x_vec_inv);
 
@@ -523,10 +401,9 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 % Active Material Loss
     if FLAG__AMLoss
         [AM_LossRate] = NParticlesLoss(C_Li_diff(end-1,:) , SIM__C_Li_diff_threshold , SIM__AML_cons_vec , FLAG__AML_Dep);
-        [~, A_surf_CV_vec_inv , A_s_vec ] = SurfAreaCalcs(N_Particles , SIM__A_surf_CV_vec , SIM__dVol_inv);
+        [~, A_surf_CV_vec_inv , A_s_vec ] = SurfAreaCalcs(N_Particles , SIM__A_surf_single_vec , SIM__dVol_inv);
     else
         AM_LossRate       = zero_CV_vec;
-        % A_surf_CV_vec = SIM__A_surf_CV_vec;
         A_surf_CV_vec_inv = SIM__A_surf_CV_vec_inv;
         A_s_vec           = SIM__A_s_CV_vec;
     end
@@ -545,10 +422,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
                                 + q_gen(i) ;
         
         % phi_el                    
-            % dSVdt_AN(P__del_phi , i) =  (AN__A_c / AN__A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
-            %                           - (SV(P__V_1,i) - SV(P__phi_el,i))/AN__R_SEI;
-            % dSVdt_AN(P__del_phi , i) =  (AN__A_c * AN__A_surf_CV_inv)*(i_el(i+1) - i_el(i)  ) ...
-            %                           - ( V_1(i) - phi_el(i) )*AN__R_SEI_inv;
             dSVdt_AN(P__del_phi , i) =  (AN__A_c * A_surf_CV_vec_inv(i))*(i_el(i+1) - i_el(i)  ) ...
                                       - ( V_1(i) - phi_el(i) )*R_SEI_vec_inv(i);
                             
@@ -557,10 +430,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
                                      - (i_ed(i+1) + i_el(i+1));
         
         % V_1                    
-            % dSVdt_AN(P__V_1    , i) = - (SV(P__V_1,i) - SV(P__phi_el,i))/AN__R_SEI ...
-            %                           +  i_Far(i);
-            % dSVdt_AN(P__V_1    , i) = - ( V_1(i) - phi_el(i) )*AN__R_SEI_inv ...
-            %                           +  i_Far(i);
             dSVdt_AN(P__V_1    , i) = - ( V_1(i) - phi_el(i) )*R_SEI_vec_inv(i) ...
                                       +  i_Far(i);
                             
@@ -569,7 +438,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
                                       + i_PS(i);
         
 	    % i_PS                    
-            % dSVdt_AN(P__i_PS   , i) =    SV(P__phi_ed,i) - SV(P__V_2,i) -  E_eq_vec(i);
             dSVdt_AN(P__i_PS   , i) =    phi_ed(i) - V_2(i) -  E_eq_vec(i);
         
 	    % Chg Trans Resis Growth
@@ -579,17 +447,11 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
             dSVdt_AN(P__NPartic , i) = AM_LossRate(1,i);
                             
 	    % C_Li^+
-            % dSVdt_AN(P__C_Liion, i) = -(J_Liion(i+1) - J_Liion(i))/ AN__del_x...
-            %                           + s_dot(i) * AN__A_s;
-            % dSVdt_AN(P__C_Liion, i) = -(J_Liion(i+1) - J_Liion(i)) * AN__del_x_inv...
-            %                           + s_dot(i) * AN__A_s;
             dSVdt_AN(P__C_Liion, i) = -(J_Liion(i+1) - J_Liion(i)) * AN__del_x_inv...
                                       + s_dot(i) * A_s_vec(i);
                     
         % C_Li
             for j = 1:N__N_R_AN
-                    % dSVdt_AN(P__C_Li+j-1, i) = -3*(AN__r_half_vec(j+1)^2 * J_Li(j+1,i) - AN__r_half_vec(j)^2 * J_Li(j,i)) ...
-                    %                            / (AN__r_half_vec(j+1)^3-AN__r_half_vec(j)^3);
                     dSVdt_AN(P__C_Li+j-1, i) = -3*(AN__r_half_vec_sq(j+1) * J_Li(j+1,i) - AN__r_half_vec_sq(j) * J_Li(j,i)) ...
                                                * AN__r_half_vec_diffcubed_inv(j);
             end
@@ -625,7 +487,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
             dSVdt_SEP(P__SEP__phi_el, i) = -(i_el(index_offset+1)-i_el(index_offset));
         
         % C_Li^+
-            % dSVdt_SEP(P__SEP__C_Liion, i)= -(J_Liion(index_offset+1) - J_Liion(index_offset))/SEP__del_x;
             dSVdt_SEP(P__SEP__C_Liion, i)= -(J_Liion(index_offset+1) - J_Liion(index_offset))*SEP__del_x_inv;
     end
 
@@ -640,10 +501,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
                                 + q_gen(index_offset) ;
         
         % phi_el
-            % dSVdt_CA(P__del_phi , i) =  (CA__A_c / CA__A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
-            %                             - (SV(P__V_1,index_offset) - SV(P__phi_el,index_offset))/CA__R_SEI;
-            % dSVdt_CA(P__del_phi , i) =  (CA__A_c * CA__A_surf_CV_inv)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
-            %                             - ( V_1(index_offset) - phi_el(index_offset) )*CA__R_SEI_inv;
             dSVdt_CA(P__del_phi , i) =  (CA__A_c * A_surf_CV_vec_inv(index_offset))*(i_el(index_offset+1) - i_el(index_offset)  ) ...
                                         - ( V_1(index_offset) - phi_el(index_offset) )*R_SEI_vec_inv(index_offset);
         
@@ -652,10 +509,6 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
                                       - (i_ed(index_offset+1) + i_el(index_offset+1));
         
 	    % V_1                    
-            % dSVdt_CA(P__V_1    , i)  = - (SV(P__V_1,index_offset) - SV(P__phi_el,index_offset))/CA__R_SEI ...
-            %                            +  i_Far(index_offset);
-            % dSVdt_CA(P__V_1    , i)  = - ( V_1(index_offset) - phi_el(index_offset) )*CA__R_SEI_inv ...
-            %                            +  i_Far(index_offset);
             dSVdt_CA(P__V_1    , i)  = - ( V_1(index_offset) - phi_el(index_offset) )*R_SEI_vec_inv(index_offset) ...
                                        +  i_Far(index_offset);
         
@@ -674,16 +527,10 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
             dSVdt_CA(P__NPartic , i) = AM_LossRate(1,index_offset);
         
         % C_Li^+
-            % dSVdt_CA(P__C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset))/ CA__del_x...
-            %                           + s_dot(index_offset) * CA__A_s;
-            % dSVdt_CA(P__C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset)) * CA__del_x_inv...
-            %                           + s_dot(index_offset) * CA__A_s;
             dSVdt_CA(P__C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset)) * CA__del_x_inv...
                                       + s_dot(index_offset) * A_s_vec(1,index_offset);
         % C_Li
             for j = 1:N__N_R_CA
-                    % dSVdt_CA(P__C_Li+j-1, i) = -3*(CA__r_half_vec(j+1)^2 * J_Li(j+1,index_offset) - CA__r_half_vec(j)^2 * J_Li(j,index_offset)) ...
-                    %                            / (CA__r_half_vec(j+1)^3-CA__r_half_vec(j)^3);
                     dSVdt_CA(P__C_Li+j-1, i) = -3*(CA__r_half_vec_sq(j+1) * J_Li(j+1,index_offset) - CA__r_half_vec_sq(j) * J_Li(j,index_offset)) ...
                                                * CA__r_half_vec_diffcubed_inv(j);
             end
@@ -715,10 +562,195 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 
 %% Used for troubleshooting
-    if t>SIM.initial_offset
-       t;
-    end
+    % if t>1000
+    %    t;
+    % end
+    % if t>SIM.initial_offset
+    %    t;
+    % end
     % if t>SIM.t_ramp
     %    t;
     % end
 end
+
+
+
+    % persistent AN__A_s
+    % persistent AN__A_surf_CV
+    % persistent AN__A_surf_CV_inv
+    % persistent AN__C_Li_max
+    % persistent AN__c_p_eff
+    % persistent AN__del_CV_r_vec
+    % persistent AN__del_r_vec
+    % persistent AN__del_x
+    % persistent AN__eps_el
+    % persistent AN__lambda_eff
+    % persistent AN__r_half_vec
+    % persistent AN__R_SEI_inv
+    % persistent AN__R_SEI
+    % persistent AN__r_vec
+    % persistent AN__rho_eff
+    % persistent AN__sigma
+
+    % persistent CA__A_s 
+    % persistent CA__A_surf_CV
+    % persistent CA__A_surf_CV_inv
+    % persistent CA__C_Li_max
+    % persistent CA__c_p_eff
+    % persistent CA__del_CV_r_vec
+    % persistent CA__del_r_vec
+    % persistent CA__del_x 
+    % persistent CA__eps_el
+    % persistent CA__lambda_eff
+    % persistent CA__r_half_vec
+    % persistent CA__R_SEI 
+    % persistent CA__R_SEI_inv
+    % persistent CA__r_vec
+    % persistent CA__rho_eff
+    % persistent CA__sigma
+
+    % persistent CONS__R_inv
+
+    % persistent EL__C
+
+    % persistent N__N_prop
+    % persistent N__N_SV_AN_tot
+    % persistent N__N_SV_max
+    % persistent N__N_SV_nR
+    % persistent N__N_SV_SEP_tot
+
+    % persistent P__c_p_eff
+    % persistent P__R_SEI
+    % persistent P__rho_eff
+
+    % persistent SEP__c_p_eff
+    % persistent SEP__del_x
+    % persistent SEP__eps_el
+    % persistent SEP__lambda_eff
+    % persistent SEP__rho_eff
+
+    % persistent SIM__A_surf_CV_vec
+    % persistent SIM__A_surf_single_vec_inv
+    % persistent SIM__del_x_vec_halved
+    % persistent SIM__diff_CV_x_vec
+    % persistent SIM__eps_el_vec
+    % persistent SIM__interp_x_interface
+    % persistent SIM__MassFluxPreCalcResistor
+
+
+
+        
+        % AN__A_s                     = AN.A_s;
+        % AN__A_surf_CV_inv           = AN.A_surf_CV_inv;
+        % AN__A_surf_CV = AN.A_surf_CV;
+        % AN__C_Li_max = AN.C_Li_max;
+        % AN__c_p_eff = AN.c_p_eff;
+        % AN__del_CV_r_vec = AN.del_CV_r_vec;
+        % AN__del_r_vec = AN.del_r_vec;
+        % AN__del_x = AN.del_x;
+        % AN__eps_el = AN.eps_el;
+        % AN__lambda_eff = AN.lambda_eff;
+        % AN__r_half_vec = AN.r_half_vec;
+        % AN__R_SEI = AN.R_SEI;
+        % AN__R_SEI_inv               = AN.R_SEI_inv;
+        % AN__r_vec = AN.r_vec;
+        % AN__rho_eff = AN.rho_eff;
+        % AN__sigma = AN.sigma;
+
+        % CA__A_s                     = CA.A_s;
+        % CA__A_surf_CV_inv           = CA.A_surf_CV_inv;
+        % CA__A_surf_CV = CA.A_surf_CV;
+        % CA__C_Li_max = CA.C_Li_max;
+        % CA__c_p_eff = CA.c_p_eff;
+        % CA__del_CV_r_vec = CA.del_CV_r_vec;
+        % CA__del_r_vec = CA.del_r_vec;
+        % CA__del_x = CA.del_x;
+        % CA__eps_el = CA.eps_el;
+        % CA__lambda_eff = CA.lambda_eff;
+        % CA__r_half_vec = CA.r_half_vec;
+        % CA__R_SEI = CA.R_SEI; 
+        % CA__R_SEI_inv               = CA.R_SEI_inv;
+        % CA__r_vec = CA.r_vec;
+        % CA__rho_eff = CA.rho_eff;
+        % CA__sigma = CA.sigma;
+
+        % CONS__R_inv = CONS.R_inv;
+
+        % EL__C = EL.C;
+
+        % N__N_prop = N.N_prop; 
+        % N__N_SV_AN_tot = N.N_SV_AN_tot;
+        % N__N_SV_max = N.N_SV_max;
+        % N__N_SV_nR = N.N_SV_nR;
+        % N__N_SV_SEP_tot = N.N_SV_SEP_tot;
+
+        % P__c_p_eff = P.c_p_eff; 
+        % P__R_SEI = P.R_SEI; 
+        % P__rho_eff = P.rho_eff; 
+
+        % SEP__c_p_eff = SEP.c_p_eff;
+        % SEP__del_x = SEP.del_x;
+        % SEP__eps_el = SEP.eps_el;
+        % SEP__lambda_eff = SEP.lambda_eff;
+        % SEP__rho_eff = SEP.rho_eff;
+        
+        % SIM__A_surf_CV_vec          = SIM.A_surf_CV_vec;
+        % SIM__A_surf_single_vec_inv  = SIM.A_surf_single_vec_inv;
+        % SIM__del_x_vec_halved = SIM.del_x_vec_halved;
+        % SIM__diff_CV_x_vec = SIM.diff_CV_x_vec;
+        % SIM__eps_el_vec = SIM.eps_el_vec;
+        % SIM__interp_x_interface     = SIM.interp_x_interface;
+        % SIM__MassFluxPreCalcResistor= SIM.MassFluxPreCalcResistor;
+
+
+    % SV = SV1Dto2D(SV , N__N_SV_max, N__N_CV_tot, N__N_SV_AN_tot, N__N_SV_SEP_tot, N__N_SV_AN, N__N_SV_SEP, N__N_SV_CA, N__N_CV_AN, N__N_CV_SEP, N__N_CV_CA, N__CV_Region_AN, N__CV_Region_SEP, N__CV_Region_CA, P__T, P__del_phi, P__C_Liion, P__SEP__T, P__SEP__phi_el, P__SEP__C_Liion);
+
+
+    % [Ce_log_diff, Ce_log_grad] = diffAndGradXCalc(Ce_log, SIM__diff_CV_x_vec_inv);
+
+
+            % dSVdt_AN(P__del_phi , i) =  (AN__A_c / AN__A_surf_CV)*(i_el(i+1) - i_el(i)  ) ...
+            %                           - (SV(P__V_1,i) - SV(P__phi_el,i))/AN__R_SEI;
+            % dSVdt_AN(P__del_phi , i) =  (AN__A_c * AN__A_surf_CV_inv)*(i_el(i+1) - i_el(i)  ) ...
+            %                           - ( V_1(i) - phi_el(i) )*AN__R_SEI_inv;
+
+            % dSVdt_AN(P__V_1    , i) = - (SV(P__V_1,i) - SV(P__phi_el,i))/AN__R_SEI ...
+            %                           +  i_Far(i);
+            % dSVdt_AN(P__V_1    , i) = - ( V_1(i) - phi_el(i) )*AN__R_SEI_inv ...
+            %                           +  i_Far(i);
+
+            % dSVdt_AN(P__i_PS   , i) =    SV(P__phi_ed,i) - SV(P__V_2,i) -  E_eq_vec(i);
+
+            % dSVdt_AN(P__C_Liion, i) = -(J_Liion(i+1) - J_Liion(i))/ AN__del_x...
+            %                           + s_dot(i) * AN__A_s;
+            % dSVdt_AN(P__C_Liion, i) = -(J_Liion(i+1) - J_Liion(i)) * AN__del_x_inv...
+            %                           + s_dot(i) * AN__A_s;
+
+
+                    % dSVdt_AN(P__C_Li+j-1, i) = -3*(AN__r_half_vec(j+1)^2 * J_Li(j+1,i) - AN__r_half_vec(j)^2 * J_Li(j,i)) ...
+                    %                            / (AN__r_half_vec(j+1)^3-AN__r_half_vec(j)^3);
+
+
+            % dSVdt_SEP(P__SEP__C_Liion, i)= -(J_Liion(index_offset+1) - J_Liion(index_offset))/SEP__del_x;
+
+
+            % dSVdt_CA(P__del_phi , i) =  (CA__A_c / CA__A_surf_CV)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
+            %                             - (SV(P__V_1,index_offset) - SV(P__phi_el,index_offset))/CA__R_SEI;
+            % dSVdt_CA(P__del_phi , i) =  (CA__A_c * CA__A_surf_CV_inv)*(i_el(index_offset+1) - i_el(index_offset)  ) ...
+            %                             - ( V_1(index_offset) - phi_el(index_offset) )*CA__R_SEI_inv;
+
+
+            % dSVdt_CA(P__V_1    , i)  = - (SV(P__V_1,index_offset) - SV(P__phi_el,index_offset))/CA__R_SEI ...
+            %                            +  i_Far(index_offset);
+            % dSVdt_CA(P__V_1    , i)  = - ( V_1(index_offset) - phi_el(index_offset) )*CA__R_SEI_inv ...
+            %                            +  i_Far(index_offset);
+
+
+            % dSVdt_CA(P__C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset))/ CA__del_x...
+            %                           + s_dot(index_offset) * CA__A_s;
+            % dSVdt_CA(P__C_Liion, i) = -(J_Liion(index_offset+1) - J_Liion(index_offset)) * CA__del_x_inv...
+            %                           + s_dot(index_offset) * CA__A_s;
+
+
+                    % dSVdt_CA(P__C_Li+j-1, i) = -3*(CA__r_half_vec(j+1)^2 * J_Li(j+1,index_offset) - CA__r_half_vec(j)^2 * J_Li(j,index_offset)) ...
+                    %                            / (CA__r_half_vec(j+1)^3-CA__r_half_vec(j)^3);

@@ -442,6 +442,12 @@ SIM.onlyAtSep = onlyAtSep;
 
         SIM.A_surf_CV_vec_inv = SIM.A_surf_CV_vec.^(-1);
 
+        SIM.A_surf_single_vec = [AN.A_surf*ones(1,N.N_CV_AN),...
+                                          zeros(1,N.N_CV_SEP),...
+                                 CA.A_surf*ones(1,N.N_CV_CA)];
+
+        SIM.A_surf_single_vec_inv = SIM.A_surf_single_vec.^(-1);
+
         SIM.A_s_CV_vec = [AN.A_s*ones(1,N.N_CV_AN),...
                                 zeros(1,N.N_CV_SEP),...
                           CA.A_s*ones(1,N.N_CV_CA)];
@@ -1197,8 +1203,8 @@ end
     % elseif N.N_SV_tot == 355
     %     data = load('JPattern_sparse355MatlabVaryProp.mat','JPattern_sparse');%%!!!!!!!!!!!!!!!
     % end
-    data = load('JPattern_sparse915MatlabVaryProp.mat','JPattern_sparse');
-    SIM.JPattern = data.JPattern_sparse;
+    % data = load('JPattern_sparse915MatlabVaryProp.mat','JPattern_sparse');
+    % SIM.JPattern = data.JPattern_sparse;
 
 
 end

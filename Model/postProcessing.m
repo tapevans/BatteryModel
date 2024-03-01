@@ -92,7 +92,7 @@ if ~postProcessComplete
         X_Li_surf    = NaN(   N_t_steps , N.N_CV_tot );
         C_Li         = NaN(   N.N_R_max , N.N_CV_tot, N_t_steps );
         X_Li         = NaN(   N.N_R_max , N.N_CV_tot, N_t_steps );
-        %     J_Liion     = zeros( N_t_steps , N.N_CV_tot + 1);
+        % J_Liion      = zeros( N_t_steps , N.N_CV_tot + 1);
         % J_Li
         % props
         
@@ -356,21 +356,44 @@ if ~postProcessComplete
 
 %% Calculate mass at each time step
     % Volume Vector
-    Vol_el = [ AN.dVol_el*ones(1 , N.N_CV_AN) , SEP.dVol_el*ones(1 , N.N_CV_SEP) , CA.dVol_el*ones(1 , N.N_CV_CA)];
-    Vol_ed = NaN(N.N_R_max , N.N_CV_tot);
+    Vol_el  = [ AN.dVol_el*ones(1 , N.N_CV_AN) , SEP.dVol_el*ones(1 , N.N_CV_SEP) , CA.dVol_el*ones(1 , N.N_CV_CA)];
+    % Vol_ed = NaN(N.N_R_max , N.N_CV_tot);
        
+    % for i = N.CV_Region_AN
+    %     Vol_ed(1:N.N_R_AN,i) = AN.dVol_r * AN.Np_CV;
+    % end
+    % for i = N.CV_Region_CA
+    %     Vol_ed(1:N.N_R_CA,i) = CA.dVol_r * CA.Np_CV;
+    % end
+    % Vol_vec = [Vol_el ; Vol_ed];
+    % 
+    % % Mass in each CV
+    % mass = zeros(N.N_R_max+1 , N.N_CV_tot, N_t_steps ); %%%% The plus 1 is to include C_Liion
+    % for i = 1:N_t_steps
+    %     mass(:,:,i) = Vol_vec .* SV(P.C_Liion:P.C_Li_surf_max,:,i);
+    %     % Sum of masses
+    %     total_mass(i,1) = sum(mass(:,:,i),'all','omitnan');
+    % end
+    % mass_error = total_mass(:) - total_mass(1);
+       
+    dVol_ed = NaN(N.N_R_max , N.N_CV_tot);
     for i = N.CV_Region_AN
-        Vol_ed(1:N.N_R_AN,i) = AN.dVol_r * AN.Np_CV;
+        dVol_ed(1:N.N_R_AN,i) = AN.dVol_r;
     end
     for i = N.CV_Region_CA
-        Vol_ed(1:N.N_R_CA,i) = CA.dVol_r * CA.Np_CV;
+        dVol_ed(1:N.N_R_CA,i) = CA.dVol_r;
     end
-    Vol_vec = [Vol_el ; Vol_ed];
+    for i = 1:N_t_steps
+        for j = 1:N.N_R_max
+            Vol_ed_wrt_time(j,:,i) = dVol_ed(j,:) .* N_Particles(i,:);
+        end
+        Vol_vec(:,:,i) = [Vol_el ; Vol_ed_wrt_time(:,:,i)];
+    end
     
     % Mass in each CV
     mass = zeros(N.N_R_max+1 , N.N_CV_tot, N_t_steps ); %%%% The plus 1 is to include C_Liion
     for i = 1:N_t_steps
-        mass(:,:,i) = Vol_vec .* SV(P.C_Liion:P.C_Li_surf_max,:,i);
+        mass(:,:,i) = Vol_vec(:,:,i) .* SV(P.C_Liion:P.C_Li_surf_max,:,i);
         % Sum of masses
         total_mass(i,1) = sum(mass(:,:,i),'all','omitnan');
     end

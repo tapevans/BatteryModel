@@ -84,11 +84,11 @@ clear all; close all; clc;
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
     % C_rates      = [];
-    % C_rates      = [0]; 
+    C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
-    C_rates      = [-1]; 
+    % C_rates      = [-1]; 
     % C_rates      = [-5]; 
     % C_rates      = -(1:5); 
     % C_rates      = [1/20]; 
@@ -274,7 +274,7 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
     if C_rates(i) < 0
         CorD = 'C';
         SIM.ChargeOrDischarge = -1;
-        SIM.SOC_start = 0;
+        SIM.SOC_start = 5;
     elseif C_rates(i) > 0
         CorD = 'D';
         SIM.ChargeOrDischarge = 1;
