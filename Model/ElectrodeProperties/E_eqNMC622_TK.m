@@ -1,7 +1,7 @@
 % E^eq (NMC622)
 % Only valid between x = [0.121427623511542 , 0.998958038269834]
 
-function E_eq = E_eqNMC622(x)
+function E_eq = E_eqNMC622_TK(x)
     x = reshape(x,1,[]);
 
     P.order = 13;
