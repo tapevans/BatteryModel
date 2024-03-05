@@ -40,7 +40,8 @@ function [SIM] = UserCurrentProfile(SIM,FLAG)
         
         % Get Simulation Time
         if SIM.C_rate == 0
-            t_final = 50; % [s], Final time
+            % t_final = 50; % [s], Final time
+            t_final = SIM.RampThermalGradientTime*1.5; % [s], Final time
         else
             t_final = SIM.charge_frac*3600/SIM.C_rate; % [s], Sim time
         end

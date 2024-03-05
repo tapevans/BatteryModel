@@ -18,7 +18,10 @@
     % Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFile';   i = i+1;
-    Project_Folder{i} = 'TK_TestDeg';   i = i+1;
+    % Project_Folder{i} = 'TK_TestDeg';   i = i+1;
+    % Project_Folder{i} = 'TK_DelV_DelT_Tests';   i = i+1;
+    Project_Folder{i} = 'TK_CyclingDegradation';   i = i+1;
+    % Project_Folder{i} = 'TK_Test';   i = i+1;
 
 
 %% Parameters
@@ -60,15 +63,16 @@ for i = 1:num_sim_files
     
     %% Check if it has already ran
     if ~postProcessComplete
+        clear batt_GovEqn
         load(sim_filenames{i})
         %% Run simulation
         tSimStart = tic;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Polarization ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if SIM.SimMode == 1 
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
 
             % Simulation Parameters
             Tol.Abs = 1E-7;
@@ -101,10 +105,10 @@ for i = 1:num_sim_files
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Harmonic Perturbation ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 2 
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
 
             % Simulation Parameters
             Tol.Abs = 1E-7;
@@ -138,18 +142,18 @@ for i = 1:num_sim_files
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- State Space EIS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 3 
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
             [A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS);
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Known BC Profile Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 4 
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
             % Initialize Save Variables
                 t_soln      = [];
                 SV_soln     = [];
@@ -159,7 +163,8 @@ for i = 1:num_sim_files
                 
             % Loop through all of the steps
             for k = 1:length(SIM.Controller_MO_File)
-                % k
+                clear batt_GovEqn
+                k
                 SIM.current_MO_step = k;
                 MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
                 
@@ -277,17 +282,17 @@ for i = 1:num_sim_files
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- MOO Controller ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 5
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Manual Current Profile ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 7 
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
 
             % Simulation Parameters
             Tol.Abs = 1E-7;
@@ -348,10 +353,10 @@ for i = 1:num_sim_files
             end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- PRBS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 8
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
 
             % Simulation Parameters
             Tol.Abs = 1E-7;
@@ -518,10 +523,10 @@ for i = 1:num_sim_files
             % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- EIS from Stitching PRBS ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 9
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
 
             % Load in PRBS results
                 NumPRBS = length(PRBS_desTswitch_filenames);
@@ -613,10 +618,10 @@ for i = 1:num_sim_files
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- EIS Ho-Kalman ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         elseif SIM.SimMode == 10
-            if SIM.SimMode ~= previousSimMode
-                clear batt_GovEqn
-                previousSimMode = SIM.SimMode;
-            end
+            % if SIM.SimMode ~= previousSimMode
+            %     clear batt_GovEqn
+            %     previousSimMode = SIM.SimMode;
+            % end
             
         % Get impulse response
             % Simulation Parameters

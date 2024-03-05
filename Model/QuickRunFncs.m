@@ -12,7 +12,7 @@
 clear all
 close all
 clc
-
+%%
 
 %
     inputHandle             = @batt_inputs_ToddKingston;

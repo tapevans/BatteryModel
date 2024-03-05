@@ -41,7 +41,7 @@
         
         
 %%
-clear all; close all; clc;
+% clear all; close all; clc;
 
 
 %% Subdirecties to Include
@@ -75,16 +75,30 @@ clear all; close all; clc;
     FLAG_local.sim_overwrite    = 1; % 1 if older simulation is deleted and new one is created
 
 % Test Degradation
-    folder_name  = 'TK_TestDeg';
-    battery_name = 'Test';
-    % battery_name = 'TestAMLoss';
+    % folder_name  = 'TK_Test';
+    % battery_name = 'Test_CTRG_Both';
+
+    % folder_name  = 'TK_DelV_DelT_Tests';
+    % % battery_name = 'Test';
+    % % battery_name = 'TestAMLoss';
+
+    folder_name  = 'TK_CyclingDegradation';
+    % % battery_name = 'Iso20_ConstantCTRG_AN';
+    % % battery_name = 'Iso20_ConstantCTRG_CA';
+    % % battery_name = 'Iso20_ConstantCTRG_Both';
+    % % battery_name = 'Iso20_ConstantAML_AN';
+    % % battery_name = 'Iso20_ConstantAML_CA';
+    % % battery_name = 'Iso20_ConstantAML_Both';
+    % % battery_name = 'Iso20_CombinedCTRG_AML_AN';
+    % % battery_name = 'Iso20_CombinedCTRG_AML_CA';
+    % battery_name = 'Iso20_CombinedCTRG_AML_Both';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    % C_rates      = [];
-    C_rates      = [0]; 
+    C_rates      = [];
+    % C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
@@ -141,16 +155,17 @@ clear all; close all; clc;
         
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 0;
+    KBCP   = 1;
         KBCPProfileOverwrite = 0;
         % KBCPProfileFilename = 'StairStepNoRelax';
         % KBCPProfileFilename = 'GITT';
-        KBCPProfileFilename = 'Chg_Dchg_1Cycles';
+        % KBCPProfileFilename = 'Chg_Dchg_1Cycles';
+        % KBCPProfileFilename = 'Chg_Dchg_1.5Cycles';
         % KBCPProfileFilename = 'Chg_Dchg_2Cycles';
         % KBCPProfileFilename = 'Chg_Dchg_4Cycles';
+        % KBCPProfileFilename = 'Chg_Dchg_10Cycles';
         % KBCPProfileFilename = 'Chg_Dchg_17Cycles';
         % KBCPProfileFilename = 'Chg_Dchg_20Cycles';
-        % KBCPProfileFilename = 'Chg_Dchg_10Cycles';
 
     % Initial SOC
         % KBSOC = 81.93;
@@ -283,7 +298,7 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
     else
         CorD = 'D';
         SIM.ChargeOrDischarge = 1;
-        SIM.SOC_start = 50;
+        SIM.SOC_start = 10;
     end
     cRateTxt = sprintf( '%.2f' , abs(C_rates(i)) ) ;
     filename = [ battery_name , '_Polar_' , cRateTxt , 'C_' , CorD , '.mat'];

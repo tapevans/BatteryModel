@@ -326,10 +326,12 @@ SIM.onlyAtSep = onlyAtSep;
     if FLAG.CTRGrowth
         SIM.CTRG_cons_vec = [AN.ChgTranResGrowthRate*ones(1,N.N_CV_AN) , zeros(1 , N.N_CV_SEP ) , CA.ChgTranResGrowthRate*ones(1,N.N_CV_CA)];
         % Decide which CV 
-            % SIM.CTRG_cons_vec =  ones(1,N.N_CV_tot);
+            SIM.CTRG_cons_vec = SIM.CTRG_cons_vec .* [FLAG.CTRG_AN*ones(1,N.N_CV_AN) , zeros(1 , N.N_CV_SEP ) , FLAG.CTRG_CA*ones(1,N.N_CV_CA)];
+
     else
         SIM.CTRG_cons_vec = zeros(1,N.N_CV_tot);
     end
+
     SIM.R_SEI_0     = [AN.R_SEI*ones(1,N.N_CV_AN) , zeros(1 , N.N_CV_SEP ) , CA.R_SEI*ones(1,N.N_CV_CA)];
     SIM.R_SEI_0_inv = SIM.R_SEI_0.^(-1);
 
@@ -338,7 +340,7 @@ SIM.onlyAtSep = onlyAtSep;
     if FLAG.AMLoss
         SIM.AML_cons_vec = -[AN.AMLossRate*ones(1,N.N_CV_AN) , zeros(1 , N.N_CV_SEP ) , CA.AMLossRate*ones(1,N.N_CV_CA)];
         % Decide which CV 
-            % SIM.AML_cons_vec =  ones(1,N.N_CV_tot);
+            SIM.AML_cons_vec = SIM.AML_cons_vec .* [FLAG.AML_AN*ones(1,N.N_CV_AN) , zeros(1 , N.N_CV_SEP ) , FLAG.AML_CA*ones(1,N.N_CV_CA)];
     else
         SIM.AML_cons_vec = zeros(1,N.N_CV_tot);
     end

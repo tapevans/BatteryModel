@@ -45,6 +45,16 @@ for jj = 1:1
     MO_File(j).delta_tol = [];
 end
 
+    % Constant Current Charge C/5
+    j = j + 1;
+    MO_File(j).MO        = 1;
+    MO_File(j).CorD      = 'C';
+    MO_File(j).C_rate    = 1/5;
+    MO_File(j).Volt_ref  = [];   % [V]
+    MO_File(j).Volt_lim  = 4.2;  % [V]
+    MO_File(j).Time_lim  = 3600*5;  % [s]
+    MO_File(j).delta_tol = [];
+
 %% GITT
     % % Relaxation
     % j = j + 1;

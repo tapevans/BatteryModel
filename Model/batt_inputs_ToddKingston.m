@@ -58,7 +58,7 @@
             FLAG.HEAT_GEN_RXN      = 1; % Heat generation from current across R_SEI %%% May not be accurate
             % FLAG.HEAT_GEN_CHEM_RXN = 0; % Heat generation from a reaction at the SEI %%%%%%%NOT IMPLEMENTED
 
-    FLAG.InitialThermalGradient = 1;
+    FLAG.InitialThermalGradient = 0;
     FLAG.RampThermalGradient    = 0;
         % SIM.RampThermalGradientTime = 1000; % [s], time to ramp the BC
         SIM.RampThermalGradientTime = 0;    % [s], time to ramp the BC
@@ -69,13 +69,29 @@
         % 3) CA Cold
         % 4) Iso18
         % 5) Iso22
-        FLAG.TempBC = 2; % Pre-determined temperature BC
+        FLAG.TempBC = 1; % Pre-determined temperature BC
             
     FLAG.V_SEI        = 1; % 1 if the overpotential is calculated using V_SEI
-    FLAG.CTRGrowth    = 1; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
-        FLAG.CTRG_Dep = 1; % 1 if CTRG is dependent on state variables
-    FLAG.AMLoss       = 1; % 1 if there is active material loss over time (decrease effective surface area (reduced number of particles) ) 
-        FLAG.AML_Dep  = 1; % 1 if AML is dependent on state variables
+    
+    % FLAG.CTRGrowth    = 1; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
+    %     FLAG.CTRG_Dep = 0; % 1 if CTRG is dependent on state variables
+    %     FLAG.CTRG_AN  = 1; % 1 if this mode is active in the AN region
+    %     FLAG.CTRG_CA  = 1; % 1 if this mode is active in the CA region
+    % 
+    % FLAG.AMLoss       = 0; % 1 if there is active material loss over time (decrease effective surface area (reduced number of particles) ) 
+    %     FLAG.AML_Dep  = 0; % 1 if AML is dependent on state variables
+    %     FLAG.AML_AN   = 1; % 1 if this mode is active in the AN region
+    %     FLAG.AML_CA   = 1; % 1 if this mode is active in the CA region
+    
+    FLAG.CTRGrowth    = SIM.preCTRGrowth; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
+        FLAG.CTRG_Dep = 0; % 1 if CTRG is dependent on state variables
+        FLAG.CTRG_AN  = SIM.preCTRG_AN; % 1 if this mode is active in the AN region
+        FLAG.CTRG_CA  = SIM.preCTRG_CA; % 1 if this mode is active in the CA region
+
+    FLAG.AMLoss       = SIM.preAMLoss; % 1 if there is active material loss over time (decrease effective surface area (reduced number of particles) ) 
+        FLAG.AML_Dep  = 0; % 1 if AML is dependent on state variables
+        FLAG.AML_AN   = SIM.preAML_AN; % 1 if this mode is active in the AN region
+        FLAG.AML_CA   = SIM.preAML_CA; % 1 if this mode is active in the CA region
     
     FLAG.Bruggeman = 1; % 1 if properties are adjusted for tortuosity
         FLAG.BRUG_ED = 1; % Apply BRUG to electrode (active material) parameters
@@ -147,7 +163,7 @@
     
     FLAG.doPostProcessing = 1;   % 1 if the postprocessing function is performed after a simulation completes
         FLAG.ReduceSolnTime = 0; % 1 if the results that are saved don't use all the points produced by t_soln ######NOT IMPLEMENTED YET
-    FLAG.Plot             = 1;   % 1 if the results plot immediately
+    FLAG.Plot             = 0;   % 1 if the results plot immediately
         FLAG.PlotUserCurrentProfiles = 0;
 
 
@@ -317,7 +333,7 @@
     AN.c_p        = 706.9;       % [J kg^-1 K^-1],     Specific heat capacity of active material
     AN.lambda     = 400;         % [W m^-1 K^-1],      Thermal conductivity
     AN.C_Li_max   = 30;          % [kmol m^-3],        Max concentration of lithium in the active material
-    AN.AMLossRate = 1e-1;        % [N_particles s^-1], Loss of active material rate
+    AN.AMLossRate = 5e0;         % [N_particles s^-1], Loss of active material rate
     AN.ChgTranResGrowthRate = 1e-6; % [ohm m^2 s^-1],  Solid electrolyte interface resistance growth rate
 
 % ---- Separator ----
@@ -343,7 +359,7 @@
     CA.c_p        = 538;        % [J kg^-1 K^-1],     Specific heat capacity of cathode material
     CA.lambda     = 400;        % [W m^-1 K^-1],      Thermal conductivity of cathode material
     CA.C_Li_max   = 49.6;       % [kmol m^-3],        Max concentration of lithium in the active material
-    CA.AMLossRate = 1e-1;       % [N_particles s^-1], Loss of active material rate
+    CA.AMLossRate = 5e0;        % [N_particles s^-1], Loss of active material rate
     CA.ChgTranResGrowthRate = 1e-6; % [ohm m^2 s^-1], Solid electrolyte interface resistance growth rate
 
 % ---- Electrolyte ----
@@ -360,10 +376,10 @@
     EL.rho        = 75;         % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
     EL.c_p        = 1830;       % [J kg^-1 K^-1], Specific heat capacity of electrolyte
     EL.lambda     = 400;        % [W m^-1 K^-1],  Thermal conductivity of electrolyte %sciencedirect.com/science/article/pii/S0735193317300179
-    EL.S_T        = 1.0;        % [-],            Soret coefficient
-    EL.Beta       = -0.75e-3;   % [V/K],          Seebeck coefficient
-    % EL.S_T        = -1.5;        % [-],            Soret coefficient
-    % EL.Beta       = -1e-3;   % [V/K],          Seebeck coefficient
+    EL.S_T        = 1.5;        % [-],            Soret coefficient
+    EL.Beta       = -1.5e-3;    % [V/K],          Seebeck coefficient
+    % EL.S_T        = SIM.preS_T; % [-],            Soret coefficient
+    % EL.Beta       = SIM.preBeta;% [V/K],          Seebeck coefficient
     EL.dmudc      = 1.0e7;      % change in chemical potential as a function of change in concentration
     
 
@@ -491,7 +507,7 @@
                     if isfield(SIM,'preAN_Temp')
                         SIM.Temp_AN_BC = SIM.preAN_Temp; %,pre: predetermined
                     else
-                        SIM.Temp_AN_BC = 20 + 273.15 - 3;
+                        SIM.Temp_AN_BC = 20 + 273.15 - 2;
                     end
                 case 1 % Isothermal20
                     SIM.Temp_AN_BC = 20 + 273.15;
@@ -520,7 +536,7 @@
                     if isfield(SIM,'preCA_Temp')
                         SIM.Temp_CA_BC = SIM.preCA_Temp; %,pre: predetermined
                     else
-                        SIM.Temp_CA_BC = 20 + 273.15 + 3;
+                        SIM.Temp_CA_BC = 20 + 273.15 + 2;
                     end
                 case 1 % Isothermal20
                     SIM.Temp_CA_BC = 20 + 273.15;

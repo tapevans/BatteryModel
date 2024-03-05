@@ -6,8 +6,8 @@ function plotfcn(filename)
 %% Plot Flags
 % ---- Polarization ----
     FLAG.COE       = 0; % Conservation of Energy Check 
-    FLAG.COM       = 1; % Conservation of Mass Check
-    FLAG.COC       = 1; % Conservation of Charge Check
+    FLAG.COM       = 0; % Conservation of Mass Check
+    FLAG.COC       = 0; % Conservation of Charge Check
     
     FLAG.TEMP      = 1; % Cell Temperature Profile
     
@@ -487,6 +487,7 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
         xlabel('Time (s)')
         ylabel('Voltage (V)')
         xlim([0,t_soln(end)])
+        % deltaV_term = (cell_voltage(end)-cell_voltage(1))*1e3
         
         % exportgraphics(f,'CellVoltage_TBCRamp_ANCOld.png')
     end
