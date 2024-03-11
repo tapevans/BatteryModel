@@ -1209,6 +1209,10 @@ end
     % SIM.JPattern = data.JPattern_sparse;
 
 
+%% Initialization for EIS
+if SIM.SimMode == 3 && FLAG.InitialThermalGradient
+
+
 end
 
 
