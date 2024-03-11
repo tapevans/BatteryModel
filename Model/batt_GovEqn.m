@@ -382,8 +382,8 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 
 %% Calculate Equilibrium Voltage
-    E_eq_an  = AN__EqPotentialHandle( X_AN(end,:) );
-    E_eq_ca  = CA__EqPotentialHandle( X_CA(end,:) );
+    E_eq_an  = AN__EqPotentialHandle( X_AN(end,:) , T(N__CV_Region_AN) );
+    E_eq_ca  = CA__EqPotentialHandle( X_CA(end,:) , T(N__CV_Region_CA) );
     
     E_eq_vec = [ E_eq_an , zeros(1,N__N_CV_SEP) , E_eq_ca];
 

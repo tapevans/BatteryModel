@@ -1,5 +1,5 @@
 % E^eq (Graphite)
-function E_eq = E_eqGraphite(x)
+function E_eq = E_eqGraphite(x,T)
 if (x < 0.8)
 
 U = ...

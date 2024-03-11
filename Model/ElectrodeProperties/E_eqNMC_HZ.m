@@ -1,6 +1,6 @@
 %% E_eqNMC
 % E^eq (NMC)
-function E_eq = E_eqNMC_HZ(x)
+function E_eq = E_eqNMC_HZ(x,T)
     % Fit parameters
     A = [ 5.314735633000300E+00; ...
          -3.640117692001490E+03;...

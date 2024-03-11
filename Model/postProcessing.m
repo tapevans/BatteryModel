@@ -262,8 +262,8 @@ if ~postProcessComplete
                               N.CV_Region_AN, N.CV_Region_CA, N.N_CV_SEP, AN.i_oHandle , CA.i_oHandle);
         
         % Equilibrium
-            Eq_an = AN.EqPotentialHandle( X_Li_surf( i , N.CV_Region_AN ));
-            Eq_ca = CA.EqPotentialHandle( X_Li_surf( i , N.CV_Region_CA ));
+            Eq_an = AN.EqPotentialHandle( X_Li_surf( i , N.CV_Region_AN ) , TemperatureK(i,N.CV_Region_AN));
+            Eq_ca = CA.EqPotentialHandle( X_Li_surf( i , N.CV_Region_CA ) , TemperatureK(i,N.CV_Region_CA));
             Eq (i , : ) = [ Eq_an , NaN(1,N.N_CV_SEP) , Eq_ca ];
 
         % Internal Energy

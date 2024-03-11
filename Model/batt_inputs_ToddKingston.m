@@ -38,7 +38,7 @@
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
 
-    FLAG.OffDiagOnsager = 1;
+    FLAG.OffDiagOnsager = 0;
         FLAG.Soret   = 1;
         FLAG.Seebeck = 1;
     
@@ -59,9 +59,9 @@
             % FLAG.HEAT_GEN_CHEM_RXN = 0; % Heat generation from a reaction at the SEI %%%%%%%NOT IMPLEMENTED
 
     FLAG.InitialThermalGradient = 0;
-    FLAG.RampThermalGradient    = 0;
-        % SIM.RampThermalGradientTime = 1000; % [s], time to ramp the BC
-        SIM.RampThermalGradientTime = 0;    % [s], time to ramp the BC
+    FLAG.RampThermalGradient    = 1;
+        SIM.RampThermalGradientTime = 1000; % [s], time to ramp the BC
+        % SIM.RampThermalGradientTime = 0;    % [s], time to ramp the BC
     % FLAG.TempBC
         % 0) Manual
         % 1) Iso20
@@ -69,29 +69,29 @@
         % 3) CA Cold
         % 4) Iso18
         % 5) Iso22
-        FLAG.TempBC = 1; % Pre-determined temperature BC
+        FLAG.TempBC = 2; % Pre-determined temperature BC
             
     FLAG.V_SEI        = 1; % 1 if the overpotential is calculated using V_SEI
     
-    % FLAG.CTRGrowth    = 1; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
-    %     FLAG.CTRG_Dep = 0; % 1 if CTRG is dependent on state variables
-    %     FLAG.CTRG_AN  = 1; % 1 if this mode is active in the AN region
-    %     FLAG.CTRG_CA  = 1; % 1 if this mode is active in the CA region
-    % 
-    % FLAG.AMLoss       = 0; % 1 if there is active material loss over time (decrease effective surface area (reduced number of particles) ) 
-    %     FLAG.AML_Dep  = 0; % 1 if AML is dependent on state variables
-    %     FLAG.AML_AN   = 1; % 1 if this mode is active in the AN region
-    %     FLAG.AML_CA   = 1; % 1 if this mode is active in the CA region
-    
-    FLAG.CTRGrowth    = SIM.preCTRGrowth; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
+    FLAG.CTRGrowth    = 0; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
         FLAG.CTRG_Dep = 0; % 1 if CTRG is dependent on state variables
-        FLAG.CTRG_AN  = SIM.preCTRG_AN; % 1 if this mode is active in the AN region
-        FLAG.CTRG_CA  = SIM.preCTRG_CA; % 1 if this mode is active in the CA region
+        FLAG.CTRG_AN  = 1; % 1 if this mode is active in the AN region
+        FLAG.CTRG_CA  = 1; % 1 if this mode is active in the CA region
 
-    FLAG.AMLoss       = SIM.preAMLoss; % 1 if there is active material loss over time (decrease effective surface area (reduced number of particles) ) 
+    FLAG.AMLoss       = 0; % 1 if there is active material loss over time (decrease effective surface area (reduced number of particles) ) 
         FLAG.AML_Dep  = 0; % 1 if AML is dependent on state variables
-        FLAG.AML_AN   = SIM.preAML_AN; % 1 if this mode is active in the AN region
-        FLAG.AML_CA   = SIM.preAML_CA; % 1 if this mode is active in the CA region
+        FLAG.AML_AN   = 1; % 1 if this mode is active in the AN region
+        FLAG.AML_CA   = 1; % 1 if this mode is active in the CA region
+    
+            % FLAG.CTRGrowth    = SIM.preCTRGrowth; % 1 if the charge transfer resistance grows over time (increased R_SEI) 
+            %     FLAG.CTRG_Dep = 0; % 1 if CTRG is dependent on state variables
+            %     FLAG.CTRG_AN  = SIM.preCTRG_AN; % 1 if this mode is active in the AN region
+            %     FLAG.CTRG_CA  = SIM.preCTRG_CA; % 1 if this mode is active in the CA region
+            % 
+            % FLAG.AMLoss       = SIM.preAMLoss; % 1 if there is active material loss over time (decrease effective surface area (reduced number of particles) ) 
+            %     FLAG.AML_Dep  = 0; % 1 if AML is dependent on state variables
+            %     FLAG.AML_AN   = SIM.preAML_AN; % 1 if this mode is active in the AN region
+            %     FLAG.AML_CA   = SIM.preAML_CA; % 1 if this mode is active in the CA region
     
     FLAG.Bruggeman = 1; % 1 if properties are adjusted for tortuosity
         FLAG.BRUG_ED = 1; % Apply BRUG to electrode (active material) parameters
@@ -480,14 +480,14 @@
         end
     else
         switch FLAG.TempBC
-            case 0 % Manual
-                SIM.Temp_init = 20 + 273.15; % [K], Initial temperature of the cell
             case 1 % Isothermal20
                 SIM.Temp_init = 20 + 273.15; % [K], Initial temperature of the cell
             case 4 % Isothermal18
                 SIM.Temp_init = 18 + 273.15; % [K], Initial temperature of the cell
             case 5 % Isothermal22
                 SIM.Temp_init = 22 + 273.15; % [K], Initial temperature of the cell
+            otherwise
+                SIM.Temp_init = 20 + 273.15; % [K], Initial temperature of the cell
         end
     end
     

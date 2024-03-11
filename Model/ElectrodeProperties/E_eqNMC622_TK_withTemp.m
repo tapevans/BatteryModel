@@ -1,8 +1,8 @@
 % E^eq (NMC622)
 % Only valid between x = [0.121427623511542 , 0.998958038269834]
 
-function E_eq = E_eqNMC622_TK(x,T)
-    x = reshape(x,1,[]);
+function E_eq = E_eqNMC622_TK_withTemp(x,T)
+    % x = reshape(x,1,[]);
 
     P.order = 13;
     P.A = P.order+2;
@@ -47,4 +47,10 @@ function E_eq = E_eqNMC622_TK(x,T)
         % nan_vec = nan(length(idx_high),1);
         % E_eq(idx_high) = nan_vec;
     end
+    
+    % Temperature Adjustments
+    p = [-0.007136 , 0.01314 , -0.003029 , -0.007028 , 0.004858 , -0.00104 , 2.823e-05];
+    dUdT = p(1)*x.^6 + p(2)*x.^5 + p(3)*x.^4 + p(4)*x.^3 + p(5)*x.^2 + p(6)*x + p(7);
+    T_ref  = 25 + 273.15;
+    E_eq   = E_eq + (T - T_ref) .* dUdT;
 end

@@ -480,13 +480,13 @@ SIM.onlyAtSep = onlyAtSep;
 if isempty(SIM.VoltageMax) 
     %% Mole Fraction Calculation
     % Determine V_min and V_max
-        voltage_min_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC0);
-        voltage_min_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC0);
+        voltage_min_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC0   , Temp_vec(1));
+        voltage_min_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC0 , Temp_vec(end));
         SIM.VoltageMin = voltage_min_ca - voltage_min_an; % Voltage at SOC0
         V_min = voltage_min_ca - voltage_min_an;
 
-        voltage_max_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC100);
-        voltage_max_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC100);
+        voltage_max_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC100   , Temp_vec(1));
+        voltage_max_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC100 , Temp_vec(end));
         SIM.VoltageMax = voltage_max_ca - voltage_max_an; % Voltage at SOC100
         V_max = voltage_max_ca - voltage_max_an;
 
@@ -557,7 +557,7 @@ else
         lb    = 0;
         ub    = 1;
         V_des = SIM.VoltageMax;
-        C_x   = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+        C_x   = lsqnonlin(@(x)XfromDesPotential(x,Temp_vec,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
         C_y   = YfromX(C_x,z,y_intcep);
     
     % Mole fractions at V_min
@@ -565,7 +565,7 @@ else
         lb    = 0;
         ub    = 1;
         V_des = SIM.VoltageMin;
-        D_x   = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+        D_x   = lsqnonlin(@(x)XfromDesPotential(x,Temp_vec,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
         D_y   = YfromX(D_x,z,y_intcep);
     
     % Limits on x and y
@@ -579,8 +579,8 @@ else
         SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
     
     % Determine electrode initial voltage potential
-        voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
-        voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
+        voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini,Temp_vec(1));
+        voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini,Temp_vec(end));
         voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
     
     % Calculate electrode initial active material concentration
@@ -1219,14 +1219,14 @@ function y_out = YfromX(x,z,y_intcep)
 end
 
 %%%%%%%%%%
-function res = XfromDesPotential(x,V_des,z,y_intcep,AN,CA)
+function res = XfromDesPotential(x,T,V_des,z,y_intcep,AN,CA)
     % Solve for y: y = -z*x + y_intcep;
     y = YfromX(x,z,y_intcep);
     % Solve An potential
-        Eeq_an = AN.EqPotentialHandle(x);
+        Eeq_an = AN.EqPotentialHandle(x,T);
 
     % Solve Ca potential
-        Eeq_ca = CA.EqPotentialHandle(y);
+        Eeq_ca = CA.EqPotentialHandle(y,T);
 
     % Calc residual
         Eeq_cell = Eeq_ca - Eeq_an;

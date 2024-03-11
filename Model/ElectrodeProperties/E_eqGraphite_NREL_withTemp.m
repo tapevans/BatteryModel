@@ -1,6 +1,8 @@
 %% E_eqGraphite
 % E^eq (Graphite)
-function E_eq = E_eqGraphite_HZ(x,T)
+function E_eq = E_eqGraphite_NREL_withTemp(x,T)
+    CONS__F_inv = 1.036426899277400e-08;
+
     A=[...
     -1.059423355572770E-02,-1.453708425609560E-02,9.089868397988610E-05,...
      2.443615203087110E-02,-5.464261369950400E-01,6.270508166379020E-01,...
@@ -75,6 +77,11 @@ function E_eq = E_eqGraphite_HZ(x,T)
         E_eq = real(Eeq_function(x));
     end
     
+    [DelS] = getGraphiteEntropy(x);
+    T_ref  = 23 + 273.15;
+    E_eq   = E_eq + (T - T_ref) .* DelS * CONS__F_inv;
+end
+
     % Plot the OCV if plotFlag == 1
 %     if plotFlag == 1
 %         y = linspace(0.01,0.99,100);
@@ -98,4 +105,40 @@ function E_eq = E_eqGraphite_HZ(x,T)
 %        hold off;
 %        
 %     end
+
+
+%% Function for Graphite Entropy (\DeltaS)
+function [DelS] = getGraphiteEntropy(x_vec)
+    poly4Handle = @(x,p) p(1)*x.^4 + p(2)*x.^3 + p(3)*x.^2 + p(4)*x + p(5);
+    p_s1 = [ 7582 , -9819 ,  4543 , -917.7 ,  61.57];
+    p_s3 = [-1123 ,  2755 , -2393 ,  837.3 , -94.05];
+
+    linearInterpHandle = @(x,p,b) p(1)* (x - b(1)) + p(2);
+    p_s2 = [704.7682 , -14.3876];
+    b_s2 = [0.5107 0.5297];
+
+    reg_idx_1  = x_vec <= b_s2(1); 
+    reg_idx_2a = x_vec > b_s2(1);
+    reg_idx_2b = x_vec <= b_s2(2);
+    reg_idx_2  = reg_idx_2a & reg_idx_2b; 
+    reg_idx_3  = x_vec > b_s2(2); 
+
+    DelS_1 = poly4Handle(x_vec , p_s1);
+    DelS_2 = linearInterpHandle(x_vec , p_s2 , b_s2);
+    DelS_3 = poly4Handle(x_vec , p_s3);
+
+    DelS_1 = DelS_1 .* reg_idx_1;
+    DelS_2 = DelS_2 .* reg_idx_2;
+    DelS_3 = DelS_3 .* reg_idx_3;
+
+    DelS = DelS_1 + DelS_2 + DelS_3;
+
+    DelS = DelS * 1e3;
 end
+
+
+    % reg_idx_1  = x_vec <= 0.51; 
+    % reg_idx_2a = x_vec > 0.51;
+    % reg_idx_2b = x_vec <= 0.53;
+    % reg_idx_2  = reg_idx_2a & reg_idx_2b; 
+    % reg_idx_3  = x_vec > 0.53; 

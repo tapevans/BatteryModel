@@ -41,7 +41,7 @@
         
         
 %%
-% clear all; close all; clc;
+clear all; close all; clc;
 
 
 %% Subdirecties to Include
@@ -76,13 +76,14 @@
 
 % Test Degradation
     % folder_name  = 'TK_Test';
-    % battery_name = 'Test_CTRG_Both';
+    % % battery_name = 'Test_CTRG_Both';
+    % battery_name = 'Test_Eeq';
 
     % folder_name  = 'TK_DelV_DelT_Tests';
     % % battery_name = 'Test';
     % % battery_name = 'TestAMLoss';
 
-    folder_name  = 'TK_CyclingDegradation';
+    % folder_name  = 'TK_CyclingDegradation';
     % % battery_name = 'Iso20_ConstantCTRG_AN';
     % % battery_name = 'Iso20_ConstantCTRG_CA';
     % % battery_name = 'Iso20_ConstantCTRG_Both';
@@ -93,12 +94,20 @@
     % % battery_name = 'Iso20_CombinedCTRG_AML_CA';
     % battery_name = 'Iso20_CombinedCTRG_AML_Both';
 
+    folder_name  = 'TK_CompareInfluenceOnDelV';
+    % battery_name = 'Soret0_Beta0_dUdT0';
+    % battery_name = 'Soret1.5_Beta0_dUdT0';
+    % battery_name = 'Soret0_Beta-1.5e-3_dUdT0';
+    battery_name = 'Soret0_Beta0_dUdT';
+    % battery_name = 'Soret1.5_Beta-1.5e-3_dUdT0';
+    % battery_name = 'Soret1.5_Beta-1.5e-3_dUdT';
+
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    C_rates      = [];
-    % C_rates      = [0]; 
+    % C_rates      = [];
+    C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
@@ -155,7 +164,7 @@
         
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 1;
+    KBCP   = 0;
         KBCPProfileOverwrite = 0;
         % KBCPProfileFilename = 'StairStepNoRelax';
         % KBCPProfileFilename = 'GITT';
@@ -811,10 +820,13 @@ switch InputFile
     case 5 % batt_input_ToddKingston
         inputHandle             = @batt_inputs_ToddKingston;
         SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        % SIM.ANEqPotentialHandle = @E_eqGraphite_NREL_withTemp;
         SIM.ANi_oHandle         = @i_oC6_NREL;
         SIM.ANsigmaHandle       = @sigmaC6_NREL;
         SIM.AND_oHandle         = @D_o_Graphite_NREL;
-        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        % SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC622_TK;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp;
         SIM.CAi_oHandle         = @i_oNMC_NREL;  
         SIM.CAsigmaHandle       = @sigmaNMC_NREL;
         SIM.CAD_oHandle         = @D_o_NMC532_NREL;

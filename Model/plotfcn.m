@@ -20,12 +20,12 @@ function plotfcn(filename)
     FLAG.phi_el    = 0; % phi_el
     FLAG.del_phi   = 0; % Delta phi (phi_ed - phi_el)
     FLAG.del_phi_v_time = 0; %@ AN/SEP
-    FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
+    FLAG.E_eq      = 1; % Equilibrium delta_phi based on surface concentration
     FLAG.eta       = 0; % eta
     FLAG.i_o       = 0; % exchange current density
     FLAG.i_Far     = 0; % charge-transfer current density
     FLAG.plotV_SEI = 0; % Voltage across the SEI
-    FLAG.N_Particles         = 1;
+    FLAG.N_Particles = 1; % Number of spherical particles in the control volume
     
     FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
     FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
@@ -33,7 +33,7 @@ function plotfcn(filename)
     FLAG.SOC                 = 0; % SOC vs time
     FLAG.voltage_vs_SOC      = 0; % Terminal voltage of the battery vs SOC
 
-    FLAG.N_Particles         = 1;
+    % FLAG.N_Particles         = 1;
 
 % ---- Harmonic Perturbation ----
     FLAG.V_and_A_EIS   = 1;

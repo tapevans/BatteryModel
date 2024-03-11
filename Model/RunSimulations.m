@@ -20,8 +20,9 @@
     % Project_Folder{i} = 'TestNewInputFile';   i = i+1;
     % Project_Folder{i} = 'TK_TestDeg';   i = i+1;
     % Project_Folder{i} = 'TK_DelV_DelT_Tests';   i = i+1;
-    Project_Folder{i} = 'TK_CyclingDegradation';   i = i+1;
+    % Project_Folder{i} = 'TK_CyclingDegradation';   i = i+1;
     % Project_Folder{i} = 'TK_Test';   i = i+1;
+    Project_Folder{i} = 'TK_CompareInfluenceOnDelV';   i = i+1;
 
 
 %% Parameters
@@ -29,23 +30,23 @@
 
 
 %% Make a list of all sim file names with full path name
-for i = 1:num_Proj
-    % Make a list of simulations in the project folder
-        oldFolder = cd([pwd filesep 'Results' filesep Project_Folder{i}]);
-        list = dir('*.mat*');
-        num_files = length(list);
-        sim_filenames = {};
-        for j = 1:num_files % Creates a cell array with all simulations' full path name
-            sim_filenames{end+1,1} = [pwd filesep list(j).name];
-        end
-
-    %Go back to oldFolder
-        cd(oldFolder);
-end
-num_sim_files = length(sim_filenames);
-
-previousSimMode = 0; % Used to clear SimMode from persistent memory
-clear batt_GovEqn
+    for i = 1:num_Proj
+        % Make a list of simulations in the project folder
+            oldFolder = cd([pwd filesep 'Results' filesep Project_Folder{i}]);
+            list = dir('*.mat*');
+            num_files = length(list);
+            sim_filenames = {};
+            for j = 1:num_files % Creates a cell array with all simulations' full path name
+                sim_filenames{end+1,1} = [pwd filesep list(j).name];
+            end
+    
+        %Go back to oldFolder
+            cd(oldFolder);
+    end
+    num_sim_files = length(sim_filenames);
+    
+    previousSimMode = 0; % Used to clear SimMode from persistent memory
+    clear batt_GovEqn
 
 %% Run all the simulations
 for i = 1:num_sim_files
