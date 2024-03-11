@@ -1017,12 +1017,6 @@ end
     SIM.SV_IC = SV_IC;
 
 
-%% SV Index 1D to 2D
-%     SV = SV1Dto2D(SV_IC , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
-%     N.IDX_1Dto2D = find(~isnan(SV));
-%     SIM.SV_nan   = nan(N.N_SV_max, N.N_CV_tot);
-
-
 %% Mass Matrix
     M = zeros(N.N_SV_tot,N.N_SV_tot);
     sim_cap = 0; % A dummy capacitance to help DAE solver by turning algebraics into ODEs. With solver working, this isn't needed anymore
@@ -1210,29 +1204,48 @@ end
 
 
 %% Initialization for EIS
-if SIM.SimMode == 3 && FLAG.InitialThermalGradient
-
-
-end
+% Run a 0 C-rate to initialize
+    if SIM.SimMode == 3 && FLAG.InitialThermalGradient
+    % Simulation Parameters
+        Tol.Abs = 1E-7;
+        Tol.Rel = 1E-7;
+    
+        % events = @(t,SV) batt_events(t,SV,SIM,P,N,FLAG);
+    
+        options = odeset('RelTol' ,Tol.Rel,      ...
+                         'AbsTol' ,Tol.Abs,      ...
+                         'Mass'   ,SIM.M);%,        ...
+                         %'Events' ,events);%,       ...
+                         % 'MaxStep',1e0); %
+    
+        i_user = 0;
+        tspan  = [0, 1000];
+        SV_IC  = SIM.SV_IC;
+        SOLN   = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
+        SV_IC_temp = SOLN.y(:,end);
+        SV_IC_new  = SV1Dto2D(SV_IC_temp , N , P , FLAG);
+        SV_IC_new  = addPhiEl2SV(SV_IC_new,P,N);
+        SIM.SV_IC  = SV_IC_temp;
+    end
 
 
 %% Some functions to help with calculations
-%%%%%%%%%%
-function y_out = YfromX(x,z,y_intcep)
-    y_out = -1/z*x + y_intcep;
-end
-
-%%%%%%%%%%
-function res = XfromDesPotential(x,T,V_des,z,y_intcep,AN,CA)
-    % Solve for y: y = -z*x + y_intcep;
-    y = YfromX(x,z,y_intcep);
-    % Solve An potential
-        Eeq_an = AN.EqPotentialHandle(x,T);
-
-    % Solve Ca potential
-        Eeq_ca = CA.EqPotentialHandle(y,T);
-
-    % Calc residual
-        Eeq_cell = Eeq_ca - Eeq_an;
-        res = Eeq_cell - V_des;
-end
+    %%%%%%%%%%
+    function y_out = YfromX(x,z,y_intcep)
+        y_out = -1/z*x + y_intcep;
+    end
+    
+    %%%%%%%%%%
+    function res = XfromDesPotential(x,T,V_des,z,y_intcep,AN,CA)
+        % Solve for y: y = -z*x + y_intcep;
+        y = YfromX(x,z,y_intcep);
+        % Solve An potential
+            Eeq_an = AN.EqPotentialHandle(x,T);
+    
+        % Solve Ca potential
+            Eeq_ca = CA.EqPotentialHandle(y,T);
+    
+        % Calc residual
+            Eeq_cell = Eeq_ca - Eeq_an;
+            res = Eeq_cell - V_des;
+    end
