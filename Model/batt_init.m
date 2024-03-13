@@ -1227,7 +1227,8 @@ end
         SV_IC_new  = addPhiEl2SV(SV_IC_new,P,N);
         SIM.SV_IC  = SV_IC_temp;
     end
-
+    
+end
 
 %% Some functions to help with calculations
     %%%%%%%%%%
