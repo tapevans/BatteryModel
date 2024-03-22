@@ -8,21 +8,11 @@
     
 %% List of Project Folders
     i = 1;
-    % Project_Folder{i} = 'OptiFinal';   i = i+1;
-    % Project_Folder{i} = 'SeminarFall2023';   i = i+1;
-    % Project_Folder{i} = 'TestImpedanceSparse';   i = i+1;
-    % Project_Folder{i} = 'TestImpedanceContributions';   i = i+1;
-    % Project_Folder{i} = 'SOCTest';   i = i+1;
-    % Project_Folder{i} = 'COETest';   i = i+1;
-    % Project_Folder{i} = 'ThermalGradient';   i = i+1;
-    % Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
-    % Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
-    % Project_Folder{i} = 'TestNewInputFile';   i = i+1;
     % Project_Folder{i} = 'TK_TestDeg';   i = i+1;
     % Project_Folder{i} = 'TK_DelV_DelT_Tests';   i = i+1;
     % Project_Folder{i} = 'TK_CyclingDegradation';   i = i+1;
     % Project_Folder{i} = 'TK_Test';   i = i+1;
-    Project_Folder{i} = 'TK_CompareInfluenceOnDelV';   i = i+1;
+    Project_Folder{i} = 'TK_GeneralComparison';   i = i+1;
 
 
 %% Parameters
@@ -84,8 +74,8 @@ for i = 1:num_sim_files
             options = odeset('RelTol' ,Tol.Rel,      ...
                              'AbsTol' ,Tol.Abs,      ...
                              'Mass'   ,SIM.M,        ...
-                             'Events' ,events);%,       ...
-                            %'MaxStep',1e2);
+                             'Events' ,events,       ...
+                             'MaxStep',1e0);%);%
                 if isfield(SIM,'JPattern')
                     options.JPattern = SIM.JPattern;
                 end
@@ -121,7 +111,7 @@ for i = 1:num_sim_files
                              'AbsTol' ,Tol.Abs,      ...
                              'Mass'   ,SIM.M,        ...
                              'Events' ,events);%,       ...
-                            %'MaxStep',1e2);
+                             %'MaxStep',1e0);%
                 if isfield(SIM,'JPattern')
                     options.JPattern = SIM.JPattern;
                 end

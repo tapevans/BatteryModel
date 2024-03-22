@@ -16,7 +16,7 @@ function [A,B,C,D,Z_results] = getSSImpedance(AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PRO
 
 %% Calculate Impedance
     sys = ss(A,B,C,D);
-    [Z_results] = getImpedanceFromSSSystem(sys , M , omega , SIM , P);
+    [Z_results_old] = getImpedanceFromSSSystem(sys , M , omega , SIM , P);
     [Z_results] = getImpedanceFromSSSystemAllOutputs(sys , M , omega , SIM , P);
 
 

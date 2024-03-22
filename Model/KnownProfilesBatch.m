@@ -77,57 +77,75 @@ clear all; close all; clc;
     % end
 
 %% Constant Deg Cycling Loops
-    % DegType_vec     = {'ConstantAML'};
-    % DegLocation_vec = {'AN'};
-    % N_cycles_vec    = [4];
-
-    DegType_vec     = {'ConstantAML','CombinedCTRG_AML'};
-    DegLocation_vec = {'AN', 'CA', 'Both'};
-    N_cycles_vec    = [4, 20];
-
-    % DegType_vec     = {'ConstantCTRG','ConstantAML','CombinedCTRG_AML'};
+    % % DegType_vec     = {'ConstantAML'};
+    % % DegLocation_vec = {'AN'};
+    % % N_cycles_vec    = [4];
+    % 
+    % DegType_vec     = {'ConstantAML','CombinedCTRG_AML'};
     % DegLocation_vec = {'AN', 'CA', 'Both'};
     % N_cycles_vec    = [4, 20];
+    % 
+    % % DegType_vec     = {'ConstantCTRG','ConstantAML','CombinedCTRG_AML'};
+    % % DegLocation_vec = {'AN', 'CA', 'Both'};
+    % % N_cycles_vec    = [4, 20];
+    % 
+    % for tt = 1:length(DegType_vec)
+    %     for kk = 1:length(DegLocation_vec)
+    %         for cc = 1:length(N_cycles_vec)
+    %             preDegType     = DegType_vec{tt};
+    %             preDegLocation = DegLocation_vec{kk};
+    %             preN_cycles    = N_cycles_vec(cc);
+    % 
+    %             battery_name = ['Iso20_' preDegType '_' preDegLocation];
+    %             KBCPProfileFilename = ['Chg_Dchg_' num2str(preN_cycles) 'Cycles'];
+    % 
+    %             if     strcmp(preDegType , 'ConstantCTRG')
+    %                 SIM.preCTRGrowth = 1;
+    %                 SIM.preAMLoss    = 0;
+    %             elseif strcmp(preDegType , 'ConstantAML')
+    %                 SIM.preCTRGrowth = 0;
+    %                 SIM.preAMLoss    = 1;
+    %             elseif strcmp(preDegType , 'CombinedCTRG_AML') 
+    %                 SIM.preCTRGrowth = 1;
+    %                 SIM.preAMLoss    = 1;
+    %             end
+    % 
+    %             if     strcmp(preDegLocation , 'AN')
+    %                 SIM.preCTRG_AN = 1;
+    %                 SIM.preCTRG_CA = 0;
+    %                 SIM.preAML_AN  = 1;
+    %                 SIM.preAML_CA  = 0;
+    %             elseif strcmp(preDegLocation , 'CA')
+    %                 SIM.preCTRG_AN = 0;
+    %                 SIM.preCTRG_CA = 1;
+    %                 SIM.preAML_AN  = 0;
+    %                 SIM.preAML_CA  = 1;
+    %             elseif strcmp(preDegLocation , 'Both') 
+    %                 SIM.preCTRG_AN = 1;
+    %                 SIM.preCTRG_CA = 1;
+    %                 SIM.preAML_AN  = 1;
+    %                 SIM.preAML_CA  = 1;
+    %             end
+    % 
+    %             CreateProject
+    %         end
+    %     end
+    % end
 
-    for tt = 1:length(DegType_vec)
-        for kk = 1:length(DegLocation_vec)
-            for cc = 1:length(N_cycles_vec)
-                preDegType     = DegType_vec{tt};
-                preDegLocation = DegLocation_vec{kk};
-                preN_cycles    = N_cycles_vec(cc);
 
-                battery_name = ['Iso20_' preDegType '_' preDegLocation];
-                KBCPProfileFilename = ['Chg_Dchg_' num2str(preN_cycles) 'Cycles'];
+%% 0-Crate Tests
+    SOC_vec = [10, 25, 50, 75, 90];
+    tempCase    = {'Iso20' , 'ANCold' , 'CACold'};
+    % STBeta = {'Soret0_Beta0'};
+    STBeta = {'Soret1.5_Beta-1.5e-3'};
 
-                if     strcmp(preDegType , 'ConstantCTRG')
-                    SIM.preCTRGrowth = 1;
-                    SIM.preAMLoss    = 0;
-                elseif strcmp(preDegType , 'ConstantAML')
-                    SIM.preCTRGrowth = 0;
-                    SIM.preAMLoss    = 1;
-                elseif strcmp(preDegType , 'CombinedCTRG_AML') 
-                    SIM.preCTRGrowth = 1;
-                    SIM.preAMLoss    = 1;
-                end
-
-                if     strcmp(preDegLocation , 'AN')
-                    SIM.preCTRG_AN = 1;
-                    SIM.preCTRG_CA = 0;
-                    SIM.preAML_AN  = 1;
-                    SIM.preAML_CA  = 0;
-                elseif strcmp(preDegLocation , 'CA')
-                    SIM.preCTRG_AN = 0;
-                    SIM.preCTRG_CA = 1;
-                    SIM.preAML_AN  = 0;
-                    SIM.preAML_CA  = 1;
-                elseif strcmp(preDegLocation , 'Both') 
-                    SIM.preCTRG_AN = 1;
-                    SIM.preCTRG_CA = 1;
-                    SIM.preAML_AN  = 1;
-                    SIM.preAML_CA  = 1;
-                end
-
-                CreateProject
-            end
+    for kk = 1:length(SOC_vec)
+        for tt = 1:length(tempCase)
+            SOC_start = SOC_vec(kk);
+            battery_name = [STBeta{1} '_' tempCase{tt} '_startSOC' num2str(SOC_start)];
+            SIM.FLAG_TempBC = tt;
+            CreateProject
         end
     end
+    
+

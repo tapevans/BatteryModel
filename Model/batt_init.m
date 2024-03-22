@@ -1219,12 +1219,13 @@ end
                          % 'MaxStep',1e0); %
     
         i_user = 0;
-        tspan  = [0, 1000];
+        % tspan  = [0, 1000];
+        tspan  = [0, 730];
         SV_IC  = SIM.SV_IC;
         SOLN   = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
         SV_IC_temp = SOLN.y(:,end);
-        SV_IC_new  = SV1Dto2D(SV_IC_temp , N , P , FLAG);
-        SV_IC_new  = addPhiEl2SV(SV_IC_new,P,N);
+        SV_IC_new  = SV1Dto2D(SV_IC_temp , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot, N.N_SV_AN, N.N_SV_SEP, N.N_SV_CA, N.N_CV_AN, N.N_CV_SEP, N.N_CV_CA, N.CV_Region_AN, N.CV_Region_SEP, N.CV_Region_CA, P.T, P.del_phi, P.C_Liion, P.SEP.T, P.SEP.phi_el, P.SEP.C_Liion);
+        SV_IC_new  = addPhiEl2SV(SV_IC_new, P.phi_ed, P.del_phi, N.CV_Region_SEP, N.N_CV_SEP);
         SIM.SV_IC  = SV_IC_temp;
     end
     

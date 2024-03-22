@@ -38,7 +38,7 @@
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
 
-    FLAG.OffDiagOnsager = 0;
+    FLAG.OffDiagOnsager = 1;
         FLAG.Soret   = 1;
         FLAG.Seebeck = 1;
     
@@ -69,7 +69,11 @@
         % 3) CA Cold
         % 4) Iso18
         % 5) Iso22
-        FLAG.TempBC = 2; % Pre-determined temperature BC
+        if isfield(SIM,'FLAG_TempBC')
+            FLAG.TempBC = SIM.FLAG_TempBC; % Pre-determined temperature BC
+        else
+            FLAG.TempBC = 3; % Pre-determined temperature BC
+        end
             
     FLAG.V_SEI        = 1; % 1 if the overpotential is calculated using V_SEI
     
@@ -378,6 +382,10 @@
     EL.lambda     = 400;        % [W m^-1 K^-1],  Thermal conductivity of electrolyte %sciencedirect.com/science/article/pii/S0735193317300179
     EL.S_T        = 1.5;        % [-],            Soret coefficient
     EL.Beta       = -1.5e-3;    % [V/K],          Seebeck coefficient
+    %%%%%%%!!!!!!!!!!!!!!!%%%%%%%%%%% Don't need to change these. Use FLAG
+    %%%%%%%at the top to turn these off
+    % EL.S_T        = 0;        % [-],            Soret coefficient
+    % EL.Beta       = 0e-3;    % [V/K],          Seebeck coefficient
     % EL.S_T        = SIM.preS_T; % [-],            Soret coefficient
     % EL.Beta       = SIM.preBeta;% [V/K],          Seebeck coefficient
     EL.dmudc      = 1.0e7;      % change in chemical potential as a function of change in concentration
