@@ -112,8 +112,11 @@ clear all; close all; clc;
     % battery_name = 'Standard';
     % % battery_name = 'VaryProps';
 
-    folder_name  = 'TestMLI';
-    battery_name = 'test';
+    % folder_name  = 'TestMLI';
+    % battery_name = 'test';
+
+    folder_name  = 'TestDLCap';
+    battery_name = 'test_AN_C_dl0.025';
 
 
 %% Simulations
@@ -154,7 +157,7 @@ clear all; close all; clc;
     % SS_SOC = 0:1:100;
     % SS_SOC = [5, 10, 25, 50, 75, 90, 95];
     % SS_SOC = [80.46];
-    % SS_SOC = [50];
+    SS_SOC = [50];
     
     % Desired frequency [rad s^-1] for impedance results (Starting with known Hz)
         % SS_freq = [];
@@ -266,7 +269,7 @@ clear all; close all; clc;
 
 
 % ---- Multi-Level Input Sequence ----
-    getMultiLevelInputSequence = 1;
+    getMultiLevelInputSequence = 0;
         MLI_SOC   = 50; % [%], The initial SOC
         MLI_pmSOC = 1;  % MLI plusMinus SOC in [%] %!!! Must be integer (if using a dt = 1)
         MLI_maxC  = 1;  % Must be integer if > 1. Denominator must be integer + 0.0 or 0.5 (if using a dt = 1)
