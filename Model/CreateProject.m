@@ -41,7 +41,7 @@
         
         
 %%
-% clear all; close all; clc;
+clear all; close all; clc;
 
 
 %% Subdirecties to Include
@@ -113,17 +113,20 @@
     % Others
     % battery_name = 'Soret0_Beta0_Iso20';
     % battery_name = 'Soret0_Beta0_ANCold';
-    % battery_name = 'Soret0_Beta0_CACold';
+    battery_name = 'Soret0_Beta0_CACold';
     % battery_name = 'Soret1.5_Beta-1.5e-3_Iso20';
     % battery_name = 'Soret1.5_Beta-1.5e-3_ANCold';
     % battery_name = 'Soret1.5_Beta-1.5e-3_CACold';
+
+    % folder_name  = 'test';
+    % battery_name = 'Test';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
     C_rates      = [];
-    C_rates      = [0]; 
+    % C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
     % C_rates      = [-1/20 -1/5 -1/2 -1 -2 -5];
@@ -136,6 +139,8 @@
     % C_rates      = [1/20 1/10 1/3 1 2]; 
     % C_rates      = [-1/20  -1 -2]; 
     % C_rates      = [-1/10];
+    % C_rates      = [1/10];
+    C_rates      = [1/10 -1/10];
 
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
@@ -159,7 +164,7 @@
     % SS_SOC = [5, 10, 25, 50, 75, 90, 95];
     % SS_SOC = [80.46];
     % SS_SOC = [50];
-    % SS_SOC = [10, 25, 50, 75, 80, 90];
+    SS_SOC = [10, 25, 50, 75, 80, 90];
     
     % Desired frequency [rad s^-1] for impedance results (Starting with known Hz)
         % SS_freq = [];
@@ -838,14 +843,14 @@ switch InputFile
         SIM.ELkappaHandle       = @kappa_NREL;
     case 5 % batt_input_ToddKingston
         inputHandle             = @batt_inputs_ToddKingston;
-        % SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
-        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL_withTemp;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        % SIM.ANEqPotentialHandle = @E_eqGraphite_NREL_withTemp;
         SIM.ANi_oHandle         = @i_oC6_NREL;
         SIM.ANsigmaHandle       = @sigmaC6_NREL;
         SIM.AND_oHandle         = @D_o_Graphite_NREL;
-        % SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
         % SIM.CAEqPotentialHandle = @E_eqNMC622_TK;
-        SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp;
         SIM.CAi_oHandle         = @i_oNMC_NREL;  
         SIM.CAsigmaHandle       = @sigmaNMC_NREL;
         SIM.CAD_oHandle         = @D_o_NMC532_NREL;

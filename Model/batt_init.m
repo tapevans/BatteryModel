@@ -524,8 +524,8 @@ if isempty(SIM.VoltageMax)
 else
     % Capacity Ratio
         z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
-        z_known = 0.8613;  %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
-        z       = z_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+        % z_known = 0.8613;  %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+        % z       = z_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
 
     %% Mole Fraction Calculation
     % x and y are the anode and cathode mole fractions respectively

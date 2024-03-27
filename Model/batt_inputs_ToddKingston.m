@@ -38,7 +38,7 @@
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
 
-    FLAG.OffDiagOnsager = 1;
+    FLAG.OffDiagOnsager = 0;
         FLAG.Soret   = 1;
         FLAG.Seebeck = 1;
     
@@ -58,8 +58,8 @@
             FLAG.HEAT_GEN_RXN      = 1; % Heat generation from current across R_SEI %%% May not be accurate
             % FLAG.HEAT_GEN_CHEM_RXN = 0; % Heat generation from a reaction at the SEI %%%%%%%NOT IMPLEMENTED
 
-    FLAG.InitialThermalGradient = 0;
-    FLAG.RampThermalGradient    = 1;
+    FLAG.InitialThermalGradient = 1;
+    FLAG.RampThermalGradient    = 0;
         SIM.RampThermalGradientTime = 1000; % [s], time to ramp the BC
         % SIM.RampThermalGradientTime = 0;    % [s], time to ramp the BC
     % FLAG.TempBC

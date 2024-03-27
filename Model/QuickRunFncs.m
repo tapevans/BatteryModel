@@ -110,7 +110,8 @@ clc;
 clear all;
 close all;
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_TestDeg\Test_Polar_1.00C_C.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\test\Test_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\test\Test_Polar_0.10C_C.mat';
 plotfcn(filename)
 
 

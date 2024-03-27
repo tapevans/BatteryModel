@@ -13,6 +13,7 @@
     % Project_Folder{i} = 'TK_CyclingDegradation';   i = i+1;
     % Project_Folder{i} = 'TK_Test';   i = i+1;
     Project_Folder{i} = 'TK_GeneralComparison';   i = i+1;
+    % Project_Folder{i} = 'test';   i = i+1;
 
 
 %% Parameters
@@ -74,11 +75,12 @@ for i = 1:num_sim_files
             options = odeset('RelTol' ,Tol.Rel,      ...
                              'AbsTol' ,Tol.Abs,      ...
                              'Mass'   ,SIM.M,        ...
-                             'Events' ,events,       ...
-                             'MaxStep',1e0);%);%
+                             'Events' ,events);%,       ...
+                             % 'MaxStep',1e0);%
                 if isfield(SIM,'JPattern')
                     options.JPattern = SIM.JPattern;
                 end
+                % options.OutputFcn = @odeplot; %([],[],'done')
             
             i_user = 0;
             tspan = [SIM.profile_time(1), SIM.profile_time(end)];
