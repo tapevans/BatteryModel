@@ -8,7 +8,7 @@
     
 %% List of Project Folders
     i = 1;
-    Project_Folder{i} = 'OptiFinal';   i = i+1;
+    % Project_Folder{i} = 'OptiFinal';   i = i+1;
     % Project_Folder{i} = 'SeminarFall2023';   i = i+1;
     % Project_Folder{i} = 'TestImpedanceSparse';   i = i+1;
     % Project_Folder{i} = 'TestImpedanceContributions';   i = i+1;
@@ -18,6 +18,8 @@
     % Project_Folder{i} = 'TestNewInputFileNoise_SplitSim';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFileNoise';   i = i+1;
     % Project_Folder{i} = 'TestNewInputFile';   i = i+1;
+    Project_Folder{i} = 'TestMLI';   i = i+1;
+    
 
 
 %% Parameters
@@ -679,6 +681,43 @@ for i = 1:num_sim_files
         % Get reduced-order impedence at desired frequencies
             M = eye(size(sys_ROM.A));
             [Z_results_ROM] = getImpedanceFromSSSystem(sys_ROM , M , freq , SIM , P);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Multi-Level Input Sequence ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        elseif SIM.SimMode == 11 
+            if SIM.SimMode ~= previousSimMode
+                clear batt_GovEqn
+                previousSimMode = SIM.SimMode;
+            end
+
+            % Simulation Parameters
+            Tol.Abs = 1E-7;
+            Tol.Rel = 1E-7;
+
+            events = @(t,SV) batt_events(t,SV,SIM,P,N,FLAG);
+
+            options = odeset('RelTol' ,Tol.Rel,      ...
+                             'AbsTol' ,Tol.Abs,      ...
+                             'Mass'   ,SIM.M,        ...
+                             'Events' ,events,       ...%);%,       ...
+                             'MaxStep',SIM.profile_time(10) );
+                if isfield(SIM,'JPattern')
+                    options.JPattern = SIM.JPattern;
+                end
+
+            i_user = 0;
+            tspan = [SIM.profile_time(1), SIM.profile_time(end)];
+            SV_IC = SIM.SV_IC;
+            SOLN = ode15s(@(t,SV)batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user),tspan,SV_IC,options);
+            if FLAG.SaveSolnDiscreteTime
+                new_tfinal = SOLN.x(end);
+                save_time = (0:SIM.SaveTimeStep:new_tfinal)';
+                t_soln = save_time;
+                SV_soln = (deval(SOLN,save_time))';
+            else
+                t_soln  = SOLN.x';
+                SV_soln = SOLN.y';
+            end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ---- Data Files ---- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

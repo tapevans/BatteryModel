@@ -3,8 +3,8 @@ function i_user = i_user_calc(t_in, i_user_input, SIM__SimMode, SIM__profile_tim
 
 %    % Polarization      % PRBS              % EIS from Stitching PRBS     % EIS Ho-Kalman
 % if SIM.SimMode == 1 || SIM.SimMode == 8 || SIM.SimMode == 9           || SIM.SimMode == 10
-   % Polarization      % EIS from Stitching PRBS     % EIS Ho-Kalman
-if SIM__SimMode == 1 || SIM__SimMode == 9           || SIM__SimMode == 10
+   % Polarization      % EIS from Stitching PRBS     % EIS Ho-Kalman       % MultiLevelInput
+if SIM__SimMode == 1 || SIM__SimMode == 9           || SIM__SimMode == 10 || SIM__SimMode == 11
     i_user = interp1(SIM__profile_time , SIM__profile_current , t_in);
 
 

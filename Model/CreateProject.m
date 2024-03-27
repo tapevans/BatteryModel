@@ -38,6 +38,9 @@
 %    
     % ---- EIS Ho-Kalman ----
         % 'battery_name'_EIS_HoKalman_SOC'HK_SOC'_SamplingTime'HK_Ts'
+%    
+    % ---- Multi-Level Input Sequence ----
+        % 'battery_name' _MultiLevelInput_SOC_init 'MLI_SOC' _pmSOC 'MLI_pmSOC' _maxCrate 'MLI_maxC'
         
         
 %%
@@ -103,11 +106,14 @@ clear all; close all; clc;
     % % battery_name = 'M_B';
     % battery_name = 'M_C';
 
-    % folder_name  = 'OptiBase';
-    % folder_name  = 'OptiAll';
-    folder_name  = 'OptiFinal';
-    battery_name = 'Standard';
-    % battery_name = 'VaryProps';
+    % % folder_name  = 'OptiBase';
+    % % folder_name  = 'OptiAll';
+    % folder_name  = 'OptiFinal';
+    % battery_name = 'Standard';
+    % % battery_name = 'VaryProps';
+
+    folder_name  = 'TestMLI';
+    battery_name = 'test';
 
 
 %% Simulations
@@ -123,7 +129,7 @@ clear all; close all; clc;
     % C_rates      = -(1:5); 
     % C_rates      = [1/20]; 
     % C_rates      = [1/20 -1/20]; 
-    C_rates      = [-1/4];
+    % C_rates      = [-1/4];
     % C_rates      = [1/20 1/10 1/3 1 2]; 
     % C_rates      = [-1/20  -1 -2]; 
 
@@ -257,6 +263,14 @@ clear all; close all; clc;
         HK_freq = logspace(exp_min ,exp_max ,exp_diff*10+1);
         HK_nSamples = 800; % [], Number of relaxation samples (2 inital relax, 1 pulse, nSamples relax)
         % HK_nSamples = 5; % [], Number of relaxation samples (2 inital relax, 1 pulse, nSamples relax)
+
+
+% ---- Multi-Level Input Sequence ----
+    getMultiLevelInputSequence = 1;
+        MLI_SOC   = 50; % [%], The initial SOC
+        MLI_pmSOC = 1;  % MLI plusMinus SOC in [%] %!!! Must be integer (if using a dt = 1)
+        MLI_maxC  = 1;  % Must be integer if > 1. Denominator must be integer + 0.0 or 0.5 (if using a dt = 1)
+
 
 
 %% Create Folder    
@@ -718,6 +732,46 @@ if getEIS_HoKalman
             clear AN CA SEP EL SIM CONS P N FLAG PROPS
     end
 
+end
+
+
+%% ---- Multi-Level Input Sequence ----
+if getMultiLevelInputSequence
+    filename = [ battery_name , '_MultiLevelInput_SOC_init' , num2str(MLI_SOC) , '_pmSOC' , num2str(MLI_pmSOC) , '_maxCrate' num2str(MLI_maxC) , '.mat'];
+    
+    % Check if sim already exist
+    if isfile([save_file_path filesep filename])
+        if FLAG_local.sim_overwrite
+            disp('Deleting previous sim')% delete old file
+            delete([save_file_path filesep filename])
+        else
+            disp('Simulation already exists')
+        end        
+    end
+    
+    % Create sim if it doesn't exist
+    if ~isfile([save_file_path filesep filename])
+        disp('Making sim')
+        SIM.results_filename = filename;
+        SIM.SimMode   = 11;
+        SIM.SOC_start = MLI_SOC;
+        SIM.MLI_pmSOC = MLI_pmSOC;
+        SIM.MLI_maxC  = MLI_maxC;
+        [SIM,inputHandle] = getFunctionHandles(InputFile,SIM);
+        
+        % Call Inputs
+            [AN,CA,SEP,EL,SIM,N,FLAG] = inputHandle(SIM);
+        
+        % Call Init
+            [AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS] = batt_init(AN,CA,SEP,EL,SIM,N,FLAG);
+        
+        % Save Simulation File
+            postProcessComplete = 0;
+            save([save_file_path filesep filename],'AN','CA','SEP','EL','SIM','CONS','P','N','FLAG','PROPS','postProcessComplete')
+        
+        % Clear Variables
+            clear AN CA SEP EL SIM CONS P N FLAG PROPS
+    end
 end
 
 %% Function Handles

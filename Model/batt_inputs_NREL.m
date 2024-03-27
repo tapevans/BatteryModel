@@ -31,6 +31,7 @@
     % 8)  PRBS
     % 9)  EIS PRBS Stitching
     % 10) EIS Ho-Kalman
+    % 11) Multi-Level Input Sequence
     % 0)  Files that are used strictly for data and not to run a simulation
 
 function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
@@ -300,6 +301,11 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
         % SIM.Tsample     = HK_Ts;  % [s],     Sampling Time
         % SIM.freq        = 1e-2;   % [rad/s], Frequency 
         % SIM.HK_nSamples = HK_nSamples; % [], Number of Relax Samples
+    end
+
+
+%% ---- Multi-Level Input Sequence ----
+    if SIM.SimMode == 11
     end
 
 
