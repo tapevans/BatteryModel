@@ -86,7 +86,7 @@ function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_NREL(SIM)
     FLAG.preDefined_C_max = 1; % 1 if using the C_max found in the input file
     
     FLAG.CONSTANT_PROPS_FROM_HANDLES = 0; % Uses the initial conditions to solve for the properties and uses those throughout the simulation
-    FLAG.VARIABLE_PROPS_FROM_HANDLES = 0;
+    FLAG.VARIABLE_PROPS_FROM_HANDLES = 1;
         % FLAG.VARIABLE_sigma    = 0;
         FLAG.VARIABLE_kappa    = 1;
         FLAG.VARIABLE_activity = 1;

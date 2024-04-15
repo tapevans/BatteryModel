@@ -91,7 +91,8 @@ clc;
 clear all;
 close all;
 
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\COETest\444All_Constant_Polar_1.00C_C.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\COETest\444All_Constant_Polar_1.00C_C.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TestMLI\test_MultiLevelInput_SOC_init50_pmSOC1_maxCrate1.mat';
 plotfcn(filename)
 
 
