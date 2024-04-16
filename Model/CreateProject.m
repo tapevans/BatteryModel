@@ -126,9 +126,13 @@ clear all; close all; clc;
     % battery_name = 'ANCold';
     % battery_name = 'CACold';
 
-    battery_name = 'ISO20_NoOnsag';
+    % battery_name = 'ISO20_NoOnsag';
     % battery_name = 'ANCold_NoOnsag';
     % battery_name = 'CACold_NoOnsag';
+
+    % battery_name = 'ISO20_NoSoret';
+    % battery_name = 'ANCold_NoSoret';
+    battery_name = 'CACold_NoSoret';
 
 
 %% Simulations
@@ -148,8 +152,8 @@ clear all; close all; clc;
     % C_rates      = [1/20 1/10 1/3 1 2]; 
     % C_rates      = [-1/20  -1 -2]; 
     % C_rates      = [-1/10];
-    C_rates      = [1/10];
-    % C_rates      = [1/10 -1/10];
+    % C_rates      = [1/10];
+    C_rates      = [1/10 -1/10];
 
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
@@ -863,9 +867,9 @@ switch InputFile
         SIM.CAi_oHandle         = @i_oNMC_NREL;  
         SIM.CAsigmaHandle       = @sigmaNMC_NREL;
         % SIM.CAD_oHandle         = @D_o_NMC532_NREL;
-            SIM.CAD_oHandle         = @D_o_NMC622_TK_ISO20;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_ISO20;
             % SIM.CAD_oHandle         = @D_o_NMC622_TK_ANCold;
-            % SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
+            SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
         SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
         SIM.ELActivityHandle    = @activity_Landesfeind;
         SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;

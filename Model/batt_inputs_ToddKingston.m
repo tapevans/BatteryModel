@@ -38,8 +38,8 @@
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
 
-    FLAG.OffDiagOnsager = 0;
-        FLAG.Soret   = 1;
+    FLAG.OffDiagOnsager = 1;
+        FLAG.Soret   = 0;
         FLAG.Seebeck = 1;
     
     FLAG.COE    = 1; % Cons of Energy (Temperature). 0 if dTdt = 0
@@ -72,7 +72,7 @@
         if isfield(SIM,'FLAG_TempBC')
             FLAG.TempBC = SIM.FLAG_TempBC; % Pre-determined temperature BC
         else
-            FLAG.TempBC = 1; % Pre-determined temperature BC
+            FLAG.TempBC = 3; % Pre-determined temperature BC
         end
             
     FLAG.V_SEI        = 1; % 1 if the overpotential is calculated using V_SEI
