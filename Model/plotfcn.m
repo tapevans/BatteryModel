@@ -11,9 +11,9 @@ function plotfcn(filename)
     
     FLAG.TEMP      = 0; % Cell Temperature Profile
     
-    FLAG.C_Liion   = 0; % Mass/Species (Concentration Normalized): Li_ion
-    FLAG.X_Li_surf = 0; % Mass/Species (Mole Fraction): Li_surf (x-direction)
-    FLAG.X_Li_rad  = 0; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
+    FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
+    FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
+    FLAG.X_Li_rad  = 1; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
     FLAG.s_dot     = 0; % Li_ion production rate
     
     FLAG.phi_ed    = 0; % phi_ed
@@ -21,17 +21,17 @@ function plotfcn(filename)
     FLAG.del_phi   = 0; % Delta phi (phi_ed - phi_el)
     FLAG.del_phi_v_time = 0; %@ AN/SEP
     FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
-    FLAG.eta       = 0; % eta
-    FLAG.i_o       = 0; % exchange current density
-    FLAG.i_Far     = 0; % charge-transfer current density
+    FLAG.eta       = 1; % eta
+    FLAG.i_o       = 1; % exchange current density
+    FLAG.i_Far     = 1; % charge-transfer current density
     FLAG.plotV_SEI = 0; % Voltage across the SEI
     FLAG.N_Particles = 0; % Number of spherical particles in the control volume
     
-    FLAG.cellVoltage         = 0; % Terminal voltage of the battery vs time
+    FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
     FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
     FLAG.V_and_A             = 0;
     FLAG.SOC                 = 0; % SOC vs time
-    FLAG.voltage_vs_SOC      = 1; % Terminal voltage of the battery vs SOC
+    FLAG.voltage_vs_SOC      = 0; % Terminal voltage of the battery vs SOC
 
     % FLAG.N_Particles         = 1;
 

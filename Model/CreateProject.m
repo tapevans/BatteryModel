@@ -102,30 +102,39 @@ clear all; close all; clc;
     % % battery_name = 'Soret1.5_Beta-1.5e-3_dUdT0';
     % % battery_name = 'Soret1.5_Beta-1.5e-3_dUdT';
 
-    folder_name  = 'TK_GeneralComparison';
-    % 0-Crate SOC:(10, 25, 50, 75, 90)
-    % battery_name = 'Soret0_Beta0_Iso20_startSOC90';
-    % battery_name = 'Soret0_Beta0_ANCold_startSOC90';
-    % battery_name = 'Soret0_Beta0_CACold_startSOC90';
-    % battery_name = 'Soret1.5_Beta-1.5e-3_Iso20_startSOC90';
-    % battery_name = 'Soret1.5_Beta-1.5e-3_ANCold_startSOC90';
-    % battery_name = 'Soret1.5_Beta-1.5e-3_CACold_startSOC90';
-    % Others
-    % battery_name = 'Soret0_Beta0_Iso20';
-    % battery_name = 'Soret0_Beta0_ANCold';
-    battery_name = 'Soret0_Beta0_CACold';
-    % battery_name = 'Soret1.5_Beta-1.5e-3_Iso20';
-    % battery_name = 'Soret1.5_Beta-1.5e-3_ANCold';
-    % battery_name = 'Soret1.5_Beta-1.5e-3_CACold';
+    % folder_name  = 'TK_GeneralComparison';
+    % % 0-Crate SOC:(10, 25, 50, 75, 90)
+    % % battery_name = 'Soret0_Beta0_Iso20_startSOC90';
+    % % battery_name = 'Soret0_Beta0_ANCold_startSOC90';
+    % % battery_name = 'Soret0_Beta0_CACold_startSOC90';
+    % % battery_name = 'Soret1.5_Beta-1.5e-3_Iso20_startSOC90';
+    % % battery_name = 'Soret1.5_Beta-1.5e-3_ANCold_startSOC90';
+    % % battery_name = 'Soret1.5_Beta-1.5e-3_CACold_startSOC90';
+    % % Others
+    % % battery_name = 'Soret0_Beta0_Iso20';
+    % % battery_name = 'Soret0_Beta0_ANCold';
+    % battery_name = 'Soret0_Beta0_CACold';
+    % % battery_name = 'Soret1.5_Beta-1.5e-3_Iso20';
+    % % battery_name = 'Soret1.5_Beta-1.5e-3_ANCold';
+    % % battery_name = 'Soret1.5_Beta-1.5e-3_CACold';
 
     % folder_name  = 'test';
     % battery_name = 'Test';
+
+    folder_name  = 'TK_ExpDiffCoeff';
+    % battery_name = 'ISO20';
+    % battery_name = 'ANCold';
+    % battery_name = 'CACold';
+
+    battery_name = 'ISO20_NoOnsag';
+    % battery_name = 'ANCold_NoOnsag';
+    % battery_name = 'CACold_NoOnsag';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    C_rates      = [];
+    % C_rates      = [];
     % C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
@@ -139,8 +148,8 @@ clear all; close all; clc;
     % C_rates      = [1/20 1/10 1/3 1 2]; 
     % C_rates      = [-1/20  -1 -2]; 
     % C_rates      = [-1/10];
-    % C_rates      = [1/10];
-    C_rates      = [1/10 -1/10];
+    C_rates      = [1/10];
+    % C_rates      = [1/10 -1/10];
 
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
@@ -164,7 +173,7 @@ clear all; close all; clc;
     % SS_SOC = [5, 10, 25, 50, 75, 90, 95];
     % SS_SOC = [80.46];
     % SS_SOC = [50];
-    SS_SOC = [10, 25, 50, 75, 80, 90];
+    % SS_SOC = [10, 25, 50, 75, 80, 90];
     
     % Desired frequency [rad s^-1] for impedance results (Starting with known Hz)
         % SS_freq = [];
@@ -321,17 +330,17 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
     if C_rates(i) < 0
         CorD = 'C';
         SIM.ChargeOrDischarge = -1;
-        SIM.SOC_start = 5;
+        SIM.SOC_start = 25;
     elseif C_rates(i) > 0
         CorD = 'D';
         SIM.ChargeOrDischarge = 1;
-        SIM.SOC_start = 95;
-        % SIM.SOC_start = 100;
+        % SIM.SOC_start = 95;
+        SIM.SOC_start = 100;
     else
         CorD = 'D';
         SIM.ChargeOrDischarge = 1;
-        % SIM.SOC_start = 90;
-        SIM.SOC_start = SOC_start;
+        SIM.SOC_start = 90;
+        % SIM.SOC_start = SOC_start;
     end
     cRateTxt = sprintf( '%.2f' , abs(C_rates(i)) ) ;
     filename = [ battery_name , '_Polar_' , cRateTxt , 'C_' , CorD , '.mat'];
@@ -853,7 +862,10 @@ switch InputFile
         % SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp;
         SIM.CAi_oHandle         = @i_oNMC_NREL;  
         SIM.CAsigmaHandle       = @sigmaNMC_NREL;
-        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        % SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+            SIM.CAD_oHandle         = @D_o_NMC622_TK_ISO20;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_ANCold;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
         SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
         SIM.ELActivityHandle    = @activity_Landesfeind;
         SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;

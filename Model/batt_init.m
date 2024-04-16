@@ -543,8 +543,8 @@ else
     
     % y-intercept
         y_intcep = F_y + z * F_x;
-        y_intcep_known = 0.8728;         %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
-        y_intcep       = y_intcep_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+        % y_intcep_known = 0.8728;         %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+        % y_intcep       = y_intcep_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
     
     % y mole fraction at x limits
         A_x =  0;
@@ -592,7 +592,7 @@ end
 %% Determine Minimum Parameters
     SIM.A_c      = min( AN.A_c, CA.A_c );
     SIM.Cell_Cap = min( AN.Cap, CA.Cap );
-    SIM.Cell_Cap = 74.6/1000; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+    % SIM.Cell_Cap = 74.6/1000; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
 
 
 %% User Time Vector and Current

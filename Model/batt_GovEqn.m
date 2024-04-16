@@ -562,9 +562,9 @@ function dSVdt = batt_GovEqn(t,SV,AN,CA,SEP,EL,SIM,CONS,P,N,FLAG,PROPS,i_user)
 
 
 %% Used for troubleshooting
-    % if t>1000
-    %    t;
-    % end
+    if t>1000
+       t;
+    end
     % if t>SIM.initial_offset
     %    t;
     % end

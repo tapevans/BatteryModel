@@ -72,7 +72,7 @@
         if isfield(SIM,'FLAG_TempBC')
             FLAG.TempBC = SIM.FLAG_TempBC; % Pre-determined temperature BC
         else
-            FLAG.TempBC = 3; % Pre-determined temperature BC
+            FLAG.TempBC = 1; % Pre-determined temperature BC
         end
             
     FLAG.V_SEI        = 1; % 1 if the overpotential is calculated using V_SEI
@@ -104,7 +104,7 @@
             FLAG.BRUG_sigma    = 0; 
             FLAG.BRUG_kappa    = 1;
             FLAG.BRUG_activity = 0;
-            FLAG.BRUG_D_Liion  = 1;
+            FLAG.BRUG_D_Liion  = 0;
             FLAG.BRUG_tf_num   = 0;
             FLAG.BRUG_D_o_AN   = 0;
             FLAG.BRUG_D_o_CA   = 0;
@@ -117,9 +117,9 @@
         % FLAG.VARIABLE_sigma    = 0;
         FLAG.VARIABLE_kappa    = 1;
         FLAG.VARIABLE_activity = 1;
-        FLAG.VARIABLE_D_Liion  = 1;
+        FLAG.VARIABLE_D_Liion  = 0;
         FLAG.VARIABLE_tf_num   = 1;
-        FLAG.VARIABLE_D_o_AN   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
+        FLAG.VARIABLE_D_o_AN   = 0; % 1 if the active material diffusion coefficient is dependent on concentration
         FLAG.VARIABLE_D_o_CA   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
     
     %%%% If CONSTANT_PROPS_FROM_HANDLES or VARIABLE_PROPS_FROM_HANDLES are 1
@@ -331,7 +331,8 @@
     AN.C_dl       = 0.0002;      % [F m^-2],           Double-layer capacitance
     AN.R_SEI      = 0.007;       % [Ohm m^2],          Solid electrolyte interface resistance
     AN.sigma      = 6.55;        % [S m^-1],           Electrical conductivity (ed phase)
-    AN.D_o        = 2.3321e-13;  % [m^2 s^-1],         Solid-state diffusion coefficient
+    % AN.D_o        = 2.3321e-13;  % [m^2 s^-1],         Solid-state diffusion coefficient
+    AN.D_o        = 5.3321e-13;  % [m^2 s^-1],         Solid-state diffusion coefficient
     AN.rho        = 2200;        % [kg m^-3],          Density of the electrode material without Li
     AN.rho_bin    = 1825;        % [kg m^-3],          Density of the binder
     AN.c_p        = 706.9;       % [J kg^-1 K^-1],     Specific heat capacity of active material
@@ -357,7 +358,7 @@
     CA.C_dl       = 3.0;        % [F m^-2],           Double-layer capacitance
     CA.R_SEI      = 0.006;      % [ohm m^2],          Solid electrolyte interface resistance
     CA.sigma      = 6.46;       % [S m^-1],           Electrical conductivity (am phase)
-    CA.D_o        = 3.0186e-15; % [m^2 s^-1],         Solid-state diffusion coefficient
+    CA.D_o        = 2.9963e-15; % [m^2 s^-1],         Solid-state diffusion coefficient
     CA.rho        = 4310;       % [kg m^-3],          Density of the electrode material without Li
     CA.rho_bin    = 1900;       % [kg m^-3],          Density of the binder
     CA.c_p        = 538;        % [J kg^-1 K^-1],     Specific heat capacity of cathode material
@@ -372,10 +373,14 @@
     EL.D_o_Li_ionHandle   = SIM.ELD_o_Li_ionHandle;
     EL.kappaHandle        = SIM.ELkappaHandle;
     
-    EL.tf_num     = 0.363;      % [-],            Transference Number 
-    EL.Activity   = 1;          % [-],
-    EL.D_o_Li_ion = 8.9380e-11; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
-    EL.kappa      = 0.28;       % [S m^-1],       Ionic conductivity
+    % EL.tf_num     = 0.363;      % [-],            Transference Number 
+    % EL.Activity   = 1;          % [-],
+    % EL.D_o_Li_ion = 8.9380e-11; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
+    % EL.kappa      = 0.28;       % [S m^-1],       Ionic conductivity
+    EL.tf_num     = 0.278092183499998;      % [-],            Transference Number 
+    EL.Activity   = 2.07788963450000;          % [-],
+    EL.D_o_Li_ion = 1.80647486305862e-10; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
+    EL.kappa      = 0.0761365002575189;       % [S m^-1],       Ionic conductivity
     EL.C          = 1.0;        % [kmol m^-3],    Li concentration
     EL.rho        = 75;         % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
     EL.c_p        = 1830;       % [J kg^-1 K^-1], Specific heat capacity of electrolyte
@@ -598,7 +603,8 @@
 
         % SIM.VoltageMax         = 4.27;   % [V]
         SIM.VoltageMax         = 4.3;   % [V]
-        SIM.VoltageMin         = 3.21 ;  % [V] 
+        % SIM.VoltageMin         = 3.21 ;  % [V] 
+        SIM.VoltageMin         = 3.00 ;  % [V] 
         SIM.AnodeFormation_X   = 0.50;   % [-] 
         SIM.CathodeFormation_X = 0.4422; % [-] 
         % SIM.OneC_measured      = 22.7; % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)

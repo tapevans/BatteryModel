@@ -39,9 +39,9 @@ clc
 
 % Test Initialization
 %%% Mode 1 ---- Polarization ----
-    SIM.SOC_start = 10;   % [%], Initial state of charge
+    SIM.SOC_start = 50;   % [%], Initial state of charge
     SIM.SimMode = 1;
-    SIM.C_rate = 1/20;
+    SIM.C_rate = 1/10;
     % SIM.C_rate = 0;
     SIM.ChargeOrDischarge = 1;
 
@@ -111,7 +111,12 @@ clear all;
 close all;
 
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\test\Test_Polar_0.10C_D.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\test\Test_Polar_0.10C_C.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\ISO20_Polar_0.10C_D.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\ANCold_Polar_0.10C_D.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\CACold_Polar_0.10C_D.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\ISO20_Polar_0.10C_C.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\ANCold_Polar_0.10C_C.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\CACold_Polar_0.10C_C.mat';
 plotfcn(filename)
 
 
