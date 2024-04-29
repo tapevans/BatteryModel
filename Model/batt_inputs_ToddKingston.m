@@ -117,9 +117,9 @@
         % FLAG.VARIABLE_sigma    = 0;
         FLAG.VARIABLE_kappa    = 1;
         FLAG.VARIABLE_activity = 1;
-        FLAG.VARIABLE_D_Liion  = 0;
+        FLAG.VARIABLE_D_Liion  = 1;
         FLAG.VARIABLE_tf_num   = 1;
-        FLAG.VARIABLE_D_o_AN   = 0; % 1 if the active material diffusion coefficient is dependent on concentration
+        FLAG.VARIABLE_D_o_AN   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
         FLAG.VARIABLE_D_o_CA   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
     
     %%%% If CONSTANT_PROPS_FROM_HANDLES or VARIABLE_PROPS_FROM_HANDLES are 1

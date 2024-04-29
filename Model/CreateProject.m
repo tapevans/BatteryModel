@@ -121,7 +121,21 @@ clear all; close all; clc;
     % folder_name  = 'test';
     % battery_name = 'Test';
 
-    folder_name  = 'TK_ExpDiffCoeff';
+    % folder_name  = 'TK_ExpDiffCoeff';
+    % % battery_name = 'ISO20';
+    % % battery_name = 'ANCold';
+    % % battery_name = 'CACold';
+    % 
+    % % battery_name = 'ISO20_NoOnsag';
+    % % battery_name = 'ANCold_NoOnsag';
+    % % battery_name = 'CACold_NoOnsag';
+    % 
+    % % battery_name = 'ISO20_NoSoret';
+    % % battery_name = 'ANCold_NoSoret';
+    % battery_name = 'CACold_NoSoret';
+
+
+    folder_name  = 'TK_LiteratureDiffCoeff';
     % battery_name = 'ISO20';
     % battery_name = 'ANCold';
     % battery_name = 'CACold';
@@ -334,7 +348,8 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
     if C_rates(i) < 0
         CorD = 'C';
         SIM.ChargeOrDischarge = -1;
-        SIM.SOC_start = 25;
+        % SIM.SOC_start = 25;
+        SIM.SOC_start = 5;
     elseif C_rates(i) > 0
         CorD = 'D';
         SIM.ChargeOrDischarge = 1;
@@ -857,19 +872,19 @@ switch InputFile
     case 5 % batt_input_ToddKingston
         inputHandle             = @batt_inputs_ToddKingston;
         SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
-        % SIM.ANEqPotentialHandle = @E_eqGraphite_NREL_withTemp;
+        % SIM.ANEqPotentialHandle = @E_eqGraphite_NREL_withTemp; %%%%%%%% Doesn't make a difference
         SIM.ANi_oHandle         = @i_oC6_NREL;
         SIM.ANsigmaHandle       = @sigmaC6_NREL;
         SIM.AND_oHandle         = @D_o_Graphite_NREL;
         SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
         % SIM.CAEqPotentialHandle = @E_eqNMC622_TK;
-        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp; %%%%%%%% Doesn't make a difference
         SIM.CAi_oHandle         = @i_oNMC_NREL;  
         SIM.CAsigmaHandle       = @sigmaNMC_NREL;
-        % SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+        SIM.CAD_oHandle         = @D_o_NMC532_NREL;
             % SIM.CAD_oHandle         = @D_o_NMC622_TK_ISO20;
             % SIM.CAD_oHandle         = @D_o_NMC622_TK_ANCold;
-            SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
         SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
         SIM.ELActivityHandle    = @activity_Landesfeind;
         SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;
