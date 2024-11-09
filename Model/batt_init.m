@@ -474,124 +474,194 @@ SIM.onlyAtSep = onlyAtSep;
     end
     
 % Capacity Calc
-    AN.Cap = AN.C_Li_max * CONS.F *(1/3600)*AN.V_ed; % [Ahr], Method 2: Based on a modeled parameter of C_max
-    CA.Cap = CA.C_Li_max * CONS.F *(1/3600)*CA.V_ed; % [Ahr], Method 2: Based on a modeled parameter of C_max
+    AN.Cap_theo   = AN.C_Li_max * CONS.F *(1/3600)*AN.V_ed; % [Ahr], Method 2: Based on a modeled parameter of C_max
+    CA.Cap_theo   = CA.C_Li_max * CONS.F *(1/3600)*CA.V_ed; % [Ahr], Method 2: Based on a modeled parameter of C_max
+    
+    % AN.Cap_stable = AN.Cap_theo * (AN.x_max_theo - AN.x_min_theo);
+    % CA.Cap_stable = CA.Cap_theo * (CA.x_max_theo - CA.x_min_theo);
 
-if isempty(SIM.VoltageMax) 
-    %% Mole Fraction Calculation
-    % Determine V_min and V_max
-        voltage_min_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC0   , Temp_vec(1));
-        voltage_min_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC0 , Temp_vec(end));
-        SIM.VoltageMin = voltage_min_ca - voltage_min_an; % Voltage at SOC0
-        V_min = voltage_min_ca - voltage_min_an;
+% NP Ratio
+    NP_ratio = AN.Cap_theo/CA.Cap_theo;
+    z = 1/NP_ratio;
 
-        voltage_max_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC100   , Temp_vec(1));
-        voltage_max_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC100 , Temp_vec(end));
-        SIM.VoltageMax = voltage_max_ca - voltage_max_an; % Voltage at SOC100
-        V_max = voltage_max_ca - voltage_max_an;
+% Define xy line
+    F_x = SIM.AnodeFormation_X;
+    F_y = SIM.CathodeFormation_X;
 
-    % Set stoich limits
-        SIM.x_min = SIM.AnodeStoich_SOC0;
-        SIM.x_max = SIM.AnodeStoich_SOC100;
-        SIM.y_min = SIM.CathodeStoich_SOC100;
-        SIM.y_max = SIM.CathodeStoich_SOC0;
+    y_intcep = F_y + (1/z) * F_x;
     
-    % Initial Lithiation Fraction
-        SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
-        SIM.y_ini = (SIM.y_min-SIM.y_max)*SIM.SOC_start/100 + SIM.y_max;
-    
-    % Determine electrode initial voltage potential
-        voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
-        voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
-        voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
-    
-    % Calculate electrode initial active material concentration
-        concen_ini_an = AN.C_Li_max * SIM.x_ini;
-        concen_ini_ca = CA.C_Li_max * SIM.y_ini;
-        
-    % % Test OCP
-    %     SOC_vec = 0:0.1:100;
-    %     xFromSOC = @(SOC) (SIM.x_max-SIM.x_min)*SOC/100 + SIM.x_min;
-    %     yFromSOC = @(SOC) (SIM.y_min-SIM.y_max)*SOC/100 + SIM.y_max;
-    %     x_vec = xFromSOC(SOC_vec);
-    %     y_vec = yFromSOC(SOC_vec);
-    %     v_an_vec = AN.EqPotentialHandle(x_vec);
-    %     v_ca_vec = CA.EqPotentialHandle(y_vec);
-    %     v_vec = v_ca_vec - v_an_vec;
-    %     figure
-    %     plot(SOC_vec , v_vec , '-k' , 'LineWidth', 2)
+    y_anom = @(x) -(1/z)*x + y_intcep;
+    x_anom = @(y) -z*(y - y_intcep);
 
-else
-    % Capacity Ratio
-        z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
-        % z_known = 0.8613;  %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
-        % z       = z_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+% Get x and y for Voltage limits
+    options         = optimoptions('lsqnonlin');
+    options.Display = 'off';
+    x0      = F_x;
+    lb      = 0;
+    ub      = 1;
+    V_des   = SIM.VoltageMin_SOC;
+    x_V_min = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
 
-    %% Mole Fraction Calculation
-    % x and y are the anode and cathode mole fractions respectively
-    % Points that are being determined
-        % * F: Mole fractions at formation
-        % * A: Mole fraction when x = 0
-        % * B: Mole fraction when x = 1
-        % * C: Mole fraction at V_max
-        % * D: Mole fraction at V_min
-        options         = optimoptions('lsqnonlin');
-        options.Display = 'off';
+    V_des   = SIM.VoltageMax_SOC;
+    x_V_max = lsqnonlin(@(x)XfromDesPotential(x,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+
+    y_V_min = y_anom(x_V_min);
+    y_V_max = y_anom(x_V_max);
+
+    AN.deltaXSOC = abs(x_V_max - x_V_min);
+    CA.deltaXSOC = abs(y_V_max - y_V_min);
+    AN.Cap_SOC = AN.C_Li_max * AN.V_ed * AN.deltaXSOC * CONS.F / 3600; % [Ahr]
+    CA.Cap_SOC = CA.C_Li_max * CA.V_ed * CA.deltaXSOC * CONS.F / 3600; % [Ahr]
+
+    SIM.Cap_cell_SOC = min(AN.Cap_SOC , CA.Cap_SOC); % [Ahr]
+
+% Determine electrode initial voltage potential
+    x_init_fn = @(SOC) (x_V_max - x_V_min)* SOC + x_V_min;
+    y_init_fn = @(SOC) (y_V_max - y_V_min)* SOC + y_V_min;
     
-        F_x = SIM.AnodeFormation_X;
-        F_y = SIM.CathodeFormation_X;
+    SIM.x_ini = x_init_fn(SIM.SOC_start/100);
+    SIM.y_ini = y_init_fn(SIM.SOC_start/100);
     
-    % y-intercept
-        y_intcep = F_y + z * F_x;
-        % y_intcep_known = 0.8728;         %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
-        % y_intcep       = y_intcep_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+    % SIM.x_ini = x_init_fn(SIM.SOC_start);
+    % SIM.y_ini = y_init_fn(SIM.SOC_start);
+
+    voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
+    voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
+    voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
+
+% Calculate electrode initial active material concentration
+    concen_ini_an = AN.C_Li_max * SIM.x_ini;
+    concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+
+    SIM.x_V_min = x_V_min;
+    SIM.x_V_max = x_V_max;
+    SIM.y_V_min = y_V_min;
+    SIM.y_V_max = y_V_max;
     
-    % y mole fraction at x limits
-        A_x =  0;
-        A_y = -z*A_x + y_intcep;
-        B_x =  1;
-        B_y = -z*B_x + y_intcep;
-    
-    % Mole fractions at V_max
-        x0    = F_x;
-        lb    = 0;
-        ub    = 1;
-        V_des = SIM.VoltageMax;
-        C_x   = lsqnonlin(@(x)XfromDesPotential(x,Temp_vec,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
-        C_y   = YfromX(C_x,z,y_intcep);
-    
-    % Mole fractions at V_min
-        x0    = F_x;
-        lb    = 0;
-        ub    = 1;
-        V_des = SIM.VoltageMin;
-        D_x   = lsqnonlin(@(x)XfromDesPotential(x,Temp_vec,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
-        D_y   = YfromX(D_x,z,y_intcep);
-    
-    % Limits on x and y
-        SIM.x_min = max(A_x,D_x);
-        SIM.x_max = min(B_x,C_x);
-        SIM.y_min = YfromX(SIM.x_max,z,y_intcep);
-        SIM.y_max = YfromX(SIM.x_min,z,y_intcep);
-    
-    % Initial Lithiation Fraction
-        SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
-        SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
-    
-    % Determine electrode initial voltage potential
-        voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini,Temp_vec(1));
-        voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini,Temp_vec(end));
-        voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
-    
-    % Calculate electrode initial active material concentration
-        concen_ini_an = AN.C_Li_max * SIM.x_ini;
-        concen_ini_ca = CA.C_Li_max * SIM.y_ini;
-end
+ 
+% % Max Concentration
+%     if ~FLAG.preDefined_C_max
+%     end
+% 
+% % Capacity Calc
+%     AN.Cap = AN.C_Li_max * CONS.F *(1/3600)*AN.V_ed; % [Ahr], Method 2: Based on a modeled parameter of C_max
+%     CA.Cap = CA.C_Li_max * CONS.F *(1/3600)*CA.V_ed; % [Ahr], Method 2: Based on a modeled parameter of C_max
+% 
+% if isempty(SIM.VoltageMax) 
+%     %% Mole Fraction Calculation
+%     % Determine V_min and V_max
+%         voltage_min_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC0   , Temp_vec(1));
+%         voltage_min_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC0 , Temp_vec(end));
+%         SIM.VoltageMin = voltage_min_ca - voltage_min_an; % Voltage at SOC0
+%         V_min = voltage_min_ca - voltage_min_an;
+% 
+%         voltage_max_an = AN.EqPotentialHandle(SIM.AnodeStoich_SOC100   , Temp_vec(1));
+%         voltage_max_ca = CA.EqPotentialHandle(SIM.CathodeStoich_SOC100 , Temp_vec(end));
+%         SIM.VoltageMax = voltage_max_ca - voltage_max_an; % Voltage at SOC100
+%         V_max = voltage_max_ca - voltage_max_an;
+% 
+%     % Set stoich limits
+%         SIM.x_min = SIM.AnodeStoich_SOC0;
+%         SIM.x_max = SIM.AnodeStoich_SOC100;
+%         SIM.y_min = SIM.CathodeStoich_SOC100;
+%         SIM.y_max = SIM.CathodeStoich_SOC0;
+% 
+%     % Initial Lithiation Fraction
+%         SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
+%         SIM.y_ini = (SIM.y_min-SIM.y_max)*SIM.SOC_start/100 + SIM.y_max;
+% 
+%     % Determine electrode initial voltage potential
+%         voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini);
+%         voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini);
+%         voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
+% 
+%     % Calculate electrode initial active material concentration
+%         concen_ini_an = AN.C_Li_max * SIM.x_ini;
+%         concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+% 
+%     % % Test OCP
+%     %     SOC_vec = 0:0.1:100;
+%     %     xFromSOC = @(SOC) (SIM.x_max-SIM.x_min)*SOC/100 + SIM.x_min;
+%     %     yFromSOC = @(SOC) (SIM.y_min-SIM.y_max)*SOC/100 + SIM.y_max;
+%     %     x_vec = xFromSOC(SOC_vec);
+%     %     y_vec = yFromSOC(SOC_vec);
+%     %     v_an_vec = AN.EqPotentialHandle(x_vec);
+%     %     v_ca_vec = CA.EqPotentialHandle(y_vec);
+%     %     v_vec = v_ca_vec - v_an_vec;
+%     %     figure
+%     %     plot(SOC_vec , v_vec , '-k' , 'LineWidth', 2)
+% 
+% else
+%     % Capacity Ratio
+%         z = (CA.C_Li_max*CA.V_ed)/(AN.C_Li_max*AN.V_ed);
+%         % z_known = 0.8613;  %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+%         % z       = z_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+% 
+%     %% Mole Fraction Calculation
+%     % x and y are the anode and cathode mole fractions respectively
+%     % Points that are being determined
+%         % * F: Mole fractions at formation
+%         % * A: Mole fraction when x = 0
+%         % * B: Mole fraction when x = 1
+%         % * C: Mole fraction at V_max
+%         % * D: Mole fraction at V_min
+%         options         = optimoptions('lsqnonlin');
+%         options.Display = 'off';
+% 
+%         F_x = SIM.AnodeFormation_X;
+%         F_y = SIM.CathodeFormation_X;
+% 
+%     % y-intercept
+%         y_intcep = F_y + z * F_x;
+%         % y_intcep_known = 0.8728;         %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+%         % y_intcep       = y_intcep_known; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
+% 
+%     % y mole fraction at x limits
+%         A_x =  0;
+%         A_y = -z*A_x + y_intcep;
+%         B_x =  1;
+%         B_y = -z*B_x + y_intcep;
+% 
+%     % Mole fractions at V_max
+%         x0    = F_x;
+%         lb    = 0;
+%         ub    = 1;
+%         V_des = SIM.VoltageMax;
+%         C_x   = lsqnonlin(@(x)XfromDesPotential(x,Temp_vec,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+%         C_y   = YfromX(C_x,z,y_intcep);
+% 
+%     % Mole fractions at V_min
+%         x0    = F_x;
+%         lb    = 0;
+%         ub    = 1;
+%         V_des = SIM.VoltageMin;
+%         D_x   = lsqnonlin(@(x)XfromDesPotential(x,Temp_vec,V_des,z,y_intcep,AN,CA),x0,lb,ub,options);
+%         D_y   = YfromX(D_x,z,y_intcep);
+% 
+%     % Limits on x and y
+%         SIM.x_min = max(A_x,D_x);
+%         SIM.x_max = min(B_x,C_x);
+%         SIM.y_min = YfromX(SIM.x_max,z,y_intcep);
+%         SIM.y_max = YfromX(SIM.x_min,z,y_intcep);
+% 
+%     % Initial Lithiation Fraction
+%         SIM.x_ini = (SIM.x_max-SIM.x_min)*SIM.SOC_start/100 + SIM.x_min;
+%         SIM.y_ini = YfromX(SIM.x_ini,z,y_intcep);
+% 
+%     % Determine electrode initial voltage potential
+%         voltage_ini_an   = AN.EqPotentialHandle(SIM.x_ini,Temp_vec(1));
+%         voltage_ini_ca   = CA.EqPotentialHandle(SIM.y_ini,Temp_vec(end));
+%         voltage_ini_cell = voltage_ini_ca - voltage_ini_an;
+% 
+%     % Calculate electrode initial active material concentration
+%         concen_ini_an = AN.C_Li_max * SIM.x_ini;
+%         concen_ini_ca = CA.C_Li_max * SIM.y_ini;
+% end
 
  
 %% Determine Minimum Parameters
     SIM.A_c      = min( AN.A_c, CA.A_c );
-    SIM.Cell_Cap = min( AN.Cap, CA.Cap );
+    SIM.Cell_Cap = min( AN.Cap_theo, CA.Cap_theo );
     % SIM.Cell_Cap = 74.6/1000; %%%%%%%%%%%!!!!!!!!!!!!Hardcoded
 
 
@@ -1238,14 +1308,27 @@ end
     end
     
     %%%%%%%%%%
-    function res = XfromDesPotential(x,T,V_des,z,y_intcep,AN,CA)
+    % function res = XfromDesPotential(x,T,V_des,z,y_intcep,AN,CA)
+    %     % Solve for y: y = -z*x + y_intcep;
+    %     y = YfromX(x,z,y_intcep);
+    %     % Solve An potential
+    %         Eeq_an = AN.EqPotentialHandle(x,T);
+    % 
+    %     % Solve Ca potential
+    %         Eeq_ca = CA.EqPotentialHandle(y,T);
+    % 
+    %     % Calc residual
+    %         Eeq_cell = Eeq_ca - Eeq_an;
+    %         res = Eeq_cell - V_des;
+    % end
+    function res = XfromDesPotential(x,V_des,z,y_intcep,AN,CA)
         % Solve for y: y = -z*x + y_intcep;
         y = YfromX(x,z,y_intcep);
         % Solve An potential
-            Eeq_an = AN.EqPotentialHandle(x,T);
+            Eeq_an = AN.EqPotentialHandle(x);
     
         % Solve Ca potential
-            Eeq_ca = CA.EqPotentialHandle(y,T);
+            Eeq_ca = CA.EqPotentialHandle(y);
     
         % Calc residual
             Eeq_cell = Eeq_ca - Eeq_an;

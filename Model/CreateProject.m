@@ -44,6 +44,7 @@
 clear all; close all; clc;
 
 
+
 %% Subdirecties to Include
     % Script's filepath
         [current_file_path,~,~] = fileparts(mfilename('fullpath'));
@@ -65,6 +66,9 @@ clear all; close all; clc;
     %    4) batt_inputs_NREL
     %    5) batt_inputs_ToddKingston
     %    6) batt_inputs_MPC
+    %    7) batt_inputs_ToddKingston_GITT_ISO
+    %    8) batt_inputs_ToddKingston_GITT_ANCOLD
+    %    9) batt_inputs_ToddKingston_GITT_CACOLD
     InputFile = 5;
 
     FLAG_local.folder_overwrite = 0; % 1 if delete folder if it already exists
@@ -78,11 +82,11 @@ clear all; close all; clc;
     % folder_name  = 'TK_Test';
     % % battery_name = 'Test_CTRG_Both';
     % battery_name = 'Test_Eeq';
-
+%
     % folder_name  = 'TK_DelV_DelT_Tests';
     % % battery_name = 'Test';
     % % battery_name = 'TestAMLoss';
-
+%
     % folder_name  = 'TK_CyclingDegradation';
     % % battery_name = 'Iso20_ConstantCTRG_AN';
     % % battery_name = 'Iso20_ConstantCTRG_CA';
@@ -93,7 +97,7 @@ clear all; close all; clc;
     % % battery_name = 'Iso20_CombinedCTRG_AML_AN';
     % % battery_name = 'Iso20_CombinedCTRG_AML_CA';
     % battery_name = 'Iso20_CombinedCTRG_AML_Both';
-
+%
     % folder_name  = 'TK_CompareInfluenceOnDelV';
     % % battery_name = 'Soret0_Beta0_dUdT0';
     % % battery_name = 'Soret1.5_Beta0_dUdT0';
@@ -101,7 +105,7 @@ clear all; close all; clc;
     % battery_name = 'Soret0_Beta0_dUdT';
     % % battery_name = 'Soret1.5_Beta-1.5e-3_dUdT0';
     % % battery_name = 'Soret1.5_Beta-1.5e-3_dUdT';
-
+%
     % folder_name  = 'TK_GeneralComparison';
     % % 0-Crate SOC:(10, 25, 50, 75, 90)
     % % battery_name = 'Soret0_Beta0_Iso20_startSOC90';
@@ -117,10 +121,10 @@ clear all; close all; clc;
     % % battery_name = 'Soret1.5_Beta-1.5e-3_Iso20';
     % % battery_name = 'Soret1.5_Beta-1.5e-3_ANCold';
     % % battery_name = 'Soret1.5_Beta-1.5e-3_CACold';
-
+    %
     % folder_name  = 'test';
     % battery_name = 'Test';
-
+    %
     % folder_name  = 'TK_ExpDiffCoeff';
     % % battery_name = 'ISO20';
     % % battery_name = 'ANCold';
@@ -133,26 +137,75 @@ clear all; close all; clc;
     % % battery_name = 'ISO20_NoSoret';
     % % battery_name = 'ANCold_NoSoret';
     % battery_name = 'CACold_NoSoret';
-
-
-    folder_name  = 'TK_LiteratureDiffCoeff';
-    % battery_name = 'ISO20';
-    % battery_name = 'ANCold';
-    % battery_name = 'CACold';
-
-    % battery_name = 'ISO20_NoOnsag';
-    % battery_name = 'ANCold_NoOnsag';
-    % battery_name = 'CACold_NoOnsag';
-
+    %
+    %
+    % folder_name  = 'TK_LiteratureDiffCoeff';
+    % % battery_name = 'ISO20';
+    % % battery_name = 'ANCold';
+    % % battery_name = 'CACold';
+    % 
+    % % battery_name = 'ISO20_NoOnsag';
+    % % battery_name = 'ANCold_NoOnsag';
+    % % battery_name = 'CACold_NoOnsag';
+    % 
+    % % battery_name = 'ISO20_NoSoret';
+    % % battery_name = 'ANCold_NoSoret';
+    % battery_name = 'CACold_NoSoret';
+    %
+    % folder_name  = 'TK_TestVoltageRelaxation';
+    % % battery_name = 'Test';
+    %
+    % folder_name  = 'TK_ECS_Poster';
     % battery_name = 'ISO20_NoSoret';
-    % battery_name = 'ANCold_NoSoret';
-    battery_name = 'CACold_NoSoret';
+    % % battery_name = 'ANCold_NoSoret';
+    % % battery_name = 'CACold_NoSoret';
+%
+    % folder_name  = 'TK_FitToThermal_Part2';
+    % % battery_name = 'ISO20_NoSoret_7040';
+    % % battery_name = 'ANCold_NoSoret_7040';
+    % % battery_name = 'CACold_NoSoret_7040';
+    % % battery_name = 'ISO20_NoSoret_100';
+    % % battery_name = 'ANCold_NoSoret_100';
+    % battery_name = 'CACold_NoSoret_100';
+    % % battery_name = 'ISO20_NoSoret_DiffFromGITT_100';
+    % % battery_name = 'ANCold_NoSoret_DiffFromGITT_100';
+    % % battery_name = 'CACold_NoSoret_DiffFromGITT_100';
+    % % battery_name = 'ISO20_NoSoret_DiffFromGITT_7040';
+    % % battery_name = 'ANCold_NoSoret_DiffFromGITT_7040';
+    % % battery_name = 'CACold_NoSoret_DiffFromGITT_7040';
+    % % battery_name = 'CACold_NoSoret_DiffFromGITT_7040_NoSeebeck';
+    % % battery_name = 'ISO20_NoSoret_DiffFromGITT_7040_NoSeebeck';
+    % % battery_name = 'ISO20_NoSoret_DiffFromGITT_100_NoSeebeck';
+    % % battery_name = 'ISO20_NoSoret_DiffFromGITT_100_NoSeebeckNoOnsager';
+    % % battery_name = 'CACold_NoSoret_DiffFromGITT_100_NoSeebeckNoOnsager';
+    % % battery_name = 'CACold_NoSoret_100_NoSeebeckNoOnsager';
+    % % battery_name = 'CACold_NoSoret_100_NoSeebeckNoOnsager_DLiionSlower';
+    % % battery_name = 'CACold_NoSoret_100_DLiionSlower';
+    % % battery_name = 'CACold_NoSoret_100_DLiionNREL';
+    % % battery_name = 'ISO20_NoSoret_100_DLiionNREL';
+    % % battery_name = 'ISO20_NoSoret_100_NoSeebeckNoOnsager_DLiionNREL';
+%
+%
+    % folder_name  = 'VaryingDLiion';
+    % % battery_name = 'ISO20_D1e-9';
+    % % battery_name = 'ISO20_D1e-10';
+    % battery_name = 'ISO20_D5e-11';
+    % % battery_name = 'ISO20_D1e-11';
+    
+    folder_name  = 'TK_TestPostPaperDraft'; % 2024_10_30
+        % battery_name = 'ConstantDall_ISO20';
+        % battery_name = 'ConstantDall_ANCOLD';
+        % battery_name = 'ConstantDall_CACOLD';
+
+        % battery_name = 'VariableD_ISO20';
+        % battery_name = 'VariableD_ANCOLD';
+        battery_name = 'VariableD_CACOLD';
 
 
 %% Simulations
 % ---- Polarization ----
 % Positive is discharge, Negative is charge
-    % C_rates      = [];
+    C_rates      = [];
     % C_rates      = [0]; 
     % C_rates      = [0.040843474405010]; % Results in 1A/m^2
     % C_rates      = [-1/5 -1/2 -1 -1.5 -2 -5];
@@ -167,7 +220,7 @@ clear all; close all; clc;
     % C_rates      = [-1/20  -1 -2]; 
     % C_rates      = [-1/10];
     % C_rates      = [1/10];
-    C_rates      = [1/10 -1/10];
+    % C_rates      = [1/10 -1/10];
 
 % ---- Harmonic Perturbation ----
 % [rad/s], frequency of the sin wave
@@ -214,7 +267,7 @@ clear all; close all; clc;
         
         
 % ---- Known BC Profile Controller ----
-    KBCP   = 0;
+    KBCP   = 1;
         KBCPProfileOverwrite = 0;
         % KBCPProfileFilename = 'StairStepNoRelax';
         % KBCPProfileFilename = 'GITT';
@@ -225,6 +278,9 @@ clear all; close all; clc;
         % KBCPProfileFilename = 'Chg_Dchg_10Cycles';
         % KBCPProfileFilename = 'Chg_Dchg_17Cycles';
         % KBCPProfileFilename = 'Chg_Dchg_20Cycles';
+        % KBCPProfileFilename = 'Relax_0.72CCharge_Relax';
+        % KBCPProfileFilename = 'CheckGITTStep';
+        KBCPProfileFilename = 'TK_GITT';
 
     % Initial SOC
         % KBSOC = 81.93;
@@ -348,18 +404,21 @@ for i = 1:length(C_rates)% -1 if Charge, 1 if Discharge
     if C_rates(i) < 0
         CorD = 'C';
         SIM.ChargeOrDischarge = -1;
-        % SIM.SOC_start = 25;
-        SIM.SOC_start = 5;
+        SIM.SOC_start = 0;
+        % SIM.SOC_start = 5;
     elseif C_rates(i) > 0
         CorD = 'D';
         SIM.ChargeOrDischarge = 1;
-        % SIM.SOC_start = 95;
+        % % SIM.SOC_start = 95;
         SIM.SOC_start = 100;
+        % % SIM.SOC_start = 70; %%!!! This is to stay within valid Diff range from GITT
+        % SIM.SOC_start = SOC_start;
     else
         CorD = 'D';
         SIM.ChargeOrDischarge = 1;
-        SIM.SOC_start = 90;
-        % SIM.SOC_start = SOC_start;
+        % SIM.SOC_start = 90;
+        % SIM.SOC_start = 10;
+        SIM.SOC_start = SOC_start;
     end
     cRateTxt = sprintf( '%.2f' , abs(C_rates(i)) ) ;
     filename = [ battery_name , '_Polar_' , cRateTxt , 'C_' , CorD , '.mat'];
@@ -887,7 +946,8 @@ switch InputFile
             % SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
         SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
         SIM.ELActivityHandle    = @activity_Landesfeind;
-        SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;
+        % SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
         SIM.ELkappaHandle       = @kappa_Landesfeind;
     case 6 % batt_input_MPC
         inputHandle             = @batt_inputs_MPC;
@@ -903,6 +963,72 @@ switch InputFile
         SIM.ELActivityHandle    = @activity_NREL;
         SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
         SIM.ELkappaHandle       = @kappa_NREL;
+
+    case 7 % batt_input_ToddKingston_GITT_ISO
+        inputHandle             = @batt_inputs_ToddKingston;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        % SIM.ANEqPotentialHandle = @E_eqGraphite_NREL_withTemp; %%%%%%%% Doesn't make a difference
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp; %%%%%%%% Doesn't make a difference
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        % SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+            SIM.CAD_oHandle         = @D_o_NMC622_TK_ISO20;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_ANCold;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
+        SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
+        SIM.ELActivityHandle    = @activity_Landesfeind;
+        % SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_Landesfeind;
+
+    case 8 % batt_input_ToddKingston_GITT_ANCOLD
+        inputHandle             = @batt_inputs_ToddKingston;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        % SIM.ANEqPotentialHandle = @E_eqGraphite_NREL_withTemp; %%%%%%%% Doesn't make a difference
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp; %%%%%%%% Doesn't make a difference
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        % SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_ISO20;
+            SIM.CAD_oHandle         = @D_o_NMC622_TK_ANCold;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
+        SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
+        SIM.ELActivityHandle    = @activity_Landesfeind;
+        % SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_Landesfeind;
+
+    case 9 % batt_input_ToddKingston_GITT_CACOLD
+        inputHandle             = @batt_inputs_ToddKingston;
+        SIM.ANEqPotentialHandle = @E_eqGraphite_NREL;
+        % SIM.ANEqPotentialHandle = @E_eqGraphite_NREL_withTemp; %%%%%%%% Doesn't make a difference
+        SIM.ANi_oHandle         = @i_oC6_NREL;
+        SIM.ANsigmaHandle       = @sigmaC6_NREL;
+        SIM.AND_oHandle         = @D_o_Graphite_NREL;
+        SIM.CAEqPotentialHandle = @E_eqNMC_NREL;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK;
+        % SIM.CAEqPotentialHandle = @E_eqNMC622_TK_withTemp; %%%%%%%% Doesn't make a difference
+        SIM.CAi_oHandle         = @i_oNMC_NREL;  
+        SIM.CAsigmaHandle       = @sigmaNMC_NREL;
+        % SIM.CAD_oHandle         = @D_o_NMC532_NREL;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_ISO20;
+            % SIM.CAD_oHandle         = @D_o_NMC622_TK_ANCold;
+            SIM.CAD_oHandle         = @D_o_NMC622_TK_CACold;
+        SIM.ELtf_numHandle      = @transferenceNumber_Landesfeind;
+        SIM.ELActivityHandle    = @activity_Landesfeind;
+        % SIM.ELD_o_Li_ionHandle  = @D_oLiion_Landesfeind;
+        SIM.ELD_o_Li_ionHandle  = @D_oLiion_NREL;
+        SIM.ELkappaHandle       = @kappa_Landesfeind;
 end
 end
 

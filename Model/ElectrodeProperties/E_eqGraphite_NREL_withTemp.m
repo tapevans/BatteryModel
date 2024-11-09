@@ -109,6 +109,7 @@ end
 
 %% Function for Graphite Entropy (\DeltaS)
 function [DelS] = getGraphiteEntropy(x_vec)
+    %doi:10.1016/S0378-7753(03)00285-4
     poly4Handle = @(x,p) p(1)*x.^4 + p(2)*x.^3 + p(3)*x.^2 + p(4)*x + p(5);
     p_s1 = [ 7582 , -9819 ,  4543 , -917.7 ,  61.57];
     p_s3 = [-1123 ,  2755 , -2393 ,  837.3 , -94.05];

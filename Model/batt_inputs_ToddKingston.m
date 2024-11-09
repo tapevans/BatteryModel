@@ -33,7 +33,7 @@
     % 10) EIS Ho-Kalman
     % 0)  Files that are used strictly for data and not to run a simulation
 
-    function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_ToddKingston(SIM)
+function [AN,CA,SEP,EL,SIM,N,FLAG] = batt_inputs_ToddKingston(SIM)
 %% Flags    
     FLAG.R_AN   = 1; % 1 if radial diffusion in anode   active material is considered
     FLAG.R_CA   = 1; % 1 if radial diffusion in cathode active material is considered
@@ -58,10 +58,15 @@
             FLAG.HEAT_GEN_RXN      = 1; % Heat generation from current across R_SEI %%% May not be accurate
             % FLAG.HEAT_GEN_CHEM_RXN = 0; % Heat generation from a reaction at the SEI %%%%%%%NOT IMPLEMENTED
 
-    FLAG.InitialThermalGradient = 1;
-    FLAG.RampThermalGradient    = 0;
-        SIM.RampThermalGradientTime = 1000; % [s], time to ramp the BC
-        % SIM.RampThermalGradientTime = 0;    % [s], time to ramp the BC
+        if isfield(SIM,'InitialThermalGradient')
+            % FLAG.InitialThermalGradient = SIM.InitialThermalGradient;
+            % FLAG.RampThermalGradient    = SIM.RampThermalGradient;
+        else
+            FLAG.InitialThermalGradient = 1;
+            FLAG.RampThermalGradient    = 0;
+        end
+            % SIM.RampThermalGradientTime = 1000; % [s], time to ramp the BC
+            SIM.RampThermalGradientTime = 0;    % [s], time to ramp the BC
     % FLAG.TempBC
         % 0) Manual
         % 1) Iso20
@@ -72,7 +77,7 @@
         if isfield(SIM,'FLAG_TempBC')
             FLAG.TempBC = SIM.FLAG_TempBC; % Pre-determined temperature BC
         else
-            FLAG.TempBC = 3; % Pre-determined temperature BC
+            FLAG.TempBC = 3; % Manual temperature BC
         end
             
     FLAG.V_SEI        = 1; % 1 if the overpotential is calculated using V_SEI
@@ -117,9 +122,21 @@
         % FLAG.VARIABLE_sigma    = 0;
         FLAG.VARIABLE_kappa    = 1;
         FLAG.VARIABLE_activity = 1;
-        FLAG.VARIABLE_D_Liion  = 1;
         FLAG.VARIABLE_tf_num   = 1;
-        FLAG.VARIABLE_D_o_AN   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
+        % if isfield(SIM,'VARIABLE_D_Liion')
+        %     FLAG.VARIABLE_D_Liion  = SIM.VARIABLE_D_Liion;
+        % else
+        %     FLAG.VARIABLE_D_Liion  = 1; %!!!!
+        % end
+        % if isfield(SIM,'VARIABLE_D_o_AN')
+        %     FLAG.VARIABLE_D_o_AN = SIM.VARIABLE_D_o_AN;
+        % else
+        %     FLAG.VARIABLE_D_o_AN   = 1; %!!!!% 1 if the active material diffusion coefficient is dependent on concentration
+        % end
+        % FLAG.VARIABLE_D_o_CA   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
+
+        FLAG.VARIABLE_D_Liion  = 1;
+        FLAG.VARIABLE_D_o_AN   = 1;
         FLAG.VARIABLE_D_o_CA   = 1; % 1 if the active material diffusion coefficient is dependent on concentration
     
     %%%% If CONSTANT_PROPS_FROM_HANDLES or VARIABLE_PROPS_FROM_HANDLES are 1
@@ -191,6 +208,7 @@
 %% ---- Polarization ----
     if SIM.SimMode == 1
         SIM.charge_frac         = 1.0;  % How deep do we want to charge/discharge? 
+        % SIM.charge_frac         = 0.3;  % How deep do we want to charge/discharge? %%% This is to stay within valid Diff range from GITT
         SIM.t_ramp              = 0;    % [s], Ramp time for load current to go from 0 to i_user
     %%%% Input from batch mode 
         % SIM.C_rate              = 2;	% How many charges per hour, ABSOLUTE VALUE
@@ -379,18 +397,23 @@
     % EL.kappa      = 0.28;       % [S m^-1],       Ionic conductivity
     EL.tf_num     = 0.278092183499998;      % [-],            Transference Number 
     EL.Activity   = 2.07788963450000;          % [-],
-    EL.D_o_Li_ion = 1.80647486305862e-10; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
+    % EL.D_o_Li_ion = 1.80647486305862e-10; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
+    % EL.D_o_Li_ion = 1e-9; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
+    % EL.D_o_Li_ion = 1e-10; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
+    EL.D_o_Li_ion = 5e-11; % [m^2 s^-1],     Li^+ liquid diffusion coefficient
     EL.kappa      = 0.0761365002575189;       % [S m^-1],       Ionic conductivity
     EL.C          = 1.0;        % [kmol m^-3],    Li concentration
     EL.rho        = 75;         % [kg m^-3],      Density of the electrolyte %%%%%%%%%%Guess value
     EL.c_p        = 1830;       % [J kg^-1 K^-1], Specific heat capacity of electrolyte
     EL.lambda     = 400;        % [W m^-1 K^-1],  Thermal conductivity of electrolyte %sciencedirect.com/science/article/pii/S0735193317300179
-    EL.S_T        = 1.5;        % [-],            Soret coefficient
-    EL.Beta       = -1.5e-3;    % [V/K],          Seebeck coefficient
+    % EL.S_T        = 1.5;        % [-],            Soret coefficient
+    % EL.Beta       = SIM.preBeta;    % [V/K],          Seebeck coefficient %%% This is to fit to cell terminal voltage change
+    % EL.Beta       = -2e-3;    % [V/K],          Seebeck coefficient %%% This is to fit to cell terminal voltage change
+    % EL.Beta       = -1.5e-3;    % [V/K],          Seebeck coefficient %%% This is to fit to thermal-electric change
     %%%%%%%!!!!!!!!!!!!!!!%%%%%%%%%%% Don't need to change these. Use FLAG
     %%%%%%%at the top to turn these off
-    % EL.S_T        = 0;        % [-],            Soret coefficient
-    % EL.Beta       = 0e-3;    % [V/K],          Seebeck coefficient
+    EL.S_T        = 0;        % [-],            Soret coefficient
+    EL.Beta       = -1.78e-3;    % [V/K],          Seebeck coefficient
     % EL.S_T        = SIM.preS_T; % [-],            Soret coefficient
     % EL.Beta       = SIM.preBeta;% [V/K],          Seebeck coefficient
     EL.dmudc      = 1.0e7;      % change in chemical potential as a function of change in concentration
@@ -602,12 +625,13 @@
         % % SIM.CathodeStoich_SOC100 = 0.3400; % [-]
 
         % SIM.VoltageMax         = 4.27;   % [V]
-        SIM.VoltageMax         = 4.3;   % [V]
         % SIM.VoltageMin         = 3.21 ;  % [V] 
-        SIM.VoltageMin         = 3.00 ;  % [V] 
+        SIM.VoltageMax_SOC     = 4.3;   % [V]
+        SIM.VoltageMin_SOC     = 3.00 ;  % [V] 
         SIM.AnodeFormation_X   = 0.50;   % [-] 
         SIM.CathodeFormation_X = 0.4422; % [-] 
         % SIM.OneC_measured      = 22.7; % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
+        
     else
         % % SIM.OneC_measured        = 22.7;   % [A/m^2], Measured cap (used for demand)    (2.14 mAh cm^-2)
         % % % SIM.VoltageMax         = 5 ;       % [V] 

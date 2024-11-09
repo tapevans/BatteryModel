@@ -1,5 +1,6 @@
 %% RunSimulations
 % This file will run all simulations in a given project folder
+function RunSimulations()
 
 %% Change to this script's working directory
     [filepath,~,~] = fileparts(mfilename('fullpath'));
@@ -15,7 +16,14 @@
     % Project_Folder{i} = 'TK_GeneralComparison';   i = i+1;
     % Project_Folder{i} = 'test';   i = i+1;
     % Project_Folder{i} = 'TK_ExpDiffCoeff';   i = i+1;
-    Project_Folder{i} = 'TK_LiteratureDiffCoeff';   i = i+1;
+    % Project_Folder{i} = 'TK_LiteratureDiffCoeff';   i = i+1;
+    % Project_Folder{i} = 'TK_TestVoltageRelaxation';   i = i+1;
+    % Project_Folder{i} = 'TK_ECS_Poster';   i = i+1;
+    % Project_Folder{i} = 'TK_FitToThermal';   i = i+1;
+    % Project_Folder{i} = 'VaryingDLiion';   i = i+1;
+    % Project_Folder{i} = 'TK_FitToThermal_Part2';   i = i+1;
+    % Project_Folder{i} = 'TK_FitToThermal_LimitedRange';   i = i+1;
+    Project_Folder{i} = 'TK_TestPostPaperDraft';   i = i+1;
     
 
 
@@ -69,6 +77,9 @@ for i = 1:num_sim_files
             %     previousSimMode = SIM.SimMode;
             % end
 
+            SIM.VoltageMin_simulation = [];
+            SIM.VoltageMax_simulation = [];
+
             % Simulation Parameters
             Tol.Abs = 1E-7;
             Tol.Rel = 1E-7;
@@ -78,8 +89,8 @@ for i = 1:num_sim_files
             options = odeset('RelTol' ,Tol.Rel,      ...
                              'AbsTol' ,Tol.Abs,      ...
                              'Mass'   ,SIM.M,        ...
-                             'Events' ,events);%,       ...
-                             % 'MaxStep',1e0);%
+                             'Events' ,events,       ... 
+                             'MaxStep',1e1);% );%
                 if isfield(SIM,'JPattern')
                     options.JPattern = SIM.JPattern;
                 end
@@ -196,6 +207,10 @@ for i = 1:num_sim_files
                 
                 % Simulation Parameters
                 % Needs to be inside loop since the voltage limits change with each type
+                SIM.VoltageMin_simulation = [];
+                % SIM.VoltageMin_simulation = SIM.Controller_MO_File(SIM.current_MO_step).Volt_lim;
+                SIM.VoltageMax_simulation= SIM.Controller_MO_File(SIM.current_MO_step).Volt_lim;
+
                 Tol.Abs = 1E-7;
                 Tol.Rel = 1E-7;
 
@@ -781,4 +796,5 @@ for i = 1:num_sim_files
     clearvars -except sim_filenames i k num_sim_files previousSimMode
 end
 disp('Finished all simulations')
+end
 

@@ -108,7 +108,7 @@ postProcessing(filename)
 %% Plot Single Results
 clc; 
 clear all;
-close all;
+% close all;
 
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\test\Test_Polar_0.10C_D.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\ISO20_Polar_0.10C_D.mat';
@@ -116,7 +116,20 @@ close all;
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\CACold_Polar_0.10C_D.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\ISO20_Polar_0.10C_C.mat';
 % filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\ANCold_Polar_0.10C_C.mat';
-filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_ExpDiffCoeff\CACold_Polar_0.10C_C.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\ISO20_NoSoret_100_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\CACold_NoSoret_DiffFromGITT_7040_NoSeebeck_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\ISO20_NoSoret_DiffFromGITT_7040_NoSeebeck_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\ISO20_NoSoret_DiffFromGITT_100_NoSeebeck_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\ISO20_NoSoret_DiffFromGITT_100_NoSeebeckNoOnsager_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\CACold_NoSoret_DiffFromGITT_100_NoSeebeckNoOnsager_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\CACold_NoSoret_100_NoSeebeckNoOnsager_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\CACold_NoSoret_100_NoSeebeckNoOnsager_DLiionSlower_Polar_0.10C_D.mat';
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\CACold_NoSoret_100_DLiionSlower_Polar_0.10C_D.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\CACold_NoSoret_100_DLiionNREL_Polar_0.10C_D.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\ISO20_NoSoret_100_DLiionNREL_Polar_0.10C_D.mat';
+% filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\ISO20_NoSoret_100_NoSeebeckNoOnsager_DLiionNREL_Polar_0.10C_D.mat';
+
+filename = 'F:\TylerFiles\GitHubRepos\BatteryModel\Model\Results\TK_FitToThermal\ANCold_NoSoret_100_Polar_0.10C_D.mat';
 plotfcn(filename)
 
 

@@ -8,6 +8,9 @@
 % * A particle has no lithium left %%%%%%%%%%%%%%%%%%Not implemented
 % * A particle is completely full of lithium %%%%%%%%%%%%%%%%%%Not implemented
 %%
+
+        
+
 function [value,isterminal,direction] = batt_events(t,SV,SIM,P,N,FLAG)
 % SV = SV1Dto2D(SV , N , P , FLAG);
 % SV = SV1Dto2D(SV , N.N_SV_max, N.N_CV_tot, N.N_SV_AN_tot, N.N_SV_SEP_tot,
@@ -15,24 +18,36 @@ function [value,isterminal,direction] = batt_events(t,SV,SIM,P,N,FLAG)
 % CellVoltage = SV(P.phi_ed,end) - SV(P.phi_ed,1);
 CellVoltage = SV(N.IDX_CellVoltage(2)) - SV(N.IDX_CellVoltage(1));
 
-if SIM.SimMode == 4 % Known BC Profile
-    MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
-    if MO == 1 % CC
-        if SIM.Controller_MO_File(SIM.current_MO_step).CorD == 'C'
-            VoltageMax = SIM.Controller_MO_File(SIM.current_MO_step).Volt_lim;
-            VoltageMin = SIM.VoltageMin;
-        else
-            VoltageMax = SIM.VoltageMax;
-            VoltageMin = SIM.Controller_MO_File(SIM.current_MO_step).Volt_lim;
-        end
+% Set Simulation Limits
+    if isempty(SIM.VoltageMin_simulation)
+        VoltageMin = SIM.VoltageMin_SOC;
     else
-        VoltageMax = SIM.VoltageMax;
-        VoltageMin = SIM.VoltageMin;
+        VoltageMin = SIM.VoltageMin_simulation;
     end
-else
-    VoltageMax = SIM.VoltageMax;
-    VoltageMin = SIM.VoltageMin;
-end
+    
+    if isempty(SIM.VoltageMax_simulation)
+        VoltageMax = SIM.VoltageMax_SOC;
+    else
+        VoltageMax = SIM.VoltageMax_simulation;
+    end
+% if SIM.SimMode == 4 % Known BC Profile
+%     MO = SIM.Controller_MO_File(SIM.current_MO_step).MO;
+%     if MO == 1 % CC
+%         if SIM.Controller_MO_File(SIM.current_MO_step).CorD == 'C'
+%             VoltageMax = SIM.Controller_MO_File(SIM.current_MO_step).Volt_lim;
+%             VoltageMin = SIM.VoltageMin;
+%         else
+%             VoltageMax = SIM.VoltageMax;
+%             VoltageMin = SIM.Controller_MO_File(SIM.current_MO_step).Volt_lim;
+%         end
+%     else
+%         VoltageMax = SIM.VoltageMax;
+%         VoltageMin = SIM.VoltageMin;
+%     end
+% else
+%     VoltageMax = SIM.VoltageMax;
+%     VoltageMin = SIM.VoltageMin;
+% end
        
 
 

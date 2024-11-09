@@ -134,16 +134,27 @@ clear all; close all; clc;
 
 
 %% 0-Crate Tests
-    SOC_vec = [10, 25, 50, 75, 90];
-    tempCase    = {'Iso20' , 'ANCold' , 'CACold'};
-    % STBeta = {'Soret0_Beta0'};
-    STBeta = {'Soret1.5_Beta-1.5e-3'};
-
+    SOC_vec = [10];
+    % DeltaT  = -6;
+    % SOC_vec = [10, 25, 50, 75, 90];
+    DeltaT  = -6:2:6;
+    
     for kk = 1:length(SOC_vec)
-        for tt = 1:length(tempCase)
+        for tt = 1:length(DeltaT)
             SOC_start = SOC_vec(kk);
-            battery_name = [STBeta{1} '_' tempCase{tt} '_startSOC' num2str(SOC_start)];
-            SIM.FLAG_TempBC = tt;
+
+            battery_name = ['dVdT_DelT' num2str(DeltaT(tt)) '_startSOC' num2str(SOC_start)];
+            SIM.FLAG_TempBC = 0;
+
+            ITGAbsHalf = abs(DeltaT(tt)/2);
+            if DeltaT(tt)<0
+                SIM.preAN_Temp = 20 + 273.15 - ITGAbsHalf;
+                SIM.preCA_Temp = 20 + 273.15 + ITGAbsHalf;
+            else
+                SIM.preAN_Temp = 20 + 273.15 + ITGAbsHalf;
+                SIM.preCA_Temp = 20 + 273.15 - ITGAbsHalf;
+            end
+            
             CreateProject
         end
     end

@@ -6,31 +6,31 @@ function plotfcn(filename)
 %% Plot Flags
 % ---- Polarization ----
     FLAG.COE       = 0; % Conservation of Energy Check 
-    FLAG.COM       = 0; % Conservation of Mass Check
+    FLAG.COM       = 1; % Conservation of Mass Check
     FLAG.COC       = 0; % Conservation of Charge Check
     
-    FLAG.TEMP      = 0; % Cell Temperature Profile
+    FLAG.TEMP      = 1; % Cell Temperature Profile
     
     FLAG.C_Liion   = 1; % Mass/Species (Concentration Normalized): Li_ion
-    FLAG.X_Li_surf = 1; % Mass/Species (Mole Fraction): Li_surf (x-direction)
-    FLAG.X_Li_rad  = 1; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
+    FLAG.X_Li_surf = 0; % Mass/Species (Mole Fraction): Li_surf (x-direction)
+    FLAG.X_Li_rad  = 0; % Mass/Species (Mole Fraction): Li (r-direction) (Any of the plots)
     FLAG.s_dot     = 0; % Li_ion production rate
     
     FLAG.phi_ed    = 0; % phi_ed
-    FLAG.phi_el    = 0; % phi_el
+    FLAG.phi_el    = 1; % phi_el
     FLAG.del_phi   = 0; % Delta phi (phi_ed - phi_el)
     FLAG.del_phi_v_time = 0; %@ AN/SEP
     FLAG.E_eq      = 0; % Equilibrium delta_phi based on surface concentration
-    FLAG.eta       = 1; % eta
-    FLAG.i_o       = 1; % exchange current density
-    FLAG.i_Far     = 1; % charge-transfer current density
+    FLAG.eta       = 0; % eta
+    FLAG.i_o       = 0; % exchange current density
+    FLAG.i_Far     = 0; % charge-transfer current density
     FLAG.plotV_SEI = 0; % Voltage across the SEI
     FLAG.N_Particles = 0; % Number of spherical particles in the control volume
     
     FLAG.cellVoltage         = 1; % Terminal voltage of the battery vs time
     FLAG.voltage_vs_capacity = 0; % Terminal voltage of the battery vs capacity
     FLAG.V_and_A             = 0;
-    FLAG.SOC                 = 0; % SOC vs time
+    FLAG.SOC                 = 1; % SOC vs time
     FLAG.voltage_vs_SOC      = 0; % Terminal voltage of the battery vs SOC
 
     % FLAG.N_Particles         = 1;
@@ -175,7 +175,7 @@ if SIM.SimMode == 1 || SIM.SimMode == 8
         lgn.Location = 'best';
         title('C_{Li^+}')
         xlabel('X Position')
-        ylabel('C_{Li^+} (kmol)')
+        ylabel('C_{Li^+} (kmol m^{-3})')
         xlim([0,SIM.x_half_vec(end)])
         
         xl_AS = xline(SIM.x_half_vec(N.N_CV_AN+1),'-',{'Anode','Separator'},'HandleVisibility','off');

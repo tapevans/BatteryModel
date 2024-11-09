@@ -23,37 +23,37 @@ j = 0;
 
 
 %% # Chg Dcgh Cycles
-for jj = 1:1
-    % Constant Current Charge C/5
-    j = j + 1;
-    MO_File(j).MO        = 1;
-    MO_File(j).CorD      = 'C';
-    MO_File(j).C_rate    = 1/5;
-    MO_File(j).Volt_ref  = [];   % [V]
-    MO_File(j).Volt_lim  = 4.2;  % [V]
-    MO_File(j).Time_lim  = 3600*5;  % [s]
-    MO_File(j).delta_tol = [];
-
-    % Constant Current Discharge C/5
-    j = j + 1;
-    MO_File(j).MO        = 1;
-    MO_File(j).CorD      = 'D';
-    MO_File(j).C_rate    = 1/5;
-    MO_File(j).Volt_ref  = [];   % [V]
-    MO_File(j).Volt_lim  = 3.2;  % [V]
-    MO_File(j).Time_lim  = 3600*5;  % [s]
-    MO_File(j).delta_tol = [];
-end
-
-    % Constant Current Charge C/5
-    j = j + 1;
-    MO_File(j).MO        = 1;
-    MO_File(j).CorD      = 'C';
-    MO_File(j).C_rate    = 1/5;
-    MO_File(j).Volt_ref  = [];   % [V]
-    MO_File(j).Volt_lim  = 4.2;  % [V]
-    MO_File(j).Time_lim  = 3600*5;  % [s]
-    MO_File(j).delta_tol = [];
+% for jj = 1:1
+%     % Constant Current Charge C/5
+%     j = j + 1;
+%     MO_File(j).MO        = 1;
+%     MO_File(j).CorD      = 'C';
+%     MO_File(j).C_rate    = 1/5;
+%     MO_File(j).Volt_ref  = [];   % [V]
+%     MO_File(j).Volt_lim  = 4.2;  % [V]
+%     MO_File(j).Time_lim  = 3600*5;  % [s]
+%     MO_File(j).delta_tol = [];
+% 
+%     % Constant Current Discharge C/5
+%     j = j + 1;
+%     MO_File(j).MO        = 1;
+%     MO_File(j).CorD      = 'D';
+%     MO_File(j).C_rate    = 1/5;
+%     MO_File(j).Volt_ref  = [];   % [V]
+%     MO_File(j).Volt_lim  = 3.2;  % [V]
+%     MO_File(j).Time_lim  = 3600*5;  % [s]
+%     MO_File(j).delta_tol = [];
+% end
+% 
+%     % Constant Current Charge C/5
+%     j = j + 1;
+%     MO_File(j).MO        = 1;
+%     MO_File(j).CorD      = 'C';
+%     MO_File(j).C_rate    = 1/5;
+%     MO_File(j).Volt_ref  = [];   % [V]
+%     MO_File(j).Volt_lim  = 4.2;  % [V]
+%     MO_File(j).Time_lim  = 3600*5;  % [s]
+%     MO_File(j).delta_tol = [];
 
 %% GITT
     % % Relaxation
@@ -112,6 +112,66 @@ end
     % % MO_File(j).delta_tol  = 1e-10;
     % % MO_File(j).C_rate_sat = 2;
     % % end
+
+
+%% TK GITT
+    % Relaxation
+    j = j + 1;
+    MO_File(j).MO         = 3;
+    MO_File(j).CorD       = 'C';
+    MO_File(j).C_rate     = 0;
+    MO_File(j).Volt_ref   = []; % [V]
+    MO_File(j).Volt_lim   = 4.4;  % [V]
+    MO_File(j).Time_lim   = 100; % [s]
+    MO_File(j).delta_tol  = 1e-10;
+    MO_File(j).C_rate_sat = 2;
+
+    for jj = 1:20
+    % Constant Current Charge C/17.25
+    j = j + 1;
+    MO_File(j).MO        = 1;
+    MO_File(j).CorD      = 'C';
+    MO_File(j).C_rate    = 1/10;
+    MO_File(j).Volt_ref  = [];
+    MO_File(j).Volt_lim  = 5;
+    MO_File(j).Time_lim  = 3600*0.5;
+    MO_File(j).delta_tol = [];
+
+    % Relaxation
+    j = j + 1;
+    MO_File(j).MO         = 3;
+    MO_File(j).CorD       = 'C';
+    MO_File(j).C_rate     = 0;
+    MO_File(j).Volt_ref   = []; % [V]
+    MO_File(j).Volt_lim   = 5;  % [V]
+    MO_File(j).Time_lim   = 3600*4; % [s]
+    MO_File(j).delta_tol  = 1e-10;
+    MO_File(j).C_rate_sat = 2;
+    end
+
+    % for jj = 1:34
+    % % Constant Current Charge 1C
+    % j = j + 1;
+    % MO_File(j).MO        = 1;
+    % MO_File(j).CorD      = 'D';
+    % MO_File(j).C_rate    = 1/17.25;
+    % MO_File(j).Volt_ref  = [];
+    % MO_File(j).Volt_lim  = 3.2;
+    % MO_File(j).Time_lim  = 3600*0.5;
+    % MO_File(j).delta_tol = [];
+    % 
+    % % Relaxation
+    % j = j + 1;
+    % MO_File(j).MO         = 3;
+    % MO_File(j).CorD       = 'C';
+    % MO_File(j).C_rate     = 0;
+    % MO_File(j).Volt_ref   = []; % [V]
+    % MO_File(j).Volt_lim   = 3.2;  % [V]
+    % MO_File(j).Time_lim   = 3600*2; % [s]
+    % MO_File(j).delta_tol  = 1e-10;
+    % MO_File(j).C_rate_sat = 2;
+    % end
+
 
 %% Stair Step with intial and ending Relax
     % % Relaxation
@@ -360,8 +420,8 @@ end
 
 %% Step with Initial relax
     % initial_relax_samples = 2;
-    % Ts = 10.0;   % [s], discrete time sampling rate
-    % N_meas = 600; % Number of discrete values to measure
+    % Ts = 1.0;   % [s], discrete time sampling rate
+    % % N_meas = 600; % Number of discrete values to measure
     % 
     % % Relaxation
     % j = j + 1;
@@ -374,15 +434,30 @@ end
     % MO_File(j).delta_tol  = 1e-10;
     % MO_File(j).C_rate_sat = 2;
     % 
-    % % Constant Current Charge C/20
+    % % Constant Current Charge 
     % j = j + 1;
     % MO_File(j).MO        = 1;
-    % MO_File(j).CorD      = 'D';
-    % MO_File(j).C_rate    = 0.040843474405010; % Results in i = 1 A/m^2
+    % MO_File(j).CorD      = 'C';
+    % MO_File(j).C_rate    = 1/10; % Increase 10% in 500 sec
+    % % MO_File(j).C_rate    = 0.72; % Increase 10% in 500 sec
+    % % MO_File(j).C_rate    = 0.040843474405010; % Results in i = 1 A/m^2
     % MO_File(j).Volt_ref  = [];
-    % MO_File(j).Volt_lim  = 3.8;%4.2 (Max), 3.8 (Min)
-    % MO_File(j).Time_lim  = N_meas*Ts;
+    % MO_File(j).Volt_lim  = 5;%4.2 (Max), 3.8 (Min)
+    % MO_File(j).Time_lim  = 1800;
     % MO_File(j).delta_tol = [];
+    % 
+    % % Relaxation
+    % j = j + 1;
+    % MO_File(j).MO         = 3;
+    % MO_File(j).CorD       = 'D';
+    % MO_File(j).C_rate     = 0;
+    % MO_File(j).Volt_ref   = []; % [V]
+    % MO_File(j).Volt_lim   = 4.4;  % [V]
+    % MO_File(j).Time_lim   = 4*3600; % [s]
+    % % MO_File(j).Time_lim   = initial_relax_samples*Ts; % [s]
+    % MO_File(j).delta_tol  = 1e-10;
+    % MO_File(j).C_rate_sat = 2;
+
 
 %%
     % Constant Current Charge C/20
